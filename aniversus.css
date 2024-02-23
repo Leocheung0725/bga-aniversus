@@ -1,0 +1,77 @@
+
+/********* You can start writing your CSS below this line: **********/
+:root {
+	--card-height: 174px;
+	--card-width: 125px;
+	--playmat-url: url('https://novbackstorage.blob.core.windows.net/bgs-game/playmat.png');
+
+}
+
+
+#gamefield {
+	position: relative;
+	height: auto;
+	width: auto;
+}
+
+.myhand_wrap {
+	display: flex;
+}
+
+.playmat_field {
+	width: auto;
+	height: auto;
+	position: relative;
+	flex-direction: row;
+	display: flex;
+	box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+}
+
+.onTableCards_field {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: row;
+	box-sizing: border-box;
+	width: auto;
+	height: 100%;
+	gap: 10px;
+	padding-left: 10px;
+}
+
+
+.player_playmat {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: row;
+	flex-wrap: wrap;
+	box-sizing: border-box;
+	padding-left: 20px;
+	padding-top: 14px;
+	padding-bottom: 14px;
+	padding-right: 20px;
+	background-image: var(--playmat-url);
+	width: 724px;
+	height: 400px;
+	gap: 0.5px;
+}
+
+
+.onTableCards {
+	display: flex;
+	position: absolute;
+	gap: 20px;
+}
+
+.cardsOnTable {
+	flex: 0 0 auto;
+	height: var(--card-height);
+	width: var(--card-width);
+}
+
+.playerCardOnPlaymat {
+	height: 50%;
+	width: 19.87%;
+}
+
