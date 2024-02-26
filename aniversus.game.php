@@ -44,9 +44,16 @@ class Aniversus extends Table
         
         // Build the card deck in the constructor
         // ----- Leo
-        $this->cards = self::getNew( "module.common.deck" ); // this is related to the deck of cards
-        $this->cards->init( "card" ); // this is related to the sql table name (用返一開始CREATED DATABASE 個名 係DBMODEL.SQL)
-	}
+
+        // Initialize the Deck component for Cat deck
+        $this->catDeck = self::getNew("module.common.deck"); // this is related to the deck of cards
+        $this->catDeck->init("cat_deck"); // this is related to the sql table name (用返一開始CREATED DATABASE 個名 係DBMODEL.SQL)
+
+        // Initialize the Deck component for Squirrel deck
+        $this->squirrelDeck = self::getNew("module.common.deck");
+        $this->squirrelDeck->init("squirrel_deck");
+    
+    }
 	
     protected function getGameName( )
     {
@@ -117,12 +124,9 @@ class Aniversus extends Table
         // TODO: setup the initial game situation here
         // Red color player plays first
         // Find who is first player
-        // $sql = "SELECT player_id, player_name, player_color FROM player";
-        $players = self::loadPlayersBasicInfos();   // !! We must only return information visible by this player !!
-        // $players_result = self::getCollectionFromDb( $sql );
-        // $player_info['player_id'] will give you the player ID
-        // $player_info['player_name'] will give you the player name
-        // $player_info['player_first'] will tell you if they are the first player (0 or 1)
+        $sql = "SELECT player_id, player_name, player_color, player_team FROM player";
+        // $players = self::loadPlayersBasicInfos();   // !! We must only return information visible by this player !!
+        $players = self::getCollectionFromDb( $sql );
         // Do something with this information
 
         foreach ($players as $player_id => $player_info) {
@@ -155,18 +159,26 @@ class Aniversus extends Table
     protected function getAllDatas()
     {
         $result = array();
-    
+
+        // send material.inc.php Static information to client
+        $result['cards_info'] = $this->cards_info;
+
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
-    
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
         $sql = "SELECT player_id id, player_score score, player_team team FROM player ";
         $result['players'] = self::getCollectionFromDb( $sql );
+        $current_player = $result['players'][$current_player_id];
+        $result['current_player'] = $current_player;
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
         // Cards in player hand
-        $result['hand'] = $this->cards->getCardsInLocation( 'hand', $current_player_id );
+        $result['hand'] = ($current_player['team'] == 'cat') 
+            ? $this->catDeck->getCardsInLocation( 'hand', $current_player_id ) // if cat team
+            : $this->squirrelDeck->getCardsInLocation( 'hand', $current_player_id ); // if squirrel team
         // $result['cardsontable_cat'] = $this->cards->getCardsInLocation( 'cardsontable_cat' );
         // $result['cardsontable_squirrel'] = $this->cards->getCardsInLocation( 'cardsontable_squirrel' );
+
+
         return $result;
     }
 
@@ -191,29 +203,54 @@ class Aniversus extends Table
 //////////////////////////////////////////////////////////////////////////////
 //////////// Utility functions
 ////////////    
-
     /*
         In this space, you can put any utility methods useful for your game logic
     */
     function initCardDeck($first_player, $second_player) {
         try {
             // $players = $this->loadPlayersBasicInfos();
-            $cards = array();
-            foreach ( [1 => "Cat"] as $team_id => $team_name ) {
-                // cat and squirrel
-                for ( $value=0; $value < 60; $value++ ) {
-                    $cards[] = array(
-                        'type' => 'cat',
-                        'type_arg' => $value,
-                        'nbr' => 1,
-                    );
+            // Create basic cards (IDs 1 to 13) for both decks
+            $basicCards = array();
+            foreach ($this->cards_info as $id => $card_info) {
+                if ($card_info['id'] >= 1 && $card_info['id'] <= 13) {
+                    $basicCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
                 }
             }
-            $this->cards->createCards( $cards, 'deck' );
-            // trial
-            $this->cards->shuffle('deck');
-            $cards_to_first_player = $this->cards->pickCards( 7, 'deck', $first_player['player_id'] );
-            $cards_to_second_player = $this->cards->pickCards( 8, 'deck', $second_player['player_id'] );
+            // Create special cards for Cat deck (IDs 101 to 114)
+            $catSpecialCards = array();
+            foreach ($this->cards_info as $id => $card_info) {
+                if ($card_info['id'] >= 101 && $card_info['id'] <= 114) {
+                    $catSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
+                }
+            }
+
+            // Create special cards for Squirrel deck (IDs 51 to 64)
+            $squirrelSpecialCards = array();
+            foreach ($this->cards_info as $id => $card_info) {
+                if ($card_info['id'] >= 51 && $card_info['id'] <= 64) {
+                    $squirrelSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
+                }
+            }
+
+            // Add cards to Cat deck
+            $this->catDeck->createCards($basicCards, 'deck');
+            $this->catDeck->createCards($catSpecialCards, 'deck');
+            // Add cards to Squirrel deck
+            $this->squirrelDeck->createCards($basicCards, 'deck');
+            $this->squirrelDeck->createCards($squirrelSpecialCards, 'deck');
+
+            // Shuffle both decks
+            $this->catDeck->shuffle('deck');
+            $this->squirrelDeck->shuffle('deck');
+            
+            // Determine who is cat team and who is squirrel team
+            $first_player_deck = ($first_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
+            $second_player_team = ($second_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
+
+            // Deal cards to players
+            $cards_to_first_player = $this->{$first_player_deck}->pickCards( 7, 'deck', $first_player['player_id'] );
+            $cards_to_second_player = $this->{$second_player_team}->pickCards( 8, 'deck', $second_player['player_id'] );
+
             // ... code the function
         } catch ( Exception $e ) {
             // logging does not actually work in game init :(
@@ -221,6 +258,20 @@ class Aniversus extends Table
             $this->error("Fatal error while creating game");
             $this->dump('err', $e);
         }
+    }
+    // Debug function to get all cards in a deck
+    function getcards() {
+        // Create special cards for Squirrel deck (IDs 51 to 64)
+        $squirrelSpecialCards = array();
+        foreach ($this->cards_info as $id => $card_info) {
+            if ($card_info['id'] >= 51 && $card_info['id'] <= 64) {
+                $squirrelSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $id, 'nbr' => $card_info['nbr']);
+            }
+        }
+        $this->squirrelDeck->createCards($squirrelSpecialCards, 'deck');
+        var_dump($squirrelSpecialCards);
+        // $this->catDeck->createCards($catSpecialCards, 'deck');
+        // var_dump($this->catDeck->getCardsInLocation('deck'));
     }
     // function debug_initMyTables() {
     //     $this->deleteAllTables(); // this suppose to delete/reset all data - you have to implement this function
@@ -396,8 +447,6 @@ class Aniversus extends Table
 //        }
 //        // Please add your future database scheme changes here
 //
-//
-
 
     }    
 }

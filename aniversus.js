@@ -14,7 +14,7 @@
  * In this file, you are describing the logic of your user interface, in Javascript language.
  *
  */
-
+import { id2css } from "./modules/aniversus_utils_constant";
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
@@ -26,7 +26,7 @@ function (dojo, declare) {
     return declare("bgagame.aniversus", ebg.core.gamegui, {
         constructor: function(){
             console.log('aniversus constructor');
-            this.cardwidth = 125;
+            this.cardwidth = 124;
             this.cardheight = 174;
             // The card pixel width and height is 472x656
             // Here, you can init the global variables of your user interface
@@ -67,23 +67,22 @@ function (dojo, declare) {
             this.playerdeck = new ebg.stock(); // new stock object for hand
             this.playerdeck.create( this, $('myhand'), this.cardwidth, this.cardheight );
             // config stock object
-            this.playerdeck.image_items_per_row = 10;
+            this.playerdeck.image_items_per_row = 1;
             this.playerdeck.centerItems = true; // Center items (actually i don't know what it does)
-            this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
+            // this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
             this.playerdeck.setSelectionMode(1); // Allow only one card to be selected
             // Create cards types:
-            for (var $id = 0; $id < 60; $id++) {
-                this.playerdeck.addItemType($id, $id, 
-                    "https://novbackstorage.blob.core.windows.net/bgs-game/cat_handCard_small.png"
-                    , $id);
-            }
-            // for fun
+            // addItemType(type: number, weight: number, image: string, image_position: number )
+            this.gamedatas.cards_info.forEach((key) => {
+                this.playerdeck.addItemType(key.id, key.css_position, 
+                    "https://novbackstorage.blob.core.windows.net/bgs-game/whole_deck.png", key.css_position);
+            });
+            // show hand
             for ( var i in this.gamedatas.hand) {
                 var card = this.gamedatas.hand[i];
                 console.log(gamedatas.hand);
-                this.playerdeck.addToStockWithId(card.id, card.id);
+                this.playerdeck.addToStockWithId(id2css[Number(card.type_arg)], card.id);
             }
-            
             // setup connect
             dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
             // Setup game notifications to handle (see "setupNotifications" method below)
@@ -205,8 +204,8 @@ function (dojo, declare) {
                 if (this.checkAction('playCard', true)) {
                     // Can play a card
                     var card_id = items[0].id;
-                    console.log('play card ' + card_id);
-                    this.playerdeck.unselectAll();
+                    console.log('Can play card ' + card_id);
+                    // this.playerdeck.unselectAll();
                 } else {
                     // Can't play a card
                     this.playerdeck.unselectAll();

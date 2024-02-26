@@ -29,265 +29,69 @@ $this->card_types = array(
                 ...
               )
 );
-
 */
+$cards_info_CSVdata = <<<CSV
+id,type,cost,productivity,power,function,name,nbr,team,css_position
+1,Function,1,0,0,"Draw 3 cards, then discard 1 card from your hand.",Scouting,3,basic,1
+2,Function,0,0,0,Play a card without paying its cost. (DOES NOT count as an action),Gambit Play,2,basic,2
+3,Function,1,0,0,"Double the effect of a function card. (Play this card first, then the function card)",Double effect,2,basic,3
+4,Function,0,0,0,"Dismiss 1 opponent's forward player. (This card can be played during opponent's SHOOTING phase, which DOES NOT count as an action)",Red Card,3,basic,4
+5,Function,0,0,0,"Ineffective opponent's function card. (DOES NOT count as an action, and can be played during opponent’s turn)",Intercept,4,basic,5
+6,Function,2,0,0,"Choose 1 card, at random, from your opponent's hand and discard it.",Disruption,3,basic,6
+7,Function,0,0,0,Gain 2 energy in this round.,energy up,2,basic,7
+8,Function,1,0,0,"Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.",Tactical Reshuffle,2,basic,8
+9,Function,0,0,0,UNPLAYABLE until one of your cards isdismissed or discarded by opponent. Gain 2 energy and draw 2 cards next round. (DOES NOT count as an action),Comeback,2,basic,9
+10,Function,1,0,0,Opponent -2 energy next round.,Energy drain,1,basic,10
+11,Function,1,0,0,Select 1 player from the field and exchange them with a player from your discard pile.,Player swap,1,basic,11
+12,Training,0,0,0,Play Resilience onto a player to protect them from any negative effects from your opponent's cards.,Resilience,2,basic,12
+13,Function,1,0,0,Get extra 2 actions in your next round,Action up,2,basic,13
+51,Player,2,2,2,,Nadine,2,squirrel,14
+52,Player,1,1,1,,Natalie,4,squirrel,15
+53,Function,2,0,0,This card can only be played when you have 3 cards or fewer in your hand. Draw 3 cards.,Refill,1,squirrel,16
+54,Function,0,0,0,Power + 2 this round,Power Play,1,squirrel,17
+55,Function,2,0,0,Your opponent cannot draw cards next round.,Restriction,2,squirrel,18
+56,Function ,1,0,0,"Draw 2 cards, then discard 2 cards from all your hand cards.",Substitution,2,squirrel,19
+57,Player,3,0,2,"When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.",Jeffrey,2,squirrel,20
+58,Player,5,0,3,The player in the same position on the opponent's field -2 power. (for as long as Sergio is in play),Sergio,3,squirrel,21
+59,Player,0,2,0,The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field),Antonio,2,squirrel,22
+60,Player,2,0,1,"Multiple Marco Bros cards can be played in the same player slot. Marco Bros x1 = 1 power ,Marco Bros x2 = 3 power, Marco Bros x3 = 6 power.",Marco Bros,4,squirrel,23
+61,Player,1,0,1,Becomes stronger when working with Aaron.,Paul,2,squirrel,24
+62,Player,4,0,4,All Pauls on the field gain +1 power.,Aaron,1,squirrel,25
+63,Player,0,2,0,"When Jude is placed, the productivity player in the same position on opponent's side must leave the field to discard pile.",Jude,2,squirrel,26
+64,Player,0,2,2,"When Ceci is placed, discard 1 card from your hand.",Ceci,3,squirrel,27
+101,Training,2,1,1,"If put it on a productivity player, Productivity +1. If put it on a forward player,  Power +1.(The cost applies wherever it is placed)",Empowerment,4,cat,28
+102,Player,2,2,4,Anthony can only be placed if there is a TRAINING CARD on the field already.,Anthony,2,cat,29
+103,Player,3,0,1,"For every 2 forward players on the opponent's team, your team gains +1 power.",Sandra,2,cat,30
+104,Player,6,0,6,You can only have 2 other players in your forward row when Timo is in play.,Timo,1,cat,31
+105,Function,3,0,0,Your opponent skips 1 round.,Suspension,2,cat,32
+106,Player,0,0,2,Leo can only be placed if you have 3 or more forward players on the field.,Leo,2,cat,33
+107,Player,4,0,3,Cannot be targeted by any FUNCTION cards.,James,2,cat,34
+108,Function,1,0,0,Return 1 card from the field to your hand.,Tactical Change,2,cat,35
+109,Player,0,3,0,"When Harry is placed, discard 2 cards from your hand.",Harry,2,cat,36
+110,Player,0,1,0,Gain an additional 1 productivity for every 2 forward players you have.,Roberto,2,cat,37
+111,Player,2,0,1,The player in the same position on the opponent's field -1 power. (for as long as Lucia is in play),Lucia,2,cat,38
+112,,0,0,0,"Discard 1 hand card to search for 1 card from your draw deck and put to your hand. Then, shuffle your deck.",Deck Dive,2,cat,39
+113,Player,2,2,2,,Rachel,2,cat,40
+114,Player,1,1,1,,Alex,4,cat,41
+CSV;
+
+
 $this->gameConstants = array(
   "cat_team_id" => 1,
   "squirrel_team_id" => 2,
 );
 
 
-$this->card_team = array(
-  1 => array( "team_name" => clienttranslate("cat"),
-              "team_name_tr" => self::_('cat')),
-  // 2 => array( "team_name" => clienttranslate("squirrel"),
-  //             "team_name_tr" => self::_('squirrel')),
-);
+// $this->card_team = array(
+//   1 => array( "team_name" => clienttranslate("cat"),
+//               "team_name_tr" => self::_('cat')),
+//   // 2 => array( "team_name" => clienttranslate("squirrel"),
+//   //             "team_name_tr" => self::_('squirrel')),
+// );
 
 // card_function = array(0 => "function", 1 => "player", 2 => "training", 3 => "skill", 4 => "action")
 // when the card power is > 0 and productivity is 0, it's a forward player card, if the card power is 0 and productivity is > 0, it's a productivity player card,
 // if the card power is > 0 and productivity is > 0, it's a allround player card
-$this->card_types = array(
-  0 => array( "card_name" => clienttranslate("LEO"),
-              "card_name_tr" => self::_('LEO'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 0,
-              "card_function" => 1,
-              "cost" => 0,
-              "card_ability" => array(
-                "power" => 2,
-                "productivity" => 0,
-                "type" => "forward"
-              ),),
-  1 => array( "card_name" => clienttranslate("ENERGY UP"),
-              "card_name_tr" => self::_('ENERGY UP'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 1,
-              "card_function" => 0,
-              "cost" => 0,),
-  2 => array( "card_name" => clienttranslate("RESILIENCE"),
-              "card_name_tr" => self::_('RESILIENCE'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 2,
-              "card_function" => 2,
-              "cost" => 0,),
-  3 => array( "card_name" => clienttranslate("ENERGY DRAIN"),
-              "card_name_tr" => self::_('ENERGY DRAIN'),
-              "card_team" => 1,
-              "nbr" => 1,
-              "card_id" => 3,
-              "card_function" => 0,
-              "cost" => 1,),
-  4 => array( "card_name" => clienttranslate("COMEBACK"),
-              "card_name_tr" => self::_('COMEBACK'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 4,
-              "card_function" => 0,
-              "cost" => 0,),
-  5 => array( "card_name" => clienttranslate("DOUBLE EFFECT"),
-              "card_name_tr" => self::_('DOUBLE EFFECT'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 5,
-              "card_function" => 0,
-              "cost" => 1,),
-  6 => array( "card_name" => clienttranslate("GAMBIT PLAY"),
-              "card_name_tr" => self::_('GAMBIT PLAY'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 6,
-              "card_function" => 0,
-              "cost" => 0,),
-  7 => array( "card_name" => clienttranslate("DECK DIVE"),
-              "card_name_tr" => self::_('DECK DIVE'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 7,
-              "card_function" => 0,
-              "cost" => 0,),
-  8 => array( "card_name" => clienttranslate("ANTHONY"),
-              "card_name_tr" => self::_('ANTHONY'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 8,
-              "card_function" => 1,
-              "cost" => 2,
-              "card_ability" => array(
-                  "power" => 4,
-                  "productivity" => 2,
-                  "type" => "allround"
-              ),),
-  9 => array( "card_name" => clienttranslate("SANDRA"),
-              "card_name_tr" => self::_('SANDRA'),
-              "card_team" => 1,
-              "nbr" => 2,
-              "card_id" => 9,
-              "card_function" => 1,
-              "cost" => 3,
-              "card_ability" => array(
-                  "power" => 1,
-                  "productivity" => 0,
-                  "type" => "forward"
-              ),),
-  10 => array( "card_name" => clienttranslate("TIMO"),
-                "card_name_tr" => self::_('TIMO'),
-                "card_team" => 1,
-                "nbr" => 1,
-                "card_id" => 10,
-                "card_function" => 1,
-                "cost" => 6,
-                "card_ability" => array(
-                    "power" => 6,
-                    "productivity" => 0,
-                    "type" => "forward"
-                ),),
-  11 => array( "card_name" => clienttranslate("INTERCEPT"),
-                "card_name_tr" => self::_('INTERCEPT'),
-                "card_team" => 1,
-                "nbr" => 4,
-                "card_id" => 11,
-                "card_function" => 0,
-                "cost" => 0,),
-  12 => array( "card_name" => clienttranslate("LUCIA"),
-                "card_name_tr" => self::_('LUCIA'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 12,
-                "card_function" => 1,
-                "cost" => 2,
-                "card_ability" => array(
-                "power" => 1,
-                "productivity" => 0,
-                "type" => "forward"
-                ),),
-  13 => array( "card_name" => clienttranslate("TACTICAL CHANGE"),
-                "card_name_tr" => self::_('TACTICAL CHANGE'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 13,
-                "card_function" => 0,
-                "cost" => 1,),
-  14 => array( "card_name" => clienttranslate("TACTICAL RESHUFFLE"),
-                "card_name_tr" => self::_('TACTICAL RESHUFFLE'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 14,
-                "card_function" => 0,
-                "cost" => 1,),
-  15 => array( "card_name" => clienttranslate("RED CARD"),
-                "card_name_tr" => self::_('RED CARD'),
-                "card_team" => 1,
-                "nbr" => 3,
-                "card_id" => 15,
-                "card_function" => 0,
-                "cost" => 0,),
-  16 => array( "card_name" => clienttranslate("ALEX"),
-                "card_name_tr" => self::_('ALEX'),
-                "card_team" => 1,
-                "nbr" => 4,
-                "card_id" => 16,
-                "card_function" => 1,
-                "cost" => 1,
-                "card_ability" => array(
-                  "power" => 1,
-                  "productivity" => 1,
-                  "type" => "allround"
-                ),),
-  17 => array( "card_name" => clienttranslate("ROBERTO"),
-                "card_name_tr" => self::_('ROBERTO'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 17,
-                "card_function" => 1,
-                "cost" => 0,
-                "card_ability" => array(
-                  "power" => 0,
-                  "productivity" => 1,
-                  "type" => "productivity"
-                ),),
-                18 => array( "card_name" => clienttranslate("SUSPENSION"),
-                "card_name_tr" => self::_('SUSPENSION'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 18,
-                "card_function" => 0,
-                "cost" => 3,),
-  19 => array( "card_name" => clienttranslate("HARRY"),
-                "card_name_tr" => self::_('HARRY'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 19,
-                "card_function" => 1,
-                "cost" => 0,
-                "card_ability" => array(
-                    "power" => 0,
-                    "productivity" => 3,
-                    "type" => "productivity"
-                ),),
-  20 => array( "card_name" => clienttranslate("ACTION UP"),
-                "card_name_tr" => self::_('ACTION UP'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 20,
-                "card_function" => 0,
-                "cost" => 1,),
-  21 => array( "card_name" => clienttranslate("EMPOWERMENT"),
-                "card_name_tr" => self::_('EMPOWERMENT'),
-                "card_team" => 1,
-                "nbr" => 4,
-                "card_id" => 21,
-                "card_function" => 2,
-                "cost" => 2,),
-  22 => array( "card_name" => clienttranslate("RACHEL"),
-                "card_name_tr" => self::_('RACHEL'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 22,
-                "card_function" => 1,
-                "cost" => 2,
-                "card_ability" => array(
-                    "power" => 2,
-                    "productivity" => 2,
-                    "type" => "allround"
-                ),),
-  23 => array( "card_name" => clienttranslate("DISRUPTION"),
-                "card_name_tr" => self::_('DISRUPTION'),
-                "card_team" => 1,
-                "nbr" => 3,
-                "card_id" => 23,
-                "card_function" => 0,
-                "cost" => 2,),
-  24 => array( "card_name" => clienttranslate("PLAYER SWAP"),
-                "card_name_tr" => self::_('PLAYER SWAP'),
-                "card_team" => 1,
-                "nbr" => 1,
-                "card_id" => 24,
-                "card_function" => 0,
-                "cost" => 1,),
-  25 => array( "card_name" => clienttranslate("SCOUTING"),
-                "card_name_tr" => self::_('SCOUTING'),
-                "card_team" => 1,
-                "nbr" => 3,
-                "card_id" => 25,
-                "card_function" => 0,
-                "cost" => 1,),
-  26 => array( "card_name" => clienttranslate("JAMES"),
-                "card_name_tr" => self::_('JAMES'),
-                "card_team" => 1,
-                "nbr" => 2,
-                "card_id" => 26,
-                "card_function" => 1,
-                "cost" => 4,
-                "card_ability" => array(
-                    "power" => 3,
-                    "productivity" => 0,
-                    "type" => "forward"
-                ),),
-);
+require_once('modules/aniversus_utils.php');
 
-
-
+$this->cards_info = read_card_infos($cards_info_CSVdata);

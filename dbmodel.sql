@@ -20,18 +20,25 @@
 
 -- Example 1: create a standard "card" table to be used with the "Deck" tools (see example game "hearts"):
 
-CREATE TABLE IF NOT EXISTS `card` (
-    `card_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `cat_deck` (
+    `card_id` int(10) unsigned NOT NULL Auto_increment,
     `card_type` varchar(16) NOT NULL,
     `card_type_arg` int(11) NOT NULL,
     `card_location` varchar(16) NOT NULL,
     `card_location_arg` int(11) NOT NULL,
-    `card_order` int(11) NOT NULL,
     `card_status` varchar(16) NOT NULL,
     PRIMARY KEY (`card_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
-
+CREATE TABLE IF NOT EXISTS `squirrel_deck` (
+    `card_id` int(10) unsigned NOT NULL Auto_increment,
+    `card_type` varchar(16) NOT NULL,
+    `card_type_arg` int(11) NOT NULL,
+    `card_location` varchar(16) NOT NULL,
+    `card_location_arg` int(11) NOT NULL,
+    `card_status` varchar(16) NOT NULL,
+    PRIMARY KEY (`card_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
 
 -- add info about first player
