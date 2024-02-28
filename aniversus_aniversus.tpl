@@ -43,8 +43,7 @@ var jstpl_some_game_item='<div class="my_game_item" id="my_game_item_${MY_ITEM_I
 
 */
 
-var jstpl_cardsOnPlaymat_opponent = '<div class="cardsOnPlaymat" id="cardsOnPlaymat_${who}_${player_role}_${position}"></div>';
-var jstpl_cardsOnPlaymat_my = '<div class="cardsOnPlaymat" id=""cardsOnPlaymat_${who}_${player_role}_${position}""></div>';
+var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
 
 </script>  
 

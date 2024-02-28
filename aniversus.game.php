@@ -158,7 +158,9 @@ class Aniversus extends Table
 
         // send material.inc.php Static information to client
         $result['cards_info'] = $this->cards_info;
-
+        $result['card_type_arg2css_position'] = $this->card_type_arg2css_position;
+        $result['id2card_type_arg'] = $this->id2card_type_arg;
+        // Get information about current player
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
@@ -302,17 +304,6 @@ class Aniversus extends Table
           
     }    
     */
-    function playCardOnTable( $player_id, $card_info ) {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        // self::checkAction( 'playCardOnTable' ); 
-        // Add your game logic to play a card there 
-        dojo.place(this.format_block());
-
-        // In any case: move it to its final destination
-        this.slideToObject('cardontable_' + player_id, 'playertablecard_' + player_id).play();
-    }
-    
-
     
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments

@@ -39,14 +39,6 @@ function (dojo, declare) {
             // Here, you can init the global variables of your user interface
             // Example:
             // this.myGlobalValue = 0;
-            // let mappings = [
-            //     [1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8], [10, 9],
-            //     [11, 10], [12, 11], [13, 12], [51, 13], [52, 14], [53, 15], [54, 16], [55, 17], [56, 18],
-            //     [57, 19], [58, 20], [59, 21], [60, 22], [61, 23], [62, 24], [63, 25], [64, 26],
-            //     [101, 27], [102, 28], [103, 29], [104, 30], [105, 31], [106, 32], [107, 33], [108, 34],
-            //     [109, 35], [110, 36], [111, 37], [112, 38], [113, 39], [114, 40]
-            // ];
-            // this.id2css = Object.fromEntries(mappings)
         },
         
         /*
@@ -198,6 +190,15 @@ function (dojo, declare) {
             script.
         
         */
+        getCardBackgroundPosition: function(position) {
+            const card_width = 124; const card_height = 174;
+            const columns = 10;
+            var row = Math.floor(position / columns);
+            var column = (position % columns);
+            var x = column * card_width;
+            var y = row * card_height;
+            return {x: -x, y: -y};
+        },
 
 
         ///////////////////////////////////////////////////
@@ -213,13 +214,70 @@ function (dojo, declare) {
             _ make a call to the game server
         
         */
+        // function playCardOnTable( player_id, card_id, card_type, card_type_arg) {
+        //     // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
+        //     // self::checkAction( 'playCardOnTable' ); 
+        //     // Add your game logic to play a card there 
+            
+        //     dojo.place(this.format_block( ($card_type == "function") ? 'jstpl' : 'dkf',  ),
+        // );
+    
+        //     // In any case: move it to its final destination
+        //     this.slideToObject('cardontable_' + player_id, 'playertablecard_' + player_id).play();
+        // }
+        playCard: function(player_id, card_id, card_type) {
+            //jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:-${x}px -${y}px"></div>';
+            // init card type to css position mapping, and get the position
+            const type2css = this.gamedatas['card_type_arg2css_position'];
+            const position = this.getCardBackgroundPosition(type2css[card_type]);
+            let x = position.x;
+            let y = position.y;
+            console.log('playCard', player_id, card_id, card_type, x, y);
+            // place the card on the table
+            if (player_id != this.player_id) {
+                // create card on table
+                dojo.place( this.format_block('jstpl_cardsOnTable', {
+                    player_id: player_id,
+                    card_id: card_id,
+                    x: x,
+                    y: y
+                }), 'playerOnPlaymat_' + 'opponent_' + '1_1');
+                // place the card on the player board
+                this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, 'overall_player_board_' + player_id);
+                // slide the card to the table
+                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , 'playerOnPlaymat_' + 'opponent_' + '1_1' ).play();
+            } else {
+                
+                if ($('myhand_item_' + card_id)) {
+                    // create card on table
+                    dojo.place( this.format_block('jstpl_cardsOnTable', {
+                        player_id: player_id,
+                        card_id: card_id,
+                        x: x,
+                        y: y
+                    }), 'playerOnPlaymat_' + 'me_' + '1_1');
+                    // place the card on the player board
+                    this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, 'myhand_item_' + card_id);
+                    this.playerdeck.removeFromStockById(card_id);
+                }
+                // slide the card to the table
+                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , 'playerOnPlaymat_' + 'me_' + '1_1').play();
+            }
+            
+
+
+
+        },
+
         onPlayerHandSelectionChanged : function() {
             var items = this.playerdeck.getSelectedItems();
+            console.log(items);
             if (items.length > 0) {
                 if (this.checkAction('playCard', true)) {
                     // Can play a card
                     var card_id = items[0].id;
                     console.log('Can play card ' + card_id);
+                    this.playCard(this.player_id, card_id, items[0].type);
                     // this.playerdeck.unselectAll();
                 } else {
                     // Can't play a card
