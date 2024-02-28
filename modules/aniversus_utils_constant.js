@@ -42,4 +42,3 @@ const id2css = {
     114: 41
   };
 
-export { id2css };

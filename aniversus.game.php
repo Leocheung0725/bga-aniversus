@@ -31,15 +31,11 @@ class Aniversus extends Table
         //  the corresponding ID in gameoptions.inc.php.
         // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
         parent::__construct();
-        
+        // declear Game State Labels, you can set the value by using self::setGameStateInitialValue( 'my_first_global_variable', 0 );
         self::initGameStateLabels( array( 
-            //    "my_first_global_variable" => 10,
-            //    "my_second_global_variable" => 11,
-            // "winning_score" => 10,
-            //      ...
-            //    "my_first_game_variant" => 100,
-            //    "my_second_game_variant" => 101,
-            //      ...
+            'currentPlayerTeam' => 10,
+            'isNextRoundAction' => 11,
+            'currentAction' => 12,
         ) );
         
         // Build the card deck in the constructor
@@ -260,18 +256,8 @@ class Aniversus extends Table
         }
     }
     // Debug function to get all cards in a deck
-    function getcards() {
-        // Create special cards for Squirrel deck (IDs 51 to 64)
-        $squirrelSpecialCards = array();
-        foreach ($this->cards_info as $id => $card_info) {
-            if ($card_info['id'] >= 51 && $card_info['id'] <= 64) {
-                $squirrelSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $id, 'nbr' => $card_info['nbr']);
-            }
-        }
-        $this->squirrelDeck->createCards($squirrelSpecialCards, 'deck');
-        var_dump($squirrelSpecialCards);
-        // $this->catDeck->createCards($catSpecialCards, 'deck');
-        // var_dump($this->catDeck->getCardsInLocation('deck'));
+    function de() {
+        var_dump("Hello");
     }
     // function debug_initMyTables() {
     //     $this->deleteAllTables(); // this suppose to delete/reset all data - you have to implement this function
@@ -314,9 +300,18 @@ class Aniversus extends Table
             'card_id' => $card_id
         ) );
           
+    }    
+    */
+    function playCardOnTable( $player_id, $card_info ) {
+        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
+        // self::checkAction( 'playCardOnTable' ); 
+        // Add your game logic to play a card there 
+        dojo.place(this.format_block());
+
+        // In any case: move it to its final destination
+        this.slideToObject('cardontable_' + player_id, 'playertablecard_' + player_id).play();
     }
     
-    */
 
     
 //////////////////////////////////////////////////////////////////////////////

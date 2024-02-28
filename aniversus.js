@@ -14,25 +14,39 @@
  * In this file, you are describing the logic of your user interface, in Javascript language.
  *
  */
-import { id2css } from "./modules/aniversus_utils_constant";
+
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
     "ebg/counter",
     "ebg/stock",
     "ebg/zone"
+    
 ],
 function (dojo, declare) {
+    
     return declare("bgagame.aniversus", ebg.core.gamegui, {
+        
         constructor: function(){
             console.log('aniversus constructor');
+            // declare card width and height
             this.cardwidth = 124;
             this.cardheight = 174;
+            
+            
+
             // The card pixel width and height is 472x656
             // Here, you can init the global variables of your user interface
             // Example:
             // this.myGlobalValue = 0;
-
+            // let mappings = [
+            //     [1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8], [10, 9],
+            //     [11, 10], [12, 11], [13, 12], [51, 13], [52, 14], [53, 15], [54, 16], [55, 17], [56, 18],
+            //     [57, 19], [58, 20], [59, 21], [60, 22], [61, 23], [62, 24], [63, 25], [64, 26],
+            //     [101, 27], [102, 28], [103, 29], [104, 30], [105, 31], [106, 32], [107, 33], [108, 34],
+            //     [109, 35], [110, 36], [111, 37], [112, 38], [113, 39], [114, 40]
+            // ];
+            // this.id2css = Object.fromEntries(mappings)
         },
         
         /*
@@ -67,21 +81,22 @@ function (dojo, declare) {
             this.playerdeck = new ebg.stock(); // new stock object for hand
             this.playerdeck.create( this, $('myhand'), this.cardwidth, this.cardheight );
             // config stock object
-            this.playerdeck.image_items_per_row = 1;
+            this.playerdeck.image_items_per_row = 10;
             this.playerdeck.centerItems = true; // Center items (actually i don't know what it does)
             // this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
             this.playerdeck.setSelectionMode(1); // Allow only one card to be selected
             // Create cards types:
             // addItemType(type: number, weight: number, image: string, image_position: number )
+
             this.gamedatas.cards_info.forEach((key) => {
-                this.playerdeck.addItemType(key.id, key.css_position, 
-                    "https://novbackstorage.blob.core.windows.net/bgs-game/whole_deck.png", key.css_position);
+                this.playerdeck.addItemType(Number(key.id), 1, 
+                    "https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png", Number(key.css_position));
             });
+            console.log(this.playerdeck);
             // show hand
             for ( var i in this.gamedatas.hand) {
                 var card = this.gamedatas.hand[i];
-                console.log(gamedatas.hand);
-                this.playerdeck.addToStockWithId(id2css[Number(card.type_arg)], card.id);
+                this.playerdeck.addToStockWithId(Number(card.type_arg), card.id);
             }
             // setup connect
             dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
