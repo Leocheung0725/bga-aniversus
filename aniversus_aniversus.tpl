@@ -9,9 +9,9 @@
                 <!-- END playeronplaymat_opponent -->
         </div>
         <div class="onTableCards_field">
-            <!-- BEGIN cardsontable_opponent -->
-            <div class="cardsOnTable" id="cardsOnTable_{role}_{id}"></div>
-            <!-- END cardsontable_opponent -->
+            <!-- BEGIN discardPile_opponent -->
+            <div class="discardPile" id="cardsOnTable_{role}_{id}"></div>
+            <!-- END discardPile_opponent -->
         </div>
     </div>
     <div class="playmat_field whiteblock">
@@ -21,9 +21,9 @@
                 <!-- END playeronplaymat_me -->
         </div>
         <div class="onTableCards_field">
-            <!-- BEGIN cardsontable_me -->
-            <div class="cardsOnTable" id="cardsOnTable_{role}_{id}"></div>
-            <!-- END cardsontable_me -->
+            <!-- BEGIN discardPile_me -->
+            <div class="discardPile" id="discardPile_{role}_{id}"></div>
+            <!-- END discardPile_me -->
         </div>
     </div>
 </div>

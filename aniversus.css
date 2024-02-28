@@ -58,16 +58,16 @@
 }
 
 
-.onTableCards {
-	display: flex;
-	position: absolute;
-	gap: 20px;
+.onTableCards_field {
+  margin-left: 3rem;
+
 }
 
-.cardsOnTable {
+.discardPile {
 	flex: 0 0 auto;
-	height: var(--card-height);
-	width: var(--card-width);
+	height: 191px;
+	width: 137px;
+  background-image: url('https://novbackstorage.blob.core.windows.net/bgs-game/Discard_pile.png');
 }
 
 .playerCardOnPlaymat {
