@@ -73,23 +73,46 @@ $machinestates = array(
         "possibleactions" => array( "playCard", "pass" ),
         "transitions" => array( "playCard" => 2, "pass" => 2 )
     ),
-    
-    3 =>  array(
-        "name" => "chooseFaction",
-        "description" => clienttranslate('${actplayer} must choose a faction'),
-        "descriptionmyturn" => clienttranslate('${you} must choose a faction'),
-        "type" => "activeplayer",
-        "possibleactions" => array( "chooseFaction" ),
-        "transitions" => array( "chooseFaction" => 3 )
-    ),
 
-    4 => array(
+    3 => array(
         "name" => "cardDrawing",
         "description" => clienttranslate('Drawing cards'),
         "type" => "game",
         "action" => "stCardDrawing",
-        "transitions" => array( "nextPlayer" => 2 )
+        "transitions" => array( "nextPlayer" => 2, "endGame" => 99)
     ),
+
+    4 => array(
+        "name" => "thrawnCard",
+        "description" => clienttranslate('Thrawn card'),
+        "type" => "game",
+        "action" => "stThrawnCard",
+        "transitions" => array( "nextPlayer" => 3 )
+    ),
+
+    5 => array(
+        "name" => "shoot",
+        "description" => clienttranslate('Shoot'),
+        "type" => "multipleactiveplayer",
+        "action" => "stShoot",
+        "possibleactions" => array( "shoot", "playRedCard" ),
+        "transitions" => array( "thrawncard" => 4, "endGame" => 99 )
+    ),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     // Final state.
     // Please do not modify (and do not overload action/args methods).
     99 => array(
