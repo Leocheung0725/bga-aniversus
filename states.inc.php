@@ -51,7 +51,7 @@
 
  
 $machinestates = array(
-
+    // Please do not modify. -----------------------------------------------------------
     // The initial state. Please do not modify.
     1 => array(
         "name" => "gameSetup",
@@ -60,59 +60,95 @@ $machinestates = array(
         "action" => "stGameSetup",
         "transitions" => array( "" => 2 )
     ),
+    // Please do not modify. -----------------------------------------------------------
     
     // Note: ID=2 => your first state
-
-
-
+    // Game setup section
     2 => array(
+        "name" => "newHand",
+        "description" => clienttranslate('Game setup: dealing cards to players'),
+        "type" => "game",
+        "action" => "stNewHand",
+        "updateGameProgression" => true,
+        "transitions" => array( "playerTurn" => 22 )
+    ),
+    // normal process section
+    21 => array(
+        "name" => "cardDrawing",
+        "description" => clienttranslate('Drawing cards'),
+        "type" => "game",
+        "action" => "stCardDrawing",
+        "transitions" => array( "nextPlayer" => 21 )
+    ),
+
+    22 => array(
         "name" => "playerTurn",
         "description" => clienttranslate('${actplayer} must play a card or pass'),
         "descriptionmyturn" => clienttranslate('${you} must play a card or pass'),
         "type" => "activeplayer",
         "possibleactions" => array( "playCard", "pass" ),
-        "transitions" => array( "playCard" => 2, "pass" => 2 )
+        "transitions" => array( "playCard" => 21, "pass" => 23, "shoot" => 24 )
     ),
 
-    3 => array(
-        "name" => "cardDrawing",
-        "description" => clienttranslate('Drawing cards'),
-        "type" => "game",
-        "action" => "stCardDrawing",
-        "transitions" => array( "nextPlayer" => 2, "endGame" => 99)
-    ),
-
-    4 => array(
-        "name" => "thrawnCard",
-        "description" => clienttranslate('Thrawn card'),
-        "type" => "game",
-        "action" => "stThrawnCard",
-        "transitions" => array( "nextPlayer" => 3 )
-    ),
-
-    5 => array(
+    23 => array(
         "name" => "shoot",
         "description" => clienttranslate('Shoot'),
         "type" => "multipleactiveplayer",
         "action" => "stShoot",
         "possibleactions" => array( "shoot", "playRedCard" ),
-        "transitions" => array( "thrawncard" => 4, "endGame" => 99 )
+        "transitions" => array( "thrawncard" => 23, "endGame" => 99 )
     ),
 
+    24 => array(
+        "name" => "throwCard",
+        "description" => clienttranslate('Thrawn card'),
+        "type" => "activeplayer",
+        "action" => "throwCard",
+        "possibleactions" => array( "thrawnCard" ),
+        "transitions" => array( "nextPlayer" => 22, "endGame" => 99 )
+    ),
+    // playerTurn section 
+    30 => array(
+        "name" => "counterattack",
+        "description" => clienttranslate('Counterattack'),
+        "type" => "activeplayer",
+        "possibleactions" => array( "counterattack" ),
+        "transitions" => array( "nextAction" => 22, "counterAgain" => 30 )
+    ),
 
-
-
-
-
-
-
-
-
-
-
-
-
+    31 => array(
+        "name" => "cardEffect",
+        "description" => clienttranslate(''),
+        "type" => "game",
+        "action" => "stCardEffect",
+        "transitions" => array( "nextAction" => 22 )
+    ),
     
+    // End hand section
+    
+    90 => array(
+        "name" => "endHand",
+        "description" => clienttranslate('End of hand'),
+        "type" => "game",
+        "action" => "stEndHand",
+        "transitions" => array( "endGame" => 99 )
+    ),
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Please do not modify. -----------------------------------------------------------
     // Final state.
     // Please do not modify (and do not overload action/args methods).
     99 => array(
@@ -122,6 +158,7 @@ $machinestates = array(
         "action" => "stGameEnd",
         "args" => "argGameEnd"
     )
+    // Please do not modify. -----------------------------------------------------------
 
 );
 
