@@ -66,10 +66,25 @@ class Aniversus extends Table
     */
     protected function setupNewGame( $players, $options = array() )
     {    
+
+        
+        /************ Start the game initialization *****/
+
+        // Init global values with their initial values
+        //self::setGameStateInitialValue( 'my_first_global_variable', 0 );
+        // self::setGameStateInitialValue( 'winning_score', 2 ); // leo
+        
+        // Init game statistics
+        // (note: statistics used in this file must be defined in your stats.inc.php file)
+        //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
+        //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
+
+        // TODO: setup the initial game situation here
+        
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
         // The number of colors defined here must correspond to the maximum number of players allowed for the gams
-        $gameinfos = self::getGameinfos();
+        // $gameinfos = self::getGameinfos();
         $default_colors = array( "E96043", "5743E9" );
 
         // Create players
@@ -105,40 +120,6 @@ class Aniversus extends Table
         self::DbQuery( $sql );
         // self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
         self::reloadPlayersBasicInfos();
-        
-        /************ Start the game initialization *****/
-
-        // Init global values with their initial values
-        //self::setGameStateInitialValue( 'my_first_global_variable', 0 );
-        // self::setGameStateInitialValue( 'winning_score', 2 ); // leo
-        
-        // Init game statistics
-        // (note: statistics used in this file must be defined in your stats.inc.php file)
-        //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
-        //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
-
-        // TODO: setup the initial game situation here
-        // Red color player plays first
-        // Find who is first player
-        $sql = "SELECT player_id, player_name, player_color, player_team FROM player";
-        // $players = self::loadPlayersBasicInfos();   // !! We must only return information visible by this player !!
-        $players = self::getCollectionFromDb( $sql );
-        // Do something with this information
-
-        foreach ($players as $player_id => $player_info) {
-            if ($player_info['player_color'] == "E96043") {
-                $first_player = $player_info;
-            } else {
-                $second_player = $player_info;
-            }
-        }
-        // Set red player as active player, red player has to play first
-        // we would use this to deal initial cards to players ( 7 cards for first player, 8 cards for second player)
-        $this->initCardDeck($first_player, $second_player);
-        
-        // Activate first player (which is in general a good idea :) )
-        $this->gamestate->changeActivePlayer( $first_player['player_id'] );
-        // $this->activeNextPlayer();
 
         /************ End of the game initialization *****/
     }
@@ -204,62 +185,62 @@ class Aniversus extends Table
     /*
         In this space, you can put any utility methods useful for your game logic
     */
-    function initCardDeck($first_player, $second_player) {
-        try {
-            // $players = $this->loadPlayersBasicInfos();
-            // Create basic cards (IDs 1 to 13) for both decks
-            $basicCards = array();
-            foreach ($this->cards_info as $id => $card_info) {
-                if ($card_info['id'] >= 1 && $card_info['id'] <= 13) {
-                    $basicCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
-                }
-            }
-            // Create special cards for Cat deck (IDs 101 to 114)
-            $catSpecialCards = array();
-            foreach ($this->cards_info as $id => $card_info) {
-                if ($card_info['id'] >= 101 && $card_info['id'] <= 114) {
-                    $catSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
-                }
-            }
+    // function initCardDeck($first_player, $second_player) {
+    //     try {
+    //         // $players = $this->loadPlayersBasicInfos();
+    //         // Create basic cards (IDs 1 to 13) for both decks
+    //         $basicCards = array();
+    //         foreach ($this->cards_info as $id => $card_info) {
+    //             if ($card_info['id'] >= 1 && $card_info['id'] <= 13) {
+    //                 $basicCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
+    //             }
+    //         }
+    //         // Create special cards for Cat deck (IDs 101 to 114)
+    //         $catSpecialCards = array();
+    //         foreach ($this->cards_info as $id => $card_info) {
+    //             if ($card_info['id'] >= 101 && $card_info['id'] <= 114) {
+    //                 $catSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
+    //             }
+    //         }
 
-            // Create special cards for Squirrel deck (IDs 51 to 64)
-            $squirrelSpecialCards = array();
-            foreach ($this->cards_info as $id => $card_info) {
-                if ($card_info['id'] >= 51 && $card_info['id'] <= 64) {
-                    $squirrelSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
-                }
-            }
+    //         // Create special cards for Squirrel deck (IDs 51 to 64)
+    //         $squirrelSpecialCards = array();
+    //         foreach ($this->cards_info as $id => $card_info) {
+    //             if ($card_info['id'] >= 51 && $card_info['id'] <= 64) {
+    //                 $squirrelSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
+    //             }
+    //         }
 
-            // Add cards to Cat deck
-            $this->catDeck->createCards($basicCards, 'deck');
-            $this->catDeck->createCards($catSpecialCards, 'deck');
-            // Add cards to Squirrel deck
-            $this->squirrelDeck->createCards($basicCards, 'deck');
-            $this->squirrelDeck->createCards($squirrelSpecialCards, 'deck');
+    //         // Add cards to Cat deck
+    //         $this->catDeck->createCards($basicCards, 'deck');
+    //         $this->catDeck->createCards($catSpecialCards, 'deck');
+    //         // Add cards to Squirrel deck
+    //         $this->squirrelDeck->createCards($basicCards, 'deck');
+    //         $this->squirrelDeck->createCards($squirrelSpecialCards, 'deck');
 
-            // Shuffle both decks
-            $this->catDeck->shuffle('deck');
-            $this->squirrelDeck->shuffle('deck');
+    //         // Shuffle both decks
+    //         $this->catDeck->shuffle('deck');
+    //         $this->squirrelDeck->shuffle('deck');
             
-            // Determine who is cat team and who is squirrel team
-            $first_player_deck = ($first_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
-            $second_player_team = ($second_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
+    //         // Determine who is cat team and who is squirrel team
+    //         $first_player_deck = ($first_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
+    //         $second_player_team = ($second_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
 
-            // Deal cards to players
-            $this->{$first_player_deck}->pickCards( 7, 'deck', $first_player['player_id'] );
-            $this->{$second_player_team}->pickCards( 8, 'deck', $second_player['player_id'] );
+    //         // Deal cards to players
+    //         $this->{$first_player_deck}->pickCards( 7, 'deck', $first_player['player_id'] );
+    //         $this->{$second_player_team}->pickCards( 8, 'deck', $second_player['player_id'] );
 
-            // ... code the function
-        } catch ( Exception $e ) {
-            // logging does not actually work in game init :(
-            // but if you calling from php chat it will work
-            $this->error("Fatal error while creating game");
-            $this->dump('err', $e);
-        }
-    }
+    //         // ... code the function
+    //     } catch ( Exception $e ) {
+    //         // logging does not actually work in game init :(
+    //         // but if you calling from php chat it will work
+    //         $this->error("Fatal error while creating game");
+    //         $this->dump('err', $e);
+    //     }
+    // }
     // Debug function to get all cards in a deck
-    function de() {
-        var_dump("Hello");
+    function de( $cards_id ) {
+        var_export($this->cards_info[$cards_id]['name']);
     }
 
     function getActivePlayerDeck($player_id) {
@@ -331,7 +312,22 @@ class Aniversus extends Table
     }    
     */
     
-    public function throwCard () {
+    public function throwCard ( $cards_id ) {
+        // checking the action
+        // self::checkAction( 'throwCard' );
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        foreach ($cards_id as $card_id) {
+            $player_deck->moveCard($card_id, 'discard');
+            $card = $player_deck->getCard($card_id);
+            self::notifyAllPlayers( "cardThrown", clienttranslate( '${player_name} throws ${card_name}' ), array(
+                'player_id' => $player_id,
+                'player_name' => self::getActivePlayerName(),
+                'card_name' => $this->cards_info[$card['type_arg']]['name'],
+                'card_id' => $cards_id
+            ) );
+        }
+        $this->gamestate->nextState( "playerTurn" );
         
     }
 
@@ -460,7 +456,7 @@ class Aniversus extends Table
 
 
 
-    function stendHand() {
+    function stEndHand() {
         // End the game and do some scoring here
 
         // ... code the function

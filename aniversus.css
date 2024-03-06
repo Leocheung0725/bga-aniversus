@@ -25,8 +25,8 @@
 	flex-direction: row;
 	display: flex;
 	box-sizing: border-box;
-  justify-content: center;
-  align-items: center;
+	justify-content: center;
+	align-items: center;
 }
 
 .onTableCards_field {
@@ -58,26 +58,48 @@
 }
 
 
-.onTableCards_field {
-  margin-left: 3rem;
-
-}
-
-.discardPile {
-	flex: 0 0 auto;
-	height: 191px;
-	width: 137px;
-  background-image: url('https://novbackstorage.blob.core.windows.net/bgs-game/Discard_pile.png');
+.discardPile_field {
+	margin-left: 4rem;
+	width: 387px;
+	height: 174px;
+	background-image: url("https://novbackstorage.blob.core.windows.net/boardgame/discardpilesfield4.png");
 }
 
 .playerCardOnPlaymat {
 	height: 50%;
 	width: 19.94%;
+	pointer-events: none;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.js-cardsontable {
-  position: absolute;
-  height: var(--card-height);
-  width: var(--card-width);
-  background-image: url("https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png");
+.playerCardOnPlaymat.available {
+	pointer-events: auto;
+	cursor: pointer;
+	background-color: rgba(255, 255, 0, 0.3);
+	box-shadow:0px 0px 0px 2px gray inset;
 }
+
+.playerCardOnPlaymat.available:hover {
+	position: relative;
+	z-index: 1;
+}
+
+.playerCardOnPlaymat.available:hover::after {
+	content: " ";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: -1;
+}
+
+
+
+.js-cardsontable {
+	position: absolute;
+	height: var(--card-height);
+	width: var(--card-width);
+	background-image: url("https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png");
+}
+

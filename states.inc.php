@@ -78,7 +78,7 @@ $machinestates = array(
         "description" => clienttranslate('Drawing cards'),
         "type" => "game",
         "action" => "stCardDrawing",
-        "transitions" => array( "nextPlayer" => 21 )
+        "transitions" => array( "nextPlayer" => 22 )
     ),
 
     22 => array(
@@ -86,8 +86,8 @@ $machinestates = array(
         "description" => clienttranslate('${actplayer} must play a card or pass'),
         "descriptionmyturn" => clienttranslate('${you} must play a card or pass'),
         "type" => "activeplayer",
-        "possibleactions" => array( "playCard", "pass" ),
-        "transitions" => array( "playCard" => 21, "pass" => 23, "shoot" => 24 )
+        "possibleactions" => array( "playCard", "pass", "shoot" ),
+        "transitions" => array( "playCard" => 30, "pass" => 21, "shoot" => 23, "throwCard" => 24 )
     ),
 
     23 => array(
@@ -96,7 +96,7 @@ $machinestates = array(
         "type" => "multipleactiveplayer",
         "action" => "stShoot",
         "possibleactions" => array( "shoot", "playRedCard" ),
-        "transitions" => array( "thrawncard" => 23, "endGame" => 99 )
+        "transitions" => array( "thrawncard" => 23, "endHand" => 90 )
     ),
 
     24 => array(
@@ -105,7 +105,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "action" => "throwCard",
         "possibleactions" => array( "thrawnCard" ),
-        "transitions" => array( "nextPlayer" => 22, "endGame" => 99 )
+        "transitions" => array( "nextPlayer" => 22, "endHand" => 90 )
     ),
     // playerTurn section 
     30 => array(
@@ -113,7 +113,7 @@ $machinestates = array(
         "description" => clienttranslate('Counterattack'),
         "type" => "activeplayer",
         "possibleactions" => array( "counterattack" ),
-        "transitions" => array( "nextAction" => 22, "counterAgain" => 30 )
+        "transitions" => array( "nextAction" => 22, "counterAgain" => 30, "EndOfCounterattact" => 31 )
     ),
 
     31 => array(

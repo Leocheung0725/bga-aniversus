@@ -33,8 +33,19 @@ function (dojo, declare) {
             this.cardwidth = 124;
             this.cardheight = 174;
             
-            
-
+            // Zone control (Playmat)
+            this.discardpile_me = new ebg.zone();
+            this.discardpile_opponent = new ebg.zone();
+            // Zone control (Player Playmat)
+            // Create a array of zone objects for player playmat
+            this.playerOnPlaymat = {};
+            ['me', 'opponent'].forEach((player) => {
+                for (var row = 1; row <= 2; row++) {
+                    for (var col = 1; col <= 5; col++) {
+                        this.playerOnPlaymat[player][row][col] = new ebg.zone();
+                    }
+                }
+            });
             // The card pixel width and height is 472x656
             // Here, you can init the global variables of your user interface
             // Example:
@@ -68,7 +79,7 @@ function (dojo, declare) {
             }
             
             // TODO: Set up your game interface here, according to "gamedatas"
-
+            // Player hand Setup
             // player hand
             this.playerdeck = new ebg.stock(); // new stock object for hand
             this.playerdeck.create( this, $('myhand'), this.cardwidth, this.cardheight );
@@ -92,6 +103,20 @@ function (dojo, declare) {
             }
             // setup connect
             dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
+
+            // playmat setup
+            // Discard pile
+            this.discardpile_me.create( this, 'discardPile_field_me', this.cardwidth, this.cardheight );
+            this.discardpile_opponent.create( this, 'discardPile_field_opponent', this.cardwidth, this.cardheight );
+            // player playmat
+            // for (var player in ['me', 'opponent']) {
+            //     for (var row = 1; row <= 2; row++) {
+            //         for (var col = 1; col <= 5; col++) {
+            //             this.playerOnPlaymat[player][row][col].create( this, `playerOnPlaymat_${player}_${row}_${col}`, this.cardwidth, this.cardheight );
+            //         }
+            //     }
+            // }
+
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
@@ -190,7 +215,10 @@ function (dojo, declare) {
             script.
         
         */
-        getCardBackgroundPosition: function(position) {
+        // This function returns the css background position of a card
+        getCardBackgroundPosition: function(card_type) {
+            const type2css = this.gamedatas['card_type_arg2css_position'];
+            const position = type2css[card_type];
             const card_width = 124; const card_height = 174;
             const columns = 10;
             var row = Math.floor(position / columns);
@@ -199,6 +227,9 @@ function (dojo, declare) {
             var y = row * card_height;
             return {x: -x, y: -y};
         },
+
+        // 
+        
 
 
         ///////////////////////////////////////////////////
@@ -225,11 +256,11 @@ function (dojo, declare) {
         //     // In any case: move it to its final destination
         //     this.slideToObject('cardontable_' + player_id, 'playertablecard_' + player_id).play();
         // }
-        playCard: function(player_id, card_id, card_type) {
+        playPlayerCard: function(player_id, card_id, card_type) {
             //jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:-${x}px -${y}px"></div>';
             // init card type to css position mapping, and get the position
-            const type2css = this.gamedatas['card_type_arg2css_position'];
-            const position = this.getCardBackgroundPosition(type2css[card_type]);
+            
+            const position = this.getCardBackgroundPosition(card_type);
             let x = position.x;
             let y = position.y;
             console.log('playCard', player_id, card_id, card_type, x, y);
@@ -263,28 +294,74 @@ function (dojo, declare) {
                 // slide the card to the table
                 this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , 'playerOnPlaymat_' + 'me_' + '1_1').play();
             }
-            
+            // this.playerdeck.removeFromStockById(card_id);
+        },
 
-
-
+        playFunctionCard: function(player_id, card_id, card_type) {
+            // get the discard pile items
+            let discard_pile_items = this.discardpile_me.getAllItems();
+            // create card html element and place it to discard pile
+            const position = this.getCardBackgroundPosition(card_type);
+            var div_id = `discardPile_field_me`;
+            dojo.place( this.format_block('jstpl_cardsOnTable', {
+                player_id: player_id,
+                card_id: card_id,
+                ...position
+            }), div_id);
+            // // place the card on the player board
+            this.placeOnObject( 'cardsOnTable_' + player_id + '_' + card_id , 'myhand_item_' + card_id);
+            this.playerdeck.removeFromStockById(card_id);
+            // slide the card to the table
+            this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , div_id ).play();
+            if (this.discardpile_me.getItemNumber() > 2) {
+                this.discardpile_me.removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
+            }
+            console.log(discard_pile_items);
+            this.discardpile_me.placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
         },
 
         onPlayerHandSelectionChanged : function() {
             var items = this.playerdeck.getSelectedItems();
-            console.log(items);
+
             if (items.length > 0) {
                 if (this.checkAction('playCard', true)) {
                     // Can play a card
                     var card_id = items[0].id;
-                    console.log('Can play card ' + card_id);
-                    this.playCard(this.player_id, card_id, items[0].type);
+                    var card_type = items[0].type;
+                    var card_info = this.gamedatas.cards_info.find((card) => card.id == card_type);
+                    if (card_info.type == 'Function') {
+                        // function card
+                        console.log(`The player card id : ${card_id} and card type: function is played.`);
+                        this.playFunctionCard(this.player_id, card_id, card_type);
+                        // this.playerdeck.unselectAll();
+                    } else {
+                        // trial 
+                        for (var row = 1; row <= 2; row++) {
+                            for (var col = 1; col <= 5; col++) {
+                                var div_id = `playerOnPlaymat_me_${row}_${col}`;
+                                dojo.addClass(div_id, 'available');
+                            }
+                        }
+                        console.log(`The player card id : ${card_id} and card type: player is played.`)
+                        // this.playPlayerCard(this.player_id, card_id, card_type);
+                        
+                    }
                     // this.playerdeck.unselectAll();
                 } else {
                     // Can't play a card
                     this.playerdeck.unselectAll();
                 }
+            } else {
+                // Remove the selection for user to play the player to playmat
+                for (var row = 1; row <= 2; row++) {
+                    for (var col = 1; col <= 5; col++) {
+                        var div_id = `playerOnPlaymat_me_${row}_${col}`;
+                        dojo.removeClass(div_id, 'available');
+                    }
+                }
             }
         },
+
         /* Example:
         
         onMyMethodToCall1: function( evt )

@@ -62,10 +62,6 @@ class view_aniversus_aniversus extends game_view
                     $this->page->insert_block("playeronplaymat_".$role_array[$x], array( "row" => $row, "col" => $col, "role" => $role_array[$x],));
                 }
             }
-            $this->page->begin_block($template, "discardPile_".$role_array[$x]);
-            for ( $id = 1; $id <= 3; $id++ ) {
-                $this->page->insert_block("discardPile_".$role_array[$x], array( "id" => $id, "role" => $role_array[$x],));
-            }
         }
 
 
