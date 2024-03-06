@@ -34,13 +34,16 @@ function (dojo, declare) {
             this.cardheight = 174;
             
             // Zone control (Playmat)
-            this.discardpile_me = new ebg.zone();
-            this.discardpile_opponent = new ebg.zone();
+            
+            
             // Zone control (Player Playmat)
             // Create a array of zone objects for player playmat
             this.playerOnPlaymat = {};
             ['me', 'opponent'].forEach((player) => {
+                this.playerOnPlaymat[player] = {};
+                this.playerOnPlaymat[player]['discardpile'] = new ebg.zone();
                 for (var row = 1; row <= 2; row++) {
+                    this.playerOnPlaymat[player][row] = {};
                     for (var col = 1; col <= 5; col++) {
                         this.playerOnPlaymat[player][row][col] = new ebg.zone();
                     }
@@ -106,16 +109,19 @@ function (dojo, declare) {
 
             // playmat setup
             // Discard pile
-            this.discardpile_me.create( this, 'discardPile_field_me', this.cardwidth, this.cardheight );
-            this.discardpile_opponent.create( this, 'discardPile_field_opponent', this.cardwidth, this.cardheight );
+            this.playerOnPlaymat['me']['discardpile'].create( this, 'discardPile_field_me', this.cardwidth, this.cardheight );
+            this.playerOnPlaymat['opponent']['discardpile'].create( this, 'discardPile_field_opponent', this.cardwidth, this.cardheight );
             // player playmat
-            // for (var player in ['me', 'opponent']) {
-            //     for (var row = 1; row <= 2; row++) {
-            //         for (var col = 1; col <= 5; col++) {
-            //             this.playerOnPlaymat[player][row][col].create( this, `playerOnPlaymat_${player}_${row}_${col}`, this.cardwidth, this.cardheight );
-            //         }
-            //     }
-            // }
+            for (var player of ['me', 'opponent']) {
+                for (var row = 1; row <= 2; row++) {
+                    for (var col = 1; col <= 5; col++) {
+                        this.playerOnPlaymat[player][row][col].create( this, `playerOnPlaymat_${player}_${row}_${col}`, this.cardwidth, this.cardheight );
+                        this.playerOnPlaymat[player][row][col].setPattern('verticalfit');
+                        this.playerOnPlaymat[player][row][col].item_margin = 2;
+                    }
+                }
+            }
+            
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
@@ -256,53 +262,60 @@ function (dojo, declare) {
         //     // In any case: move it to its final destination
         //     this.slideToObject('cardontable_' + player_id, 'playertablecard_' + player_id).play();
         // }
-        playPlayerCard: function(player_id, card_id, card_type) {
-            //jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:-${x}px -${y}px"></div>';
+        playPlayerCard: function(player_id, card_id, card_type, row, col, evt) {
+            dojo.stopEvent( evt );
+            console.log(`Within Function: Row: ${row}, Col: ${col}`)
             // init card type to css position mapping, and get the position
-            
             const position = this.getCardBackgroundPosition(card_type);
-            let x = position.x;
-            let y = position.y;
-            console.log('playCard', player_id, card_id, card_type, x, y);
+            console.log(`Received Args are player_id: ${player_id}, card_id: ${card_id}, card_type: ${card_type}, row: ${row}, col: ${col}`)
             // place the card on the table
             if (player_id != this.player_id) {
                 // create card on table
                 dojo.place( this.format_block('jstpl_cardsOnTable', {
                     player_id: player_id,
                     card_id: card_id,
-                    x: x,
-                    y: y
-                }), 'playerOnPlaymat_' + 'opponent_' + '1_1');
+                    ...position
+                }), 'playerOnPlaymat_opponent_' + `${row}_${col}`);
                 // place the card on the player board
-                this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, 'overall_player_board_' + player_id);
+                this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, "player_board_" + player_id);
                 // slide the card to the table
-                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , 'playerOnPlaymat_' + 'opponent_' + '1_1' ).play();
+                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , 'playerOnPlaymat_opponent_' + `${row}_${col}` ).play();
             } else {
-                
                 if ($('myhand_item_' + card_id)) {
                     // create card on table
                     dojo.place( this.format_block('jstpl_cardsOnTable', {
                         player_id: player_id,
                         card_id: card_id,
-                        x: x,
-                        y: y
-                    }), 'playerOnPlaymat_' + 'me_' + '1_1');
+                        ...position
+                    }), `playerOnPlaymat_me_${row}_${col}`);
                     // place the card on the player board
                     this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, 'myhand_item_' + card_id);
                     this.playerdeck.removeFromStockById(card_id);
                 }
                 // slide the card to the table
-                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , 'playerOnPlaymat_' + 'me_' + '1_1').play();
+                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , `playerOnPlaymat_me_${row}_${col}`).play();
+                this.playerOnPlaymat['me'][row][col].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
+                for (var row = 1; row <= 2; row++) {
+                    for (var col = 1; col <= 5; col++) {
+                        var div_id = `playerOnPlaymat_me_${row}_${col}`;
+                        dojo.removeClass(div_id, 'available');
+                    }
+                }
+                this.playerdeck.unselectAll();
+                console.log(JSON.stringify(this.playerOnPlaymat));
+                return;
+                
             }
             // this.playerdeck.removeFromStockById(card_id);
         },
 
         playFunctionCard: function(player_id, card_id, card_type) {
             // get the discard pile items
-            let discard_pile_items = this.discardpile_me.getAllItems();
+            let discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
             // create card html element and place it to discard pile
             const position = this.getCardBackgroundPosition(card_type);
-            var div_id = `discardPile_field_me`;
+            // me part
+            let div_id = `discardPile_field_me`;
             dojo.place( this.format_block('jstpl_cardsOnTable', {
                 player_id: player_id,
                 card_id: card_id,
@@ -313,16 +326,19 @@ function (dojo, declare) {
             this.playerdeck.removeFromStockById(card_id);
             // slide the card to the table
             this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , div_id ).play();
-            if (this.discardpile_me.getItemNumber() > 2) {
-                this.discardpile_me.removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
+            if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
+                this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
             }
             console.log(discard_pile_items);
-            this.discardpile_me.placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
+            this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
+
         },
 
-        onPlayerHandSelectionChanged : function() {
-            var items = this.playerdeck.getSelectedItems();
+        onPlayerHandSelectionChanged : function(evt) {
+            // // 停止該事件傳播
+            // dojo.stopEvent( evt );
 
+            var items = this.playerdeck.getSelectedItems();
             if (items.length > 0) {
                 if (this.checkAction('playCard', true)) {
                     // Can play a card
@@ -336,10 +352,12 @@ function (dojo, declare) {
                         // this.playerdeck.unselectAll();
                     } else {
                         // trial 
-                        for (var row = 1; row <= 2; row++) {
-                            for (var col = 1; col <= 5; col++) {
+                        for (let row = 1; row <= 2; row++) {
+                            for (let col = 1; col <= 5; col++) {
                                 var div_id = `playerOnPlaymat_me_${row}_${col}`;
                                 dojo.addClass(div_id, 'available');
+                                console.log(`Row: ${row}, Col: ${col}`)
+                                dojo.connect($(div_id), 'onclick', this, (evt) => {this.playPlayerCard(this.player_id, card_id, card_type, row, col, evt)});
                             }
                         }
                         console.log(`The player card id : ${card_id} and card type: player is played.`)

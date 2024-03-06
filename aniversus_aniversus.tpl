@@ -36,7 +36,7 @@ var jstpl_some_game_item='<div class="my_game_item" id="my_game_item_${MY_ITEM_I
 */
 
 var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
-
+// var jstpl_cardsOnPlaymatField = '<div class="js-cardsOnPlaymatField available" id="cardsOnPlaymatField_${player_role}_{row}_{col}"></div>';
 </script>  
 
 {OVERALL_GAME_FOOTER}

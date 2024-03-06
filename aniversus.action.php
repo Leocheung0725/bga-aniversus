@@ -37,10 +37,21 @@
             $this->view = "aniversus_aniversus";
             self::trace( "Complete reinitialization of board game" );
       }
-  	} 
+  	}
   	
   	// TODO: defines your action entry points there
+    public function playFunctionCard()
+    {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
 
+        // Retrieve arguments
+        $card_id = self::getArg( "card_id", AT_posint, true );
+        $this->game->playFunctionCard( $card_id );
+
+        // End of the action
+        self::ajaxResponse();
+    }
 
     /*
     

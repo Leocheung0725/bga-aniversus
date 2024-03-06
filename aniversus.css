@@ -72,6 +72,7 @@
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+
 .playerCardOnPlaymat.available {
 	pointer-events: auto;
 	cursor: pointer;
