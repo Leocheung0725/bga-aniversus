@@ -15,6 +15,25 @@
  *
  */
 
+function reloadCss() {
+	var links = document.getElementsByTagName("link");
+	for (var cl in links) {
+		var link = links[cl];
+		if (link.rel === "stylesheet" && link.href.includes("99999")) {
+			var index = link.href.indexOf("?timestamp=");
+			var href = link.href;
+			if (index >= 0) {
+				href = href.substring(0, index);
+			}
+
+			link.href = href + "?timestamp=" + Date.now();
+
+			console.log("reloading " + link.href);
+		}
+	}
+}
+
+
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
@@ -71,14 +90,22 @@ function (dojo, declare) {
         setup: function( gamedatas )
         {
             console.log( "Starting game setup" );
-            
-
+            // add reload Css debug button ( for development ) //////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var parent = document.querySelector('.debug_section');
+            if (parent) {
+                var butt = dojo.create('a', { class: 'bgabutton bgabutton_gray', innerHTML: "Reload CSS" }, parent);
+                dojo.connect(butt, 'onclick', () => reloadCss());
+            }
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // Setting up player boards
             for( var player_id in gamedatas.players )
             {
                 var player = gamedatas.players[player_id];
-                
                 // TODO: Setting up players boards if needed
+                var player_board_div = $('player_board_'+player_id);
+                dojo.place( this.format_block('jstpl_player_board', player), player_board_div );
             }
             
             // TODO: Set up your game interface here, according to "gamedatas"
@@ -97,12 +124,14 @@ function (dojo, declare) {
             this.gamedatas.cards_info.forEach((key) => {
                 this.playerdeck.addItemType(Number(key.id), 1, 
                     "https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png", Number(key.css_position));
+                    
             });
             console.log(this.playerdeck);
             // show hand
             for ( var i in this.gamedatas.hand) {
                 var card = this.gamedatas.hand[i];
                 this.playerdeck.addToStockWithId(Number(card.type_arg), card.id);
+                this.addTooltipHtml('myhand_item_' + card.id, this.getTooltipHtml(Number(card.type_arg)));
             }
             // setup connect
             dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
@@ -116,12 +145,11 @@ function (dojo, declare) {
                 for (var row = 1; row <= 2; row++) {
                     for (var col = 1; col <= 5; col++) {
                         this.playerOnPlaymat[player][row][col].create( this, `playerOnPlaymat_${player}_${row}_${col}`, this.cardwidth, this.cardheight );
-                        this.playerOnPlaymat[player][row][col].setPattern('verticalfit');
-                        this.playerOnPlaymat[player][row][col].item_margin = 2;
+                        this.playerOnPlaymat[player][row][col].setPattern('diagonal');
+                        this.playerOnPlaymat[player][row][col].item_margin = 5;
                     }
                 }
             }
-            
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
@@ -138,26 +166,40 @@ function (dojo, declare) {
         //
         onEnteringState: function( stateName, args )
         {
-            console.log( 'Entering state: '+stateName );
+            console.log( 'Entering state: '+ stateName );
             
-            switch( stateName )
-            {
+        //     switch( stateName )
+        //     {
             
-            /* Example:
+        //     /* Example:
             
-            case 'myGameState':
+        //     case 'myGameState':
             
-                // Show some HTML block at this game state
-                dojo.style( 'my_html_block_id', 'display', 'block' );
+        //         // Show some HTML block at this game state
+        //         dojo.style( 'my_html_block_id', 'display', 'block' );
                 
-                break;
-           */
+        //         break;
+        //    */
                 
                 
-            case 'dummmy':
-                break;
+        //     case 'dummmy':
+        //         break;
+        //     }
+            // Call appropriate method
+            var methodName = "onEnteringState_" + stateName;
+            if (this[methodName] !== undefined) {
+                console.log(`Calling ${methodName}, args: ${this.safeStringify(args.args)}`);
+                this[methodName](args.args);
             }
         },
+
+        // onEnteringState_dummmy: function(args) {
+        //     console.log('Entering state: dummy');
+        //     console.log(args);
+        // },
+        // -------------------------------------                        -------------------------------------------- //
+        // ------------------------------------- End of onEnteringState -------------------------------------------- //
+
 
         // onLeavingState: this method is called each time we are leaving a game state.
         //                 You can use this method to perform some user interface changes at this moment.
@@ -221,6 +263,20 @@ function (dojo, declare) {
             script.
         
         */
+        safeStringify: function(obj) {
+        const seen = new WeakSet();
+            return JSON.stringify(obj, (key, value) => {
+                if (typeof value === "object" && value !== null) {
+                if (seen.has(value)) {
+                    // Circular reference found, discard key
+                    return;
+                }
+                seen.add(value);
+                }
+                return value;
+            })
+        },
+
         // This function returns the css background position of a card
         getCardBackgroundPosition: function(card_type) {
             const type2css = this.gamedatas['card_type_arg2css_position'];
@@ -234,8 +290,39 @@ function (dojo, declare) {
             return {x: -x, y: -y};
         },
 
-        // 
+
+        getTooltipHtml: function(card_id) {
+            var card = this.gamedatas.cards_info.find((card) => card.id == card_id);
+            var card_name = card.name;
+            var card_type = card.type;
+            var card_cost = card.cost;
+            var card_productivity = (card_type == "Function") ? "NA" : card.productivity;
+            var card_power = (card_type == "Function") ? "NA" : card.power;
+            var card_description = (card.function == "") ? "NA" : card.function;
+            return this.format_block('jstpl_cardToolTip', {
+                card_name: card_name,
+                card_type: card_type,
+                card_cost: card_cost,
+                card_productivity: card_productivity,
+                card_power: card_power,
+                card_description: card_description
+            });
+        },
         
+        
+        ajaxcallwrapper: function(action, args, handler) {
+            if (!args) args = {}; // this allows to skip args parameter for action which do not require them
+                
+            args.lock = true; // this allows to avoid rapid action clicking which can cause race condition on server
+            if (this.checkAction(action)) { // this does all the proper check that player is active and action is declared
+                this.ajaxcall("/" + this.game_name + "/" + this.game_name + "/" + action + ".html", args, // this is mandatory fluff 
+                    this, (result) => { },  // success result handler is empty - it is never needed
+                                                   handler); // this is real result handler - it called both on success and error, it has optional param  "is_error" - you rarely need it
+                }
+        },
+        // Usage: 
+        // this.ajaxcallwrapper('pass'); // no args
+        // this.ajaxcallwrapper('playCard', {card: card_id}); // with args
 
 
         ///////////////////////////////////////////////////
@@ -264,10 +351,8 @@ function (dojo, declare) {
         // }
         playPlayerCard: function(player_id, card_id, card_type, row, col, evt) {
             dojo.stopEvent( evt );
-            console.log(`Within Function: Row: ${row}, Col: ${col}`)
             // init card type to css position mapping, and get the position
             const position = this.getCardBackgroundPosition(card_type);
-            console.log(`Received Args are player_id: ${player_id}, card_id: ${card_id}, card_type: ${card_type}, row: ${row}, col: ${col}`)
             // place the card on the table
             if (player_id != this.player_id) {
                 // create card on table
@@ -291,20 +376,24 @@ function (dojo, declare) {
                     // place the card on the player board
                     this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, 'myhand_item_' + card_id);
                     this.playerdeck.removeFromStockById(card_id);
-                }
-                // slide the card to the table
-                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , `playerOnPlaymat_me_${row}_${col}`).play();
-                this.playerOnPlaymat['me'][row][col].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
-                for (var row = 1; row <= 2; row++) {
-                    for (var col = 1; col <= 5; col++) {
-                        var div_id = `playerOnPlaymat_me_${row}_${col}`;
-                        dojo.removeClass(div_id, 'available');
+                    // slide the card to the table
+                    this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , `playerOnPlaymat_me_${row}_${col}`).play();
+                    console.log(`This handled about the position of row: ${row} and col: ${col}`)
+                    this.playerOnPlaymat['me'][row][col].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
+                    for (var row = 1; row <= 2; row++) {
+                        for (var col = 1; col <= 5; col++) {
+                            var div_id = `playerOnPlaymat_me_${row}_${col}`;
+                            dojo.removeClass(div_id, 'available');
+                        }
                     }
+                    this.playerdeck.unselectAll();
+                    for (var row = 1; row <= 2; row++) {
+                        for (var col = 1; col <= 5; col++) {
+                            console.log(`The playerOnPlaymat['me'][${row}][${col}] has ${this.playerOnPlaymat['me'][row][col].getItemNumber()} items.`);
+                        }
+                    }
+                    return;
                 }
-                this.playerdeck.unselectAll();
-                console.log(JSON.stringify(this.playerOnPlaymat));
-                return;
-                
             }
             // this.playerdeck.removeFromStockById(card_id);
         },
@@ -329,15 +418,11 @@ function (dojo, declare) {
             if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
                 this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
             }
-            console.log(discard_pile_items);
             this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
 
         },
 
         onPlayerHandSelectionChanged : function(evt) {
-            // // 停止該事件傳播
-            // dojo.stopEvent( evt );
-
             var items = this.playerdeck.getSelectedItems();
             if (items.length > 0) {
                 if (this.checkAction('playCard', true)) {
@@ -356,7 +441,6 @@ function (dojo, declare) {
                             for (let col = 1; col <= 5; col++) {
                                 var div_id = `playerOnPlaymat_me_${row}_${col}`;
                                 dojo.addClass(div_id, 'available');
-                                console.log(`Row: ${row}, Col: ${col}`)
                                 dojo.connect($(div_id), 'onclick', this, (evt) => {this.playPlayerCard(this.player_id, card_id, card_type, row, col, evt)});
                             }
                         }

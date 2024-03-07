@@ -36,7 +36,38 @@ var jstpl_some_game_item='<div class="my_game_item" id="my_game_item_${MY_ITEM_I
 */
 
 var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
-// var jstpl_cardsOnPlaymatField = '<div class="js-cardsOnPlaymatField available" id="cardsOnPlaymatField_${player_role}_{row}_{col}"></div>';
+
+
+var jstpl_cardToolTip = 
+'<div class=\'tooltip-main\'>' +
+'<div>' +
+    '<ul class=\'no-bullets\'>' +     
+    '<li class=\'li-item title\'><h1>${card_name}</h1></li>' +
+    '<hr>' +
+    '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
+    '<li class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></li>' +
+    '<li class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></li>' +
+    '<li class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></li>' +
+    '<hr>' +
+    '<li class=\'li-item\'><span>Description :</span></li>' +
+    '<li class=\'li-item description\'><p>${card_description}</p></li>' +
+    '</ul>' + 
+'</div>' +
+'</div>';
+
+var jstpl_player_board =
+'<div class="playerboard-main">' +
+    '<div>' +
+        '<ul class="no-bullets">' +     
+        '<li class="li-item"><span>Remaining productivity <div class="productivity-inline-image"></div> : ${player_productivity}</span></li>' +
+        '<li class="li-item"><span>Power <div class="power-inline-image"></div> : ${player_power}</span></li>' +
+        '<li class="li-item"><span>Remaining Action: ${player_action}</span></li>' +
+        '<li class="li-item"><span>Score: ${player_score}</span></li>' +
+        '</ul>' + 
+    '</div>' +
+'</div>';
+
+
 </script>  
 
 {OVERALL_GAME_FOOTER}

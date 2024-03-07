@@ -89,7 +89,9 @@ class Aniversus extends Table
 
         // Create players
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
-        $sql = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar, player_team) VALUES ";
+        $sql = "INSERT INTO player (player_id, player_color, player_canal, 
+        player_name, player_avatar, player_team, player_productivity_limit, 
+        player_productivity, player_action_limit, player_action, player_power) VALUES ";
         $values = array();
         $player_team = array("cat","squirrel");
         shuffle($player_team);
@@ -113,7 +115,12 @@ class Aniversus extends Table
                 '{$player['player_canal']}',
                 '{$playerNameEscaped}',
                 '{$playerAvatarEscaped}',
-                '$team'
+                '$team',
+                0,
+                0,
+                3,
+                0,
+                0
             )";
         }
         $sql .= implode( ',' , $values );
@@ -145,7 +152,7 @@ class Aniversus extends Table
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score, player_team team FROM player ";
+        $sql = "SELECT player_id id, player_score score, player_team team, player_power, player_productivity_limit, player_productivity, player_action_limit, player_action FROM player ";
         $result['players'] = self::getCollectionFromDb( $sql );
         $current_player = $result['players'][$current_player_id];
         $result['current_player'] = $current_player;

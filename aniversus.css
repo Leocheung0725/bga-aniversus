@@ -104,3 +104,77 @@
 	background-image: url("https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png");
 }
 
+/* ---------------------- Tooltip CSS ----------------------- */
+
+.tooltip-main {
+  justify-content: center;
+  align-items: center;
+  border-radius: 1rem;
+  font-family: "Arial";
+  padding: 8px;
+}
+
+ul.no-bullet {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.li-item {
+  margin: 0.1rem 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.li-item.type {
+  font-style: bold;
+  color: rgb(37, 114, 161);
+}
+
+.li-item.title {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.li-item img {
+  vertical-align: middle;
+}
+
+.cost-inline-image {
+  display: inline-block; /* or 'inline' depending on your layout needs */
+  width: 20px; /* Width of the image */
+  height: 20px; /* Height of the image */
+  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Costv2.png'); /* Path to your image */
+  background-size: cover; /* This ensures the image covers the entire element */
+  background-position: center; /* This centers the background image */
+}
+
+.productivity-inline-image {
+  display: inline-block; /* or 'inline' depending on your layout needs */
+  width: 20px; /* Width of the image */
+  height: 20px; /* Height of the image */
+  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Productivityv2.png'); /* Path to your image */
+  background-size: cover; /* This ensures the image covers the entire element */
+  background-position: center; /* This centers the background image */
+}
+
+.power-inline-image {
+  display: inline-block; /* or 'inline' depending on your layout needs */
+  width: 20px; /* Width of the image */
+  height: 20px; /* Height of the image */
+  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Powerv2.png'); /* Path to your image */
+  background-size: cover; /* This ensures the image covers the entire element */
+  background-position: center; /* This centers the background image */
+}
+
+/* player_board CSS */
+.playerboard-main {
+  justify-content: center;
+  align-items: center;
+  border-radius: 1rem;
+  padding: 5px;
+}
+
+
+/* ------------------- End of Tooltip CSS ------------------- */

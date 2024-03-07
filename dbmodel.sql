@@ -63,4 +63,11 @@ CREATE TABLE IF NOT EXISTS `playmat` (
 
 -- Below is some modification to the player table
 ALTER TABLE `player` ADD `player_team` VARCHAR(16) NOT NULL DEFAULT '0';
+ALTER TABLE `player` ADD `player_productivity_limit` INT(11) NOT NULL;
+ALTER TABLE `player` ADD `player_productivity` INT(11) NOT NULL;
+ALTER TABLE `player` ADD `player_action_limit` INT(11) NOT NULL;
+ALTER TABLE `player` ADD `player_action` INT(11) NOT NULL;
+ALTER TABLE `player` ADD `player_power` INT(11) NOT NULL;
+
+
 
