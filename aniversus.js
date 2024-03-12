@@ -104,10 +104,11 @@ function (dojo, declare) {
             {
                 var player = gamedatas.players[player_id];
                 // TODO: Setting up players boards if needed
-                var player_board_div = $('player_board_'+player_id);
+                var player_board_div = $('player_board_'+ player_id);
                 dojo.place( this.format_block('jstpl_player_board', player), player_board_div );
             }
-            
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // TODO: Set up your game interface here, according to "gamedatas"
             // Player hand Setup
             // player hand
@@ -135,7 +136,8 @@ function (dojo, declare) {
             }
             // setup connect
             dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
-
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // playmat setup
             // Discard pile
             this.playerOnPlaymat['me']['discardpile'].create( this, 'discardPile_field_me', this.cardwidth, this.cardheight );
@@ -150,7 +152,8 @@ function (dojo, declare) {
                     }
                 }
             }
-
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
@@ -398,42 +401,27 @@ function (dojo, declare) {
             // this.playerdeck.removeFromStockById(card_id);
         },
 
-        playFunctionCard: function(player_id, card_id, card_type) {
-            // get the discard pile items
-            let discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
-            // create card html element and place it to discard pile
-            const position = this.getCardBackgroundPosition(card_type);
-            // me part
-            let div_id = `discardPile_field_me`;
-            dojo.place( this.format_block('jstpl_cardsOnTable', {
-                player_id: player_id,
-                card_id: card_id,
-                ...position
-            }), div_id);
-            // // place the card on the player board
-            this.placeOnObject( 'cardsOnTable_' + player_id + '_' + card_id , 'myhand_item_' + card_id);
-            this.playerdeck.removeFromStockById(card_id);
-            // slide the card to the table
-            this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , div_id ).play();
-            if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
-                this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
-            }
-            this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
 
-        },
 
         onPlayerHandSelectionChanged : function(evt) {
             var items = this.playerdeck.getSelectedItems();
+            let card_id = items[0].id;
+            let card_type = items[0].type;
+            let card_info = this.gamedatas.cards_info.find((card) => card.id == card_type);
             if (items.length > 0) {
                 if (this.checkAction('playCard', true)) {
                     // Can play a card
-                    var card_id = items[0].id;
-                    var card_type = items[0].type;
-                    var card_info = this.gamedatas.cards_info.find((card) => card.id == card_type);
                     if (card_info.type == 'Function') {
                         // function card
                         console.log(`The player card id : ${card_id} and card type: function is played.`);
-                        this.playFunctionCard(this.player_id, card_id, card_type);
+                        if (this.isCurrentPlayerActive()) {
+                            this.ajaxcallwrapper('playFunctionCard', {
+                                "card_id": card_id,
+                                "card_type": card_type,
+                                "player_id": this.player_id
+                            });
+                        }
+                        
                         // this.playerdeck.unselectAll();
                     } else {
                         // trial 
@@ -526,6 +514,8 @@ function (dojo, declare) {
             // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
             // this.notifqueue.setSynchronous( 'cardPlayed', 3000 );
             // 
+
+            dojo.subscribe('functionCardPlayed', this, "notif_playFunctionCard");
         },  
         
         // TODO: from this point and below, you can write your game notifications handling methods
@@ -544,5 +534,54 @@ function (dojo, declare) {
         },    
         
         */
+        notif_playFunctionCard: function( notif ) {
+            console.log(`**** Notification: playFunctionCard `)
+            console.log(notif);
+            const player_id = notif.args.player_id;
+            const card_id = notif.args.card_id;
+            const card_type = notif.args.card_type;
+            if (player_id == this.player_id) {
+                // get the discard pile items
+                let discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
+                // create card html element and place it to discard pile
+                const position = this.getCardBackgroundPosition(card_type);
+                // me part
+                let div_id = `discardPile_field_me`;
+                dojo.place( this.format_block('jstpl_cardsOnTable', {
+                    player_id: player_id,
+                    card_id: card_id,
+                    ...position
+                }), div_id);
+                // // place the card on the player board
+                this.placeOnObject( 'cardsOnTable_' + player_id + '_' + card_id , 'myhand_item_' + card_id);
+                this.playerdeck.removeFromStockById(card_id);
+                // slide the card to the table
+                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , div_id ).play();
+                if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
+                    this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
+                }
+                this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
+            } else {
+                // get the discard pile items
+                let discard_pile_items = this.playerOnPlaymat['opponent']['discardpile'].getAllItems();
+                // create card html element and place it to discard pile
+                const position = this.getCardBackgroundPosition(card_type);
+                // opponent part
+                let div_id = `discardPile_field_opponent`;
+                dojo.place( this.format_block('jstpl_cardsOnTable', {
+                    player_id: player_id,
+                    card_id: card_id,
+                    ...position
+                }), div_id);
+                // // place the card on the player board
+                this.placeOnObject( 'cardsOnTable_' + player_id + '_' + card_id , 'player_board_' + player_id);
+                // slide the card to the table
+                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , div_id ).play();
+                if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
+                    this.playerOnPlaymat['opponent']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
+                }
+                this.playerOnPlaymat['opponent']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
+            }
+        },
    });             
 });

@@ -22,8 +22,9 @@
 	width: auto;
 	height: auto;
 	position: relative;
-	flex-direction: row;
 	display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
 	box-sizing: border-box;
 	justify-content: center;
 	align-items: center;
@@ -55,6 +56,10 @@
 	width: 724px;
 	height: 400px;
 	gap: 0.5px;
+}
+
+.player_playmat.reverse {
+  transform: rotate(180deg);
 }
 
 

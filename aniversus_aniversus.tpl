@@ -3,7 +3,7 @@
 
 <div id="gamefield">
 	<div class="playmat_field whiteblock">
-        <div class="player_playmat" id="player_playmat_opponent">
+        <div class="player_playmat reverse" id="player_playmat_opponent">
                 <!-- BEGIN playeronplaymat_opponent -->
             <div class="playerCardOnPlaymat playerOnPlaymat_row_{row} playerOnPlaymat_col_{col}" id="playerOnPlaymat_{role}_{row}_{col}"></div>
                 <!-- END playeronplaymat_opponent -->
@@ -62,7 +62,7 @@ var jstpl_player_board =
         '<li class="li-item"><span>Remaining productivity <div class="productivity-inline-image"></div> : ${player_productivity}</span></li>' +
         '<li class="li-item"><span>Power <div class="power-inline-image"></div> : ${player_power}</span></li>' +
         '<li class="li-item"><span>Remaining Action: ${player_action}</span></li>' +
-        '<li class="li-item"><span>Score: ${player_score}</span></li>' +
+        '<li class="li-item"><span>Score: ${score}</span></li>' +
         '</ul>' + 
     '</div>' +
 '</div>';

@@ -117,9 +117,9 @@ class Aniversus extends Table
                 '{$playerAvatarEscaped}',
                 '$team',
                 0,
+                100,
                 0,
-                3,
-                0,
+                100,
                 0
             )";
         }
@@ -192,64 +192,11 @@ class Aniversus extends Table
     /*
         In this space, you can put any utility methods useful for your game logic
     */
-    // function initCardDeck($first_player, $second_player) {
-    //     try {
-    //         // $players = $this->loadPlayersBasicInfos();
-    //         // Create basic cards (IDs 1 to 13) for both decks
-    //         $basicCards = array();
-    //         foreach ($this->cards_info as $id => $card_info) {
-    //             if ($card_info['id'] >= 1 && $card_info['id'] <= 13) {
-    //                 $basicCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
-    //             }
-    //         }
-    //         // Create special cards for Cat deck (IDs 101 to 114)
-    //         $catSpecialCards = array();
-    //         foreach ($this->cards_info as $id => $card_info) {
-    //             if ($card_info['id'] >= 101 && $card_info['id'] <= 114) {
-    //                 $catSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
-    //             }
-    //         }
-
-    //         // Create special cards for Squirrel deck (IDs 51 to 64)
-    //         $squirrelSpecialCards = array();
-    //         foreach ($this->cards_info as $id => $card_info) {
-    //             if ($card_info['id'] >= 51 && $card_info['id'] <= 64) {
-    //                 $squirrelSpecialCards[] = array('type' => $card_info['type'], 'type_arg' => $card_info['id'], 'nbr' => $card_info['nbr']);
-    //             }
-    //         }
-
-    //         // Add cards to Cat deck
-    //         $this->catDeck->createCards($basicCards, 'deck');
-    //         $this->catDeck->createCards($catSpecialCards, 'deck');
-    //         // Add cards to Squirrel deck
-    //         $this->squirrelDeck->createCards($basicCards, 'deck');
-    //         $this->squirrelDeck->createCards($squirrelSpecialCards, 'deck');
-
-    //         // Shuffle both decks
-    //         $this->catDeck->shuffle('deck');
-    //         $this->squirrelDeck->shuffle('deck');
-            
-    //         // Determine who is cat team and who is squirrel team
-    //         $first_player_deck = ($first_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
-    //         $second_player_team = ($second_player['player_team'] == 'cat') ? 'catDeck' : 'squirrelDeck';
-
-    //         // Deal cards to players
-    //         $this->{$first_player_deck}->pickCards( 7, 'deck', $first_player['player_id'] );
-    //         $this->{$second_player_team}->pickCards( 8, 'deck', $second_player['player_id'] );
-
-    //         // ... code the function
-    //     } catch ( Exception $e ) {
-    //         // logging does not actually work in game init :(
-    //         // but if you calling from php chat it will work
-    //         $this->error("Fatal error while creating game");
-    //         $this->dump('err', $e);
-    //     }
-    // }
     // Debug function to get all cards in a deck
     function de( $cards_id ) {
         var_export($this->cards_info[$cards_id]['name']);
     }
-
+    // $player_id = self::getActivePlayerId();
     function getActivePlayerDeck($player_id) {
         // get the player team information and determine which deck would be used
         $sql = "SELECT player_id, player_name, player_color, player_team FROM player";
@@ -262,7 +209,7 @@ class Aniversus extends Table
             return $this->squirrelDeck;
         }
     }
-
+    // $player_id = self::getActivePlayerId();
     function getNonActivePlayerDeck($player_id) {
         // get the player team information and determine which deck would be used
         $sql = "SELECT player_id, player_name, player_color, player_team FROM player";
@@ -275,13 +222,12 @@ class Aniversus extends Table
             return $this->catDeck;
         }
     }
-    // function debug_initMyTables() {
-    //     $this->deleteAllTables(); // this suppose to delete/reset all data - you have to implement this function
-    //     $this->initMyTables();
-    //     $newGameDatas = $this->getAllTableDatas(); // this is framework function
-    //     $this->notifyPlayer($this->getActivePlayerId(), 'resetInterfaceWithAllDatas', '', $newGameDatas); // this is notification to reset all data 
-    //     $this->notifyAllPlayers("message",'setup called',[]);
-    // }
+
+    function getCardinfoFromCardsInfo($card_id) {
+        return current(array_filter($this->cards_info, function($card) use ($card_id){
+            return $card['id'] == $card_id;
+        }));
+    }
 
 
 
@@ -318,7 +264,55 @@ class Aniversus extends Table
           
     }    
     */
-    
+    public function playFunctionCard( $player_id, $card_id, $card_type ) {
+        // check that this is player's turn and that it is a "possible action" at this game state
+        self::checkAction( 'playFunctionCard' );
+
+        // get the active player team
+        $ActivePlayer = self::getActivePlayerId();
+
+        if ($player_id != $ActivePlayer) {
+            throw new BgaUserException( self::_("You are not the active player") );
+        }
+        $card_info = $this->getCardinfoFromCardsInfo($card_type);
+        if ($card_info['type'] != 'Function') {
+            throw new BgaUserException( self::_("This is not a function card") );
+        }
+        $card_cost = $card_info['cost'];
+        $card_team = $card_info['team'];
+        // get the active player energy and action number
+        $sql = "select player_action, player_productivity, player_team from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        if ($player['player_team'] != $card_team && $card_team != "basic") {
+            throw new BgaUserException( self::_("This card does not belong to your team") );
+        }
+        if ($player['player_action'] <= 0) {
+            throw new BgaUserException( self::_("You do not have enough action to play this card") );
+        }
+        if ($player['player_productivity'] < $card_cost) {
+            throw new BgaUserException( self::_("You do not have enough productivity to play this card") );
+        }
+        // play the card
+        $sql = "
+        UPDATE player
+        SET player_action = player_action - 1, player_productivity = player_productivity - $card_cost
+        WHERE player_id = $player_id
+        ";
+        self::DbQuery( $sql );
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $player_deck->moveCard($card_type, 'discard');
+        // Notify all players about the card played
+        self::notifyAllPlayers( "functionCardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
+            'player_id' => $player_id,
+            'player_name' => self::getActivePlayerName(),
+            'card_name' => $card_info['name'],
+            'card_id' => $card_id,
+            'card_type' => $card_type,
+        ) );
+        // // Go to next game state
+        // $this->gamestate->nextState( "counterattact" );
+    }
+
     public function throwCard ( $cards_id ) {
         // checking the action
         // self::checkAction( 'throwCard' );

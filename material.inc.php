@@ -18,17 +18,25 @@
  * are available everywhere in your game logic code.
  *
  */
-
-
 /*
-
 Example:
-
 $this->card_types = array(
     1 => array( "card_name" => ...,
                 ...
               )
 );
+// $this->card_team = array(
+//   1 => array( "team_name" => clienttranslate("cat"),
+//               "team_name_tr" => self::_('cat')),
+//   // 2 => array( "team_name" => clienttranslate("squirrel"),
+//   //             "team_name_tr" => self::_('squirrel')),
+// );
+
+// card_function = array(0 => "function", 1 => "player", 2 => "training", 3 => "skill", 4 => "action")
+// when the card power is > 0 and productivity is 0, it's a forward player card, if the card power is 0 and productivity is > 0, it's a productivity player card,
+// if the card power is > 0 and productivity is > 0, it's a allround player card
+
+
 */
 $cards_info_CSVdata = <<<CSV
 id,type,cost,productivity,power,function,name,nbr,team,css_position
@@ -50,7 +58,7 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 53,Function,2,0,0,This card can only be played when you have 3 cards or fewer in your hand. Draw 3 cards.,Refill,1,squirrel,15
 54,Function,0,0,0,Power + 2 this round,Power Play,1,squirrel,16
 55,Function,2,0,0,Your opponent cannot draw cards next round.,Restriction,2,squirrel,17
-56,Function ,1,0,0,"Draw 2 cards, then discard 2 cards from all your hand cards.",Substitution,2,squirrel,18
+56,Function,1,0,0,"Draw 2 cards, then discard 2 cards from all your hand cards.",Substitution,2,squirrel,18
 57,Player,3,0,2,"When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.",Jeffrey,2,squirrel,19
 58,Player,5,0,3,The player in the same position on the opponent's field -2 power. (for as long as Sergio is in play),Sergio,3,squirrel,20
 59,Player,0,2,0,The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field),Antonio,2,squirrel,21
@@ -70,7 +78,7 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 109,Player,0,3,0,"When Harry is placed, discard 2 cards from your hand.",Harry,2,cat,35
 110,Player,0,1,0,Gain an additional 1 productivity for every 2 forward players you have.,Roberto,2,cat,36
 111,Player,2,0,1,The player in the same position on the opponent's field -1 power. (for as long as Lucia is in play),Lucia,2,cat,37
-112,,0,0,0,"Discard 1 hand card to search for 1 card from your draw deck and put to your hand. Then, shuffle your deck.",Deck Dive,2,cat,38
+112,Function,0,0,0,"Discard 1 hand card to search for 1 card from your draw deck and put to your hand. Then, shuffle your deck.",Deck Dive,2,cat,38
 113,Player,2,2,2,,Rachel,2,cat,39
 114,Player,1,1,1,,Alex,4,cat,40
 CSV;
@@ -82,16 +90,6 @@ $this->gameConstants = array(
 );
 
 
-// $this->card_team = array(
-//   1 => array( "team_name" => clienttranslate("cat"),
-//               "team_name_tr" => self::_('cat')),
-//   // 2 => array( "team_name" => clienttranslate("squirrel"),
-//   //             "team_name_tr" => self::_('squirrel')),
-// );
-
-// card_function = array(0 => "function", 1 => "player", 2 => "training", 3 => "skill", 4 => "action")
-// when the card power is > 0 and productivity is 0, it's a forward player card, if the card power is 0 and productivity is > 0, it's a productivity player card,
-// if the card power is > 0 and productivity is > 0, it's a allround player card
 
 require_once("modules/aniversus_utils.php");
 $this->cards_info = read_card_infos($cards_info_CSVdata);

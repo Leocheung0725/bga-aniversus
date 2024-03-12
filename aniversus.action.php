@@ -47,7 +47,9 @@
 
         // Retrieve arguments
         $card_id = self::getArg( "card_id", AT_posint, true );
-        $this->game->playFunctionCard( $card_id );
+        $card_type = self::getArg( "card_type", AT_posint, true );
+        $player_id = self::getArg( "player_id", AT_alphanum, true );
+        $this->game->playFunctionCard( $player_id, $card_id, $card_type );
 
         // End of the action
         self::ajaxResponse();
