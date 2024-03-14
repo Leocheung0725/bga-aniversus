@@ -55,6 +55,22 @@
         self::ajaxResponse();
     }
 
+    public function playPlayerCard()
+    {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+
+        // Retrieve arguments
+        $card_id = self::getArg( "card_id", AT_posint, true );
+        $card_type = self::getArg( "card_type", AT_posint, true );
+        $player_id = self::getArg( "player_id", AT_alphanum, true );
+        $row = self::getArg( "row", AT_posint, true );
+        $col = self::getArg( "col", AT_posint, true );
+        $this->game->playPlayerCard( $player_id, $card_id, $card_type, $row, $col );
+
+        // End of the action
+        self::ajaxResponse();
+    }
     /*
     
     Example:

@@ -164,14 +164,16 @@ class Aniversus extends Table
             $result[$player_id] = array();
             if ($player_id == $current_player_id) {
                 // Discard pile information
-                $result[$player_id]['discard'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'discard', $player_id );
+                // order by location_arg ( the larger location arg is the top card in the discard pile)
+                
+                $result[$player_id]['discardpile'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'discard', null, "card_location_arg" );
                 // Playmat information
-                $result[$player_id]['playmat'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'playmat', $player_id );
+                $result[$player_id]['playmat'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'playmat' );
             } else {
                 // Discard pile information
-                $result[$player_id]['discard'] = $this->getNonActivePlayerDeck($player_id)->getCardsInLocation( 'discard', $player_id );
+                $result[$player_id]['discardpile'] = array_reverse($this->getActivePlayerDeck($player_id)->getCardsInLocation( 'discard', null, "card_location_arg" ));
                 // Playmat information
-                $result[$player_id]['playmat'] = $this->getNonActivePlayerDeck($player_id)->getCardsInLocation( 'playmat', $player_id );
+                $result[$player_id]['playmat'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'playmat' );
             
             }
         }
@@ -237,6 +239,49 @@ class Aniversus extends Table
         }));
     }
 
+    function encodePlayerLocation($row, $column) {
+        /*
+        To encode row 1, column 1
+        $location_arg = encodeLocation(1, 1); // returns 1
+        To encode row 2, column 3
+        $location_arg = encodeLocation(2, 3); // returns 8
+        */
+        $num_columns = 5;
+        return ($row - 1) * $num_columns + $column;
+    }
+    
+    function decodePlayerLocation($location_arg) {
+        /*
+        To decode location_arg 1
+        $position = decodeLocation(1); // returns ['row' => 1, 'column' => 1]
+        To decode location_arg 8
+        $position = decodeLocation(8); // returns ['row' => 2, 'column' => 3]
+        */
+        $num_columns = 5;
+        $row = intval(($location_arg - 1) / $num_columns) + 1;
+        $column = ($location_arg - 1) % $num_columns + 1;
+        return array('row' => $row, 'column' => $column);
+    }
+
+    function findLargestLocationArg($cards) {
+        // Check if the input is null or an empty array
+        if (is_null($cards) || empty($cards)) {
+            return 0;
+        }
+    
+        // Initialize an array to hold location_arg values
+        $locationArgs = [];
+    
+        // Iterate through each card and collect the location_arg values
+        foreach ($cards as $card) {
+            if (isset($card['location_arg'])) {
+                $locationArgs[] = $card['location_arg'];
+            }
+        }
+    
+        // If locationArgs is empty, return 0, otherwise return the max value
+        return !empty($locationArgs) ? max($locationArgs) : 0;
+    }
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -275,8 +320,7 @@ class Aniversus extends Table
     public function playFunctionCard( $player_id, $card_id, $card_type ) {
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'playFunctionCard' );
-
-        // get the active player team
+        // get the active player id
         $ActivePlayer = self::getActivePlayerId();
 
         if ($player_id != $ActivePlayer) {
@@ -287,8 +331,9 @@ class Aniversus extends Table
         $card_team = $card_info['team'];
         $player_deck = $this->getActivePlayerDeck($player_id);
         // check whether the user have this card in hand
-        if (!$player_deck->cardInLocation($card_id, 'hand')) {
-            throw new BgaUserException( self::_("You do not have this card in hand") );
+        $card_deck_info = $player_deck->getCard($card_id);
+        if ( $card_deck_info['location'] != 'hand' ) {
+            throw new BgaUserException( self::_("This card is not in your hand") );
         }
         // get the active player energy and action number
         $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
@@ -309,15 +354,22 @@ class Aniversus extends Table
         WHERE player_id = $player_id
         ";
         self::DbQuery( $sql );
-        $player_deck->moveCard($card_type, 'discard');
+        // move the card from hand to discard Pile because this is function card
+        // get discard pile cards list
+        $discard_pile_cards = $player_deck->getCardsInLocation('discard');
+        // find the next location_arg for the discard pile
+        $largest_location_arg = $this->findLargestLocationArg($discard_pile_cards);
+        $player_deck->moveCard($card_id, 'discard', $largest_location_arg + 1);
         // Notify all players about the card played
-        self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} plays ${card_name}' ), array(
+        self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} plays ${card_name} : ${card_effect}' ), array(
             'player_id' => $player_id,
             'player_name' => self::getActivePlayerName(),
             'card_name' => $card_info['name'],
             'card_id' => $card_id,
             'card_type' => $card_type,
+            'card_effect' => $card_info['function'],
         ) );
+        // Refresh the player board by using lastest data (Fetch the data from database again this time) 
         $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
@@ -329,6 +381,76 @@ class Aniversus extends Table
         
         // // Go to next game state
         // $this->gamestate->nextState( "counterattact" );
+    }
+
+    public function playPlayerCard($player_id, $card_id, $card_type, $row, $col) {
+        // check that this is player's turn and that it is a "possible action" at this game state
+        self::checkAction( 'playPlayerCard' );
+        // get the active player id
+        $ActivePlayer = self::getActivePlayerId();
+        if ($player_id != $ActivePlayer) {
+            throw new BgaUserException( self::_("You are not the active player") );
+        }
+        $card_info = $this->getCardinfoFromCardsInfo($card_type);
+        $card_cost = $card_info['cost'];
+        $card_team = $card_info['team'];
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        // check whether the user have this card in hand
+        $card_deck_info = $player_deck->getCard($card_id);
+        if ( $card_deck_info['location'] != 'hand' ) {
+            throw new BgaUserException( self::_("This card is not in your hand") );
+        }
+        // get the active player energy and action number
+        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        if ($player['player_team'] != $card_team && $card_team != "basic") {
+            throw new BgaUserException( self::_("This card does not belong to your team") );
+        }
+        if ($player['player_action'] <= 0) {
+            throw new BgaUserException( self::_("You do not have enough action to play this card") );
+        }
+        // play the card
+        // minus the action and productivity of player in this round
+        if ($row = 1) {
+            if ($player['player_productivity'] < $card_cost) {
+                throw new BgaUserException( self::_("You do not have enough productivity to play this card") );
+            }
+            $sql = "
+            UPDATE player
+            SET player_action = player_action - 1, player_productivity = player_productivity - $card_cost
+            WHERE player_id = $player_id
+            ";
+            self::DbQuery( $sql );
+        } else if ( $row = 2 ) {
+            $card_productivity = $card_info['productivity'];
+            $sql = "
+            UPDATE player
+            SET player_action = player_action - 1, 
+            player_productivity = player_productivity + $card_productivity, 
+            player_productivity_limit = player_productivity_limit + $card_productivity
+            WHERE player_id = $player_id
+            ";
+            self::DbQuery( $sql );
+        }
+        // move the card from hand to playmat
+        $player_deck->moveCard($card_id, 'playmat', $this->encodePlayerLocation($row, $col));
+        self::notifyAllPlayers( "playPlayerCard", clienttranslate( '${player_name} plays ${card_name} : ${card_effect}' ), array(
+            'player_id' => $player_id,
+            'player_name' => self::getActivePlayerName(),
+            'card_name' => $card_info['name'],
+            'card_id' => $card_id,
+            'card_type' => $card_type,
+            'card_effect' => $card_info['function'],
+        ) );
+        // Refresh the player board by using lastest data (Fetch the data from database again this time) 
+        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        self::notifyAllPlayers( "updatePlayerBoard", "", array(
+            'player_id' => $player_id,
+            'player_productivity' => $player['player_productivity'],
+            'player_action' => $player['player_action'],
+            'player_score' => $player['player_score'],
+        ) );
     }
 
     public function throwCard ( $cards_id ) {
