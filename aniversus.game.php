@@ -158,13 +158,24 @@ class Aniversus extends Table
         $result['current_player'] = $current_player;
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
         // Cards in player hand
-        $result['hand'] = ($current_player['team'] == 'cat') 
-            ? $this->catDeck->getCardsInLocation( 'hand', $current_player_id ) // if cat team
-            : $this->squirrelDeck->getCardsInLocation( 'hand', $current_player_id ); // if squirrel team
-        // $result['cardsontable_cat'] = $this->cards->getCardsInLocation( 'cardsontable_cat' );
-        // $result['cardsontable_squirrel'] = $this->cards->getCardsInLocation( 'cardsontable_squirrel' );
-
-
+        $result['hand'] = $this->getActivePlayerDeck($current_player_id)->getCardsInLocation( 'hand', $current_player_id );
+        // common information, create a new array to store the common information
+        foreach ($result['players'] as $player_id => $player) {
+            $result[$player_id] = array();
+            if ($player_id == $current_player_id) {
+                // Discard pile information
+                $result[$player_id]['discard'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'discard', $player_id );
+                // Playmat information
+                $result[$player_id]['playmat'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'playmat', $player_id );
+            } else {
+                // Discard pile information
+                $result[$player_id]['discard'] = $this->getNonActivePlayerDeck($player_id)->getCardsInLocation( 'discard', $player_id );
+                // Playmat information
+                $result[$player_id]['playmat'] = $this->getNonActivePlayerDeck($player_id)->getCardsInLocation( 'playmat', $player_id );
+            
+            }
+        }
+        // Cards in the draw deck
         return $result;
     }
 
@@ -193,9 +204,6 @@ class Aniversus extends Table
         In this space, you can put any utility methods useful for your game logic
     */
     // Debug function to get all cards in a deck
-    function de( $cards_id ) {
-        var_export($this->cards_info[$cards_id]['name']);
-    }
     // $player_id = self::getActivePlayerId();
     function getActivePlayerDeck($player_id) {
         // get the player team information and determine which deck would be used
@@ -222,7 +230,7 @@ class Aniversus extends Table
             return $this->catDeck;
         }
     }
-
+    // $card_id = card_type
     function getCardinfoFromCardsInfo($card_id) {
         return current(array_filter($this->cards_info, function($card) use ($card_id){
             return $card['id'] == $card_id;
@@ -275,13 +283,15 @@ class Aniversus extends Table
             throw new BgaUserException( self::_("You are not the active player") );
         }
         $card_info = $this->getCardinfoFromCardsInfo($card_type);
-        if ($card_info['type'] != 'Function') {
-            throw new BgaUserException( self::_("This is not a function card") );
-        }
         $card_cost = $card_info['cost'];
         $card_team = $card_info['team'];
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        // check whether the user have this card in hand
+        if (!$player_deck->cardInLocation($card_id, 'hand')) {
+            throw new BgaUserException( self::_("You do not have this card in hand") );
+        }
         // get the active player energy and action number
-        $sql = "select player_action, player_productivity, player_team from player where player_id = $player_id";
+        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
         if ($player['player_team'] != $card_team && $card_team != "basic") {
             throw new BgaUserException( self::_("This card does not belong to your team") );
@@ -299,16 +309,24 @@ class Aniversus extends Table
         WHERE player_id = $player_id
         ";
         self::DbQuery( $sql );
-        $player_deck = $this->getActivePlayerDeck($player_id);
         $player_deck->moveCard($card_type, 'discard');
         // Notify all players about the card played
-        self::notifyAllPlayers( "functionCardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
+        self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} plays ${card_name}' ), array(
             'player_id' => $player_id,
             'player_name' => self::getActivePlayerName(),
             'card_name' => $card_info['name'],
             'card_id' => $card_id,
             'card_type' => $card_type,
         ) );
+        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        self::notifyAllPlayers( "updatePlayerBoard", "", array(
+            'player_id' => $player_id,
+            'player_productivity' => $player['player_productivity'],
+            'player_action' => $player['player_action'],
+            'player_score' => $player['player_score'],
+        ) );
+        
         // // Go to next game state
         // $this->gamestate->nextState( "counterattact" );
     }

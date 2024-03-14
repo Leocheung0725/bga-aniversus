@@ -181,5 +181,9 @@ ul.no-bullet {
   padding: 5px;
 }
 
+.counter {
+  display: inline-block;
+}
+
 
 /* ------------------- End of Tooltip CSS ------------------- */

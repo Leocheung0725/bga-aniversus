@@ -59,10 +59,9 @@ var jstpl_player_board =
 '<div class="playerboard-main">' +
     '<div>' +
         '<ul class="no-bullets">' +     
-        '<li class="li-item"><span>Remaining productivity <div class="productivity-inline-image"></div> : ${player_productivity}</span></li>' +
-        '<li class="li-item"><span>Power <div class="power-inline-image"></div> : ${player_power}</span></li>' +
-        '<li class="li-item"><span>Remaining Action: ${player_action}</span></li>' +
-        '<li class="li-item"><span>Score: ${score}</span></li>' +
+        '<li class="li-item"><span>Remaining productivity <div class="productivity-inline-image"></div> : <div class="counter" id="player_productivity_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span>Power <div class="power-inline-image"></div> : <div class="counter" id="player_power_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span>Remaining Action: <div class="counter" id="player_action_${player_id}"></div></span></li>' +
         '</ul>' + 
     '</div>' +
 '</div>';

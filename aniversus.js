@@ -52,8 +52,6 @@ function (dojo, declare) {
             this.cardwidth = 124;
             this.cardheight = 174;
             
-            // Zone control (Playmat)
-            
             
             // Zone control (Player Playmat)
             // Create a array of zone objects for player playmat
@@ -100,13 +98,25 @@ function (dojo, declare) {
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // Setting up player boards
-            for( var player_id in gamedatas.players )
+            this.playerCounter = {};
+            for( let player_id in gamedatas.players )
             {
                 var player = gamedatas.players[player_id];
+                this.playerCounter[player_id] = {};
                 // TODO: Setting up players boards if needed
                 var player_board_div = $('player_board_'+ player_id);
-                dojo.place( this.format_block('jstpl_player_board', player), player_board_div );
+                dojo.place( this.format_block('jstpl_player_board', {"player_id" : player_id}), player_board_div );
+                this.playerCounter[player_id]['productivity'] = new ebg.counter();
+                this.playerCounter[player_id]['productivity'].create( `player_productivity_${player_id}` );
+                this.playerCounter[player_id]['productivity'].setValue(player.player_productivity);
+                this.playerCounter[player_id]['action'] = new ebg.counter();
+                this.playerCounter[player_id]['action'].create( `player_action_${player_id}` );
+                this.playerCounter[player_id]['action'].setValue(player.player_action);
+                this.playerCounter[player_id]['power'] = new ebg.counter();
+                this.playerCounter[player_id]['power'].create( `player_power_${player_id}` );
+                this.playerCounter[player_id]['power'].setValue(player.player_power);
             }
+
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // TODO: Set up your game interface here, according to "gamedatas"
@@ -293,6 +303,19 @@ function (dojo, declare) {
             return {x: -x, y: -y};
         },
 
+        getJstplCard: function(player_id, card_id, card_type, from, to) {
+            const position = this.getCardBackgroundPosition(card_type);
+            // create card on table
+            dojo.place( this.format_block('jstpl_cardsOnTable', {
+                player_id: player_id,
+                card_id: card_id,
+                ...position
+            }), to);
+            // place the card on the player board
+            this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, from);
+            // slide the card to the table
+            this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , to).play();
+        },
 
         getTooltipHtml: function(card_id) {
             var card = this.gamedatas.cards_info.find((card) => card.id == card_id);
@@ -515,7 +538,8 @@ function (dojo, declare) {
             // this.notifqueue.setSynchronous( 'cardPlayed', 3000 );
             // 
 
-            dojo.subscribe('functionCardPlayed', this, "notif_playFunctionCard");
+            dojo.subscribe('playFunctionCard', this, "notif_playFunctionCard");
+            dojo.subscribe('updatePlayerBoard', this, "notif_updatePlayerBoard");
         },  
         
         // TODO: from this point and below, you can write your game notifications handling methods
@@ -534,6 +558,21 @@ function (dojo, declare) {
         },    
         
         */
+        // This Notification is called when the shooting is successful
+        notif_updatePlayerBoard: function( notif ) {
+            console.log(`**** Notification: updatePlayerBoard `)
+            console.log(notif);
+            const player_id = notif.args.player_id;
+            const player_productivity = notif.args.player_productivity;
+            const player_action = notif.args.player_action;
+            const score = notif.args.player_score;
+            // Update all information in the player board
+            this.playerCounter[player_id]['productivity'].toValue(player_productivity);
+            this.playerCounter[player_id]['action'].toValue(player_action);
+            this.scoreCtrl[player_id].toValue(score);
+        },
+
+        // This Notification is called when a function card is played
         notif_playFunctionCard: function( notif ) {
             console.log(`**** Notification: playFunctionCard `)
             console.log(notif);
@@ -541,42 +580,14 @@ function (dojo, declare) {
             const card_id = notif.args.card_id;
             const card_type = notif.args.card_type;
             if (player_id == this.player_id) {
-                // get the discard pile items
-                let discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
-                // create card html element and place it to discard pile
-                const position = this.getCardBackgroundPosition(card_type);
-                // me part
-                let div_id = `discardPile_field_me`;
-                dojo.place( this.format_block('jstpl_cardsOnTable', {
-                    player_id: player_id,
-                    card_id: card_id,
-                    ...position
-                }), div_id);
-                // // place the card on the player board
-                this.placeOnObject( 'cardsOnTable_' + player_id + '_' + card_id , 'myhand_item_' + card_id);
+                this.getJstplCard(player_id, card_id, card_type, 'myhand_item_' + card_id, 'discardPile_field_me');
                 this.playerdeck.removeFromStockById(card_id);
-                // slide the card to the table
-                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , div_id ).play();
                 if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
                     this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
                 this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
             } else {
-                // get the discard pile items
-                let discard_pile_items = this.playerOnPlaymat['opponent']['discardpile'].getAllItems();
-                // create card html element and place it to discard pile
-                const position = this.getCardBackgroundPosition(card_type);
-                // opponent part
-                let div_id = `discardPile_field_opponent`;
-                dojo.place( this.format_block('jstpl_cardsOnTable', {
-                    player_id: player_id,
-                    card_id: card_id,
-                    ...position
-                }), div_id);
-                // // place the card on the player board
-                this.placeOnObject( 'cardsOnTable_' + player_id + '_' + card_id , 'player_board_' + player_id);
-                // slide the card to the table
-                this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , div_id ).play();
+                this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, 'discardPile_field_opponent');
                 if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
                     this.playerOnPlaymat['opponent']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
