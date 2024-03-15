@@ -63,6 +63,7 @@
 }
 
 
+
 .discardPile_field {
 	margin-left: 4rem;
 	width: 387px;
@@ -107,6 +108,10 @@
 	height: var(--card-height);
 	width: var(--card-width);
 	background-image: url("https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png");
+}
+
+.js-cardsontable.reverse {
+  transform: rotate(180deg);
 }
 
 /* ---------------------- Tooltip CSS ----------------------- */

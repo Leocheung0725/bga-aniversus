@@ -161,20 +161,20 @@ class Aniversus extends Table
         $result['hand'] = $this->getActivePlayerDeck($current_player_id)->getCardsInLocation( 'hand', $current_player_id );
         // common information, create a new array to store the common information
         foreach ($result['players'] as $player_id => $player) {
-            $result[$player_id] = array();
-            if ($player_id == $current_player_id) {
-                // Discard pile information
-                // order by location_arg ( the larger location arg is the top card in the discard pile)
-                
-                $result[$player_id]['discardpile'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'discard', null, "card_location_arg" );
-                // Playmat information
-                $result[$player_id]['playmat'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'playmat' );
-            } else {
-                // Discard pile information
-                $result[$player_id]['discardpile'] = array_reverse($this->getActivePlayerDeck($player_id)->getCardsInLocation( 'discard', null, "card_location_arg" ));
-                // Playmat information
-                $result[$player_id]['playmat'] = $this->getActivePlayerDeck($player_id)->getCardsInLocation( 'playmat' );
-            
+            // Initialize the discard pile and playmat arrays for each player
+            $result['players'][$player_id]['discardpile'] = array();
+            $result['players'][$player_id]['playmat'] = array();
+            // Discard pile information
+            // order by location_arg ( the larger location arg is the top card in the discard pile)
+            $discardPileCards = $this->getActivePlayerDeck($player_id)->getCardsInLocation('discard', null, "card_location_arg");
+            foreach ($discardPileCards as $card) {
+                $result['players'][$player_id]['discardpile'][] = $card;
+            }
+        
+            // Playmat information
+            $playmatCards = $this->getActivePlayerDeck($player_id)->getCardsInLocation('playmat');
+            foreach ($playmatCards as $card) {
+                $result['players'][$player_id]['playmat'][] = $card;
             }
         }
         // Cards in the draw deck
@@ -260,7 +260,7 @@ class Aniversus extends Table
         $num_columns = 5;
         $row = intval(($location_arg - 1) / $num_columns) + 1;
         $column = ($location_arg - 1) % $num_columns + 1;
-        return array('row' => $row, 'column' => $column);
+        return array('row' => $row, 'col' => $column);
     }
 
     function findLargestLocationArg($cards) {
@@ -411,7 +411,7 @@ class Aniversus extends Table
         }
         // play the card
         // minus the action and productivity of player in this round
-        if ($row = 1) {
+        if ($row == "1") {
             if ($player['player_productivity'] < $card_cost) {
                 throw new BgaUserException( self::_("You do not have enough productivity to play this card") );
             }
@@ -421,7 +421,7 @@ class Aniversus extends Table
             WHERE player_id = $player_id
             ";
             self::DbQuery( $sql );
-        } else if ( $row = 2 ) {
+        } else if ( $row == "2" ) {
             $card_productivity = $card_info['productivity'];
             $sql = "
             UPDATE player
@@ -441,6 +441,8 @@ class Aniversus extends Table
             'card_id' => $card_id,
             'card_type' => $card_type,
             'card_effect' => $card_info['function'],
+            'row' => $row,
+            'col' => $col,
         ) );
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
         $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";

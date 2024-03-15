@@ -33,7 +33,12 @@ class view_aniversus_aniversus extends game_view
         // Used for translations and stuff. Please do not modify.
         return "aniversus";
     }
-    
+
+    function transformNumber($x) {
+        $pivot = 3;
+        return 2 * $pivot - $x;
+    }
+
   	function build_page( $viewArgs )
   	{		
   	    // Get players & players number
@@ -54,12 +59,17 @@ class view_aniversus_aniversus extends game_view
         //             "TEAM" => $team ));
         // }
         $role_array = array("1" => "opponent", "2" => "me");
-        
+
         for ($x = 1; $x <= 2; $x++) {
             $this->page->begin_block($template, "playeronplaymat_".$role_array[$x]);
             for ( $row = 1; $row <= 2; $row++ ) {
                 for ( $col = 1; $col <= 5; $col++ ) {
-                    $this->page->insert_block("playeronplaymat_".$role_array[$x], array( "row" => $row, "col" => $col, "role" => $role_array[$x],));
+                    if ($x == 1) {
+                        $this->page->insert_block("playeronplaymat_".$role_array[$x], array( "row" => $row, "col" => $this->transformNumber($col), "role" => $role_array[$x],));
+                    } else {
+                        $this->page->insert_block("playeronplaymat_".$role_array[$x], array( "row" => $row, "col" => $col, "role" => $role_array[$x],));
+                    }
+                    
                 }
             }
         }
