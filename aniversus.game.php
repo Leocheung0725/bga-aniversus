@@ -125,9 +125,18 @@ class Aniversus extends Table
         }
         $sql .= implode( ',' , $values );
         self::DbQuery( $sql );
+        // Initialize the playing_card
+        $sql = "INSERT INTO playing_card (player_id) VALUES ";
+        $values = array();
+        foreach( $players as $player_id => $player ) {
+            $values[] = "(
+                '{$player_id}'
+            )";
+        }
+        $sql .= implode( ',' , $values );
+        self::DbQuery( $sql );
         // self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
         self::reloadPlayersBasicInfos();
-
         /************ End of the game initialization *****/
     }
 

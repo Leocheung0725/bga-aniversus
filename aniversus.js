@@ -160,7 +160,7 @@ function (dojo, declare) {
             }
             // Add cards to the playmat and discard pile
             for ( let player_id in this.gamedatas.players ) {
-                if (player_id == this.player_id) {
+                if (player_id == this.getActivePlayerId()) {
                     //// Add cards to the Discard pile
                     //// Get the top three cards in the discard pile
                     let topThreeDiscardPile = this.gamedatas['players'][player_id]['discardpile'].slice(0, 3);
@@ -412,7 +412,7 @@ function (dojo, declare) {
                 this.ajaxcallwrapper('playPlayerCard', {
                     "card_id": card_id,
                     "card_type": card_type,
-                    "player_id": this.player_id,
+                    "player_id": this.getActivePlayerId(),
                     "row": row,
                     "col": col
                 });
@@ -442,7 +442,7 @@ function (dojo, declare) {
                             this.ajaxcallwrapper('playFunctionCard', {
                                 "card_id": card_id,
                                 "card_type": card_type,
-                                "player_id": this.player_id
+                                "player_id": this.getActivePlayerId()
                             });
                         }
                     }
@@ -456,7 +456,7 @@ function (dojo, declare) {
                         }
                     }
                     console.log(`The player card id : ${card_id} and card type: player is played.`)
-                    // this.playPlayerCard(this.player_id, card_id, card_type);
+                    // this.playPlayerCard(this.getActivePlayerId(), card_id, card_type);
                     
                     } else {
                         // Can't play a card
@@ -579,7 +579,7 @@ function (dojo, declare) {
             const player_id = notif.args.player_id;
             const card_id = notif.args.card_id;
             const card_type = notif.args.card_type;
-            if (player_id == this.player_id) {
+            if (player_id == this.getActivePlayerId()) {
                 this.getJstplCard(player_id, card_id, card_type, 'myhand_item_' + card_id, 'discardPile_field_me');
                 this.playerdeck.removeFromStockById(card_id);
                 if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
@@ -606,7 +606,7 @@ function (dojo, declare) {
             const col = notif.args.col;
             console.log(`The player id: ${player_id} and card id: ${card_id} and card type: ${card_type} and row: ${row} and col: ${col}`)
             // opponent part
-            if (player_id != this.player_id) {
+            if (player_id != this.getActivePlayerId()) {
                 this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, `playerOnPlaymat_opponent_${row}_${col}`);
                 this.playerOnPlaymat['opponent'][row][col].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
             } else {

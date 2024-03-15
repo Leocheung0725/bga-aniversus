@@ -69,5 +69,16 @@ ALTER TABLE `player` ADD `player_action_limit` INT(11) NOT NULL;
 ALTER TABLE `player` ADD `player_action` INT(11) NOT NULL;
 ALTER TABLE `player` ADD `player_power` INT(11) NOT NULL;
 
-
+-- Playing Card DATABASE
+CREATE TABLE IF NOT EXISTS `playing_card` (
+    `id` int(10) unsigned NOT NULL Auto_increment,
+    `player_id` VARCHAR(30),
+    `card_id` VARCHAR(5),
+    `card_type` varchar(16),
+    `card_type_arg` int(11),
+    `card_location` varchar(16),
+    `card_location_arg` int(11),
+    `card_status` varchar(16),
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 

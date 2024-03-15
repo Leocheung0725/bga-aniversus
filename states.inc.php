@@ -121,7 +121,7 @@ $machinestates = array(
         "description" => clienttranslate(''),
         "type" => "game",
         "action" => "stCardEffect",
-        "transitions" => array( "nextAction" => 22 )
+        "transitions" => array( "playerTurn" => 22 )
     ),
     
     // End hand section
