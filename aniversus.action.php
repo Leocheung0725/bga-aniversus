@@ -71,6 +71,19 @@
         // End of the action
         self::ajaxResponse();
     }
+
+    public function throwCards()
+    {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+
+        // Retrieve arguments
+        $card_ids = self::getArg( "card_ids", AT_numberlist, true );
+        $this->game->throwCards( $card_ids );
+
+        // End of the action
+        self::ajaxResponse();
+    }
     /*
     
     Example:

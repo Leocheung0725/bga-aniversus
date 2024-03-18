@@ -48,6 +48,20 @@
 */
 
 //    !! It is not a good idea to modify this file when a game is running !!
+// define contants for state ids
+if (!defined('stateEndGame')) { // ensure this block is only invoked once, since it is included multiple times
+    define("stateNewHand", 2);
+    define("stateCardDrawing", 21);
+    define("statePlayerTurn", 22);
+    define("stateCounterattack", 30);
+    define("stateCardEffect", 31);
+    define("stateCardActiveEffect", 32);
+    define("stateShoot", 23);
+    define("stateThrowCard", 24);
+    define("stateEndHand", 90);
+    define("stateEndGame", 99);
+ }
+
 
  
 $machinestates = array(
@@ -58,7 +72,7 @@ $machinestates = array(
         "description" => "",
         "type" => "manager",
         "action" => "stGameSetup",
-        "transitions" => array( "" => 2 )
+        "transitions" => array( "" =>  stateNewHand )
     ),
     // Please do not modify. -----------------------------------------------------------
     
@@ -70,7 +84,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stNewHand",
         "updateGameProgression" => true,
-        "transitions" => array( "playerTurn" => 22 )
+        "transitions" => array( "playerTurn" => statePlayerTurn )
     ),
     // normal process section
     21 => array(
@@ -78,25 +92,26 @@ $machinestates = array(
         "description" => clienttranslate('Drawing cards'),
         "type" => "game",
         "action" => "stCardDrawing",
-        "transitions" => array( "nextPlayer" => 22 )
+        "transitions" => array( "nextPlayer" => statePlayerTurn )
     ),
 
     22 => array(
         "name" => "playerTurn",
-        "description" => clienttranslate('${actplayer} must play a card or pass'),
-        "descriptionmyturn" => clienttranslate('${you} must play a card or pass'),
+        "description" => clienttranslate('${actplayer} must play a card or shoot or pass'),
+        "descriptionmyturn" => clienttranslate('${you} must play a card or shoot or pass'),
         "type" => "activeplayer",
         "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass", "shoot" ),
-        "transitions" => array( "counterattact" => 30, "pass" => 21, "shoot" => 23, "throwCard" => 24 )
+        "transitions" => array( "counterattact" => stateCounterattack , "launch" => stateCardEffect,
+        "shoot" => stateShoot, "throwCard" => stateThrowCard )
     ),
 
     23 => array(
         "name" => "shoot",
         "description" => clienttranslate('Shoot'),
-        "type" => "multipleactiveplayer",
+        "type" => "activeplayer",
         "action" => "stShoot",
         "possibleactions" => array( "shoot", "playRedCard" ),
-        "transitions" => array( "thrawncard" => 23, "endHand" => 90 )
+        "transitions" => array( "thrawncard" => stateThrowCard, "endHand" => stateEndHand )
     ),
 
     24 => array(
@@ -105,15 +120,16 @@ $machinestates = array(
         "type" => "activeplayer",
         "action" => "throwCard",
         "possibleactions" => array( "thrawnCard" ),
-        "transitions" => array( "nextPlayer" => 22, "endHand" => 90 )
+        "transitions" => array( "cardDrawing" => stateCardDrawing, "endHand" => stateEndHand )
     ),
     // playerTurn section 
     30 => array(
         "name" => "counterattack",
         "description" => clienttranslate('Counterattack'),
-        "type" => "activeplayer",
+        "type" => "game",
+        "action" => "stCounterattack",
         "possibleactions" => array( "counterattack" ),
-        "transitions" => array( "nextAction" => 22, "counterAgain" => 30, "EndOfCounterattact" => 31 )
+        "transitions" => array( "playerTurn" => statePlayerTurn, "Counterattack" => stateCounterattack, "cardEffect" => stateCardEffect )
     ),
 
     31 => array(
@@ -121,7 +137,18 @@ $machinestates = array(
         "description" => clienttranslate(''),
         "type" => "game",
         "action" => "stCardEffect",
-        "transitions" => array( "playerTurn" => 22 )
+        "args" => "argCardEffect",
+        "transitions" => array( "playerTurn" => statePlayerTurn, "cardActiveEffect" => stateCardActiveEffect )
+    ),
+
+    32 => array(
+        "name" => "cardActiveEffect",
+        "description" => clienttranslate('${activeplayer} ${message}'),
+        "descriptionmyturn" => clienttranslate('${you} ${message}'),
+        "type" => "activeplayer",
+        "action" => "stCardActiveEffect",
+        "args" => "argCardActiveEffect",
+        "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect )
     ),
     
     // End hand section
@@ -131,7 +158,7 @@ $machinestates = array(
         "description" => clienttranslate('End of hand'),
         "type" => "game",
         "action" => "stEndHand",
-        "transitions" => array( "endGame" => 99 )
+        "transitions" => array( "endGame" => stateEndGame )
     ),
     
 
