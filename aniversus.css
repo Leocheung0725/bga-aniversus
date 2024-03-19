@@ -224,3 +224,24 @@ ul.no-bullet {
 
 
 /* ------------------- End of Tooltip CSS ------------------- */
+
+/* state operations css */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0px #6ea8fe;
+  }
+  50% {
+    box-shadow: 0 0 15px #6ea8fe;
+  }
+  100% {
+    box-shadow: 0 0 0px #6ea8fe;
+  }
+}
+
+.stockitem_selected {
+  border: 2px solid #6ea8fe !important;
+  box-shadow: 0 0 15px #6ea8fe ! important;
+  transform: scale(1.05) ! important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease ! important;
+  animation: pulse 2s infinite ease-in-out ! important;
+}

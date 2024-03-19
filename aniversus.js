@@ -125,6 +125,8 @@ function (dojo, declare) {
             this.playerdeck.centerItems = true; // Center items (actually i don't know what it does)
             // this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
             this.playerdeck.setSelectionMode(1); // Allow only one card to be selected
+            this.playerdeck.setSelectionAppearance('class'); // Add a class to selected
+            this.playerdeck.item_margin = 13; // Add margin between cards
             // Create cards types:
             // addItemType(type: number, weight: number, image: string, image_position: number )
 
@@ -240,7 +242,6 @@ function (dojo, declare) {
             console.log(args);
             // set playerdeck selection mode
             this.playerdeck.setSelectionMode(1);
-            dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
         },
 
         onEnteringState_cardActiveEffect: function(args) {
@@ -249,12 +250,17 @@ function (dojo, declare) {
             switch (args.card_type_arg) {
                 case '1':
                     this.playerdeck.setSelectionMode(1);
-                    dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
                     break;
                 case other:
                     console.log('The card type is other');
                     break;
             }
+        },
+
+        onEnteringState_counterattack: function(args) {
+            console.log('counterattack state: the enterfunction is called');
+            console.log(args);
+            
         },
         // -------------------------------------                        -------------------------------------------- //
         // ------------------------------------- End of onEnteringState -------------------------------------------- //
@@ -302,8 +308,13 @@ function (dojo, declare) {
                     //   dojo.addClass('play_button_id', 'disabled');
                     // }
                 case 'playerTurn':
+                    this.addActionButton( 'playerTurn_btn_play', _('Play'), 'onPlayCard_PlayerTurn' );
                     this.addActionButton( 'playerTurn_btn_shoot', _('Shoot'), 'onShoot_PlayerTurn' );
                     this.addActionButton( 'playerTurn_btn_pass', _('Pass'), 'onPass_PlayerTurn' );
+                    break;
+                case 'counterattack':
+                    this.addActionButton( 'counterattack_btn_intercept', _('Intercept'), 'onIntercept_counterattack' );
+                    this.addActionButton( 'counterattack_btn_pass', _('Pass'), 'onPass_counterattack' );
                     break;
                 }
             }
@@ -426,14 +437,7 @@ function (dojo, declare) {
                 });
             }
         },
-
-
-        onPlayerHandSelectionChanged : function(evt) {
-            dojo.stopEvent(evt);
-            if (!this.isCurrentPlayerActive()) {
-                this.playerdeck.unselectAll();
-                return;
-            }
+        onPlayCard_PlayerTurn : function(evt) {
             var items = this.playerdeck.getSelectedItems();
             if (items.length > 0) {
                 var card_id = items[0].id;
@@ -460,13 +464,21 @@ function (dojo, declare) {
                         }
                     }
                     console.log(`The player card id : ${card_id} and card type: player is played.`)
-                    // this.playPlayerCard(this.getActivePlayerId(), card_id, card_type);
-                    
                     } else {
                         // Can't play a card
                         this.playerdeck.unselectAll();
                     }
                 }
+            }
+        },
+
+        onPlayerHandSelectionChanged : function( evt ) {
+            if (!this.isCurrentPlayerActive()) {
+                this.playerdeck.unselectAll();
+                return;
+            }
+            var items = this.playerdeck.getSelectedItems();
+            if (items.length > 0) {
             } else {
                 // Remove the selection for user to play the player to playmat
                 for (var row = 1; row <= 2; row++) {
@@ -504,6 +516,18 @@ function (dojo, declare) {
             dojo.stopEvent(evt);
         },
 
+        onIntercept_counterattack: function(evt) {
+            dojo.stopEvent(evt);
+            if (this.checkAction('intercept_counterattack', true)) {
+                this.ajaxcallwrapper('intercept_counterattack');
+            }
+        },
+        onPass__counterattack: function(evt) {
+            if (this.checkAction('pass_counterattack', true)) {
+                this.ajaxcallwrapper('pass_counterattack');
+            }
+        },
+
         
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
@@ -533,6 +557,7 @@ function (dojo, declare) {
             dojo.subscribe('updatePlayerBoard', this, "notif_updatePlayerBoard");
             dojo.subscribe('playPlayerCard', this, "notif_playPlayerCard");
             dojo.subscribe('cardDrawn', this, "notif_cardDrawn");
+            dojo.subscribe('cardThrown', this, "notif_cardThrown");
         },  
         
         // TODO: from this point and below, you can write your game notifications handling methods
@@ -544,10 +569,12 @@ function (dojo, declare) {
             const player_productivity = notif.args.player_productivity;
             const player_action = notif.args.player_action;
             const score = notif.args.player_score;
+            const player_power = notif.args.player_power;
             // Update all information in the player board
             this.playerCounter[player_id]['productivity'].toValue(player_productivity);
             this.playerCounter[player_id]['action'].toValue(player_action);
             this.scoreCtrl[player_id].toValue(score);
+            this.playerCounter[player_id]['power'].toValue(player_power);
         },
 
         // This Notification is called when a function card is played
@@ -612,9 +639,20 @@ function (dojo, declare) {
             const cards = notif.args.cards;
             for (let i in cards) {
                 var card = cards[i];
-                this.playerdeck.addToStockWithId(Number(card.type_arg), card.id);
+                this.playerdeck.addToStockWithId(Number(card.type_arg), card.id, "player_board_" + player_id);
                 this.addTooltipHtml('myhand_item_' + card.id, this.getTooltipHtml(Number(card.type_arg)));
             }
+        },
+        // This Notification is called when a card is thrown
+        notif_cardThrown: function( notif ) {
+            console.log(`**** Notification: cardThrown `)
+            console.log(notif);
+            const player_id = notif.args.player_id;
+            const card_id = notif.args.card_id;
+            const card_type_arg = notif.args.card_type_arg;
+            this.getJstplCard(player_id, card_id, card_type_arg, 'myhand_item_' + card_id, 'discardPile_field_me');
+            this.playerOnPlaymat['me']['discardpile'].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
+            this.playerdeck.removeFromStockById(Number(card_id));
         }
    });             
 });

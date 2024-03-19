@@ -84,6 +84,32 @@
         // End of the action
         self::ajaxResponse();
     }
+
+    public function intercept_counterattack()
+    {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+
+        // Retrieve arguments
+        $this->game->intercept_counterattack();
+
+        // End of the action
+        self::ajaxResponse();
+    }
+
+
+
+    public function pass_counterattack()
+    {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+
+        // Retrieve arguments
+        $this->game->pass_counterattack();
+
+        // End of the action
+        self::ajaxResponse();
+    }
     /*
     
     Example:

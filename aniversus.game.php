@@ -150,7 +150,6 @@ class Aniversus extends Table
     protected function getAllDatas()
     {
         $result = array();
-
         // send material.inc.php Static information to client
         $result['cards_info'] = $this->cards_info;
         $result['card_type_arg2css_position'] = $this->card_type_arg2css_position;
@@ -311,30 +310,6 @@ class Aniversus extends Table
         (note: each method below must match an input method in aniversus.action.php)
     */
 
-    /*
-    
-    Example:
-
-    function playCard( $card_id )
-    {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        self::checkAction( 'playCard' ); 
-        
-        $player_id = self::getActivePlayerId();
-        
-        // Add your game logic to play a card there 
-        ...
-        
-        // Notify all players about the card played
-        self::notifyAllPlayers( "cardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
-            'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_name,
-            'card_id' => $card_id
-        ) );
-          
-    }    
-    */
     public function playFunctionCard( $player_id, $card_id, $card_type ) {
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'playFunctionCard' );
@@ -346,6 +321,10 @@ class Aniversus extends Table
         }
         $card_info = $this->getCardinfoFromCardsInfo($card_type);
         $card_cost = $card_info['cost'];
+        // write a function to handle the cost free
+        /////
+        ///  .....
+        ////
         $card_team = $card_info['team'];
         $player_deck = $this->getActivePlayerDeck($player_id);
         // check whether the user have this card in hand
@@ -397,22 +376,24 @@ class Aniversus extends Table
             'player_score' => $player['player_score'],
         ) );
         // update database that what card the active player has played
-        $set_values = array();
-        $set_values[] = "card_id = $card_id";
-        $set_values[] = "card_type = ".$card_info['type'];
-        $set_values[] = "card_type_arg = ".$card_info['id'];
-        $set_values[] = "card_location = 'discard'";
-        $set_values[] = "card_status = 'validing'";
-        $set_values[] = "active = TRUE";
-        $sql = "UPDATE playing_card SET ".implode(", ", $set_values)." WHERE player_id = $player_id";
+        $sql = "UPDATE playing_card SET "
+        . "card_id = " . intval($card_id) . ", "
+        . "card_type = '" . addslashes($card_info['type']) . "', "
+        . "card_type_arg = " . intval($card_info['id']) . ", "
+        . "card_location = 'discard', "
+        . "card_status = TRUE, "
+        . "active = TRUE "
+        . "WHERE player_id = " . intval($player_id);
+        self::DbQuery( $sql );
         // check whether the opponent has counter attack card in hand
         $opponent_deck = $this->getNonActivePlayerDeck($player_id);
         if (empty($opponent_deck->getCardsOfTypeInLocation( 'Function' , 5 , 'hand' ))) {
             // Go to launch state, the card effect would be done
+            $this->activeNextPlayer();
             $this->gamestate->nextState( "launch" );
         } else {
             // Go to counterAttack state
-            $this->gamestate->nextState( "counterattact" );
+            $this->gamestate->nextState( "counterattack" );
         }
     }
 
@@ -481,17 +462,22 @@ class Aniversus extends Table
             'col' => $col,
         ) );
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
+        $sql = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
             'player_id' => $player_id,
             'player_productivity' => $player['player_productivity'],
             'player_action' => $player['player_action'],
             'player_score' => $player['player_score'],
+            'player_power' => $player['player_power'],
         ) );
     }
 
-    public function throwCards ( $card_ids ) {
+    public function throwCards( $card_ids ) {
+        // Ensure that the $card_ids is actually an array
+        if (!is_array($card_ids)) {
+            throw new BgaUserException("Invalid card IDs.");
+        }
         // checking the action
         // self::checkAction( 'throwCard' );
         $player_id = self::getActivePlayerId();
@@ -503,8 +489,31 @@ class Aniversus extends Table
                 'player_id' => $player_id,
                 'player_name' => self::getActivePlayerName(),
                 'card_name' => $this->cards_info[$card['type_arg']]['name'],
-                'card_id' => $card_id
+                'card_id' => $card_id,
+                'card_type_arg' => $card['type_arg'],
             ) );
+        }
+    }
+    public function intercept_counterattack() {
+        // check that this is player's turn and that it is a "possible action" at this game state
+        self::checkAction( 'intercept_counterattack' );
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+    }
+
+
+    public function pass_counterattack() {
+        // check that this is player's turn and that it is a "possible action" at this game state
+        self::checkAction( 'pass_counterattack' );
+        $player_id = self::getActivePlayerId();
+        $sql = "SELECT player_id FROM playing_card WHERE active = TRUE";
+        $active_player_id = self::getUniqueValueFromDB( $sql );
+        if ($player_id != $active_player_id) {
+            $sql = "UPDATE playing_card SET card_status = TRUE WHERE active = TRUE";
+            $this->gamestate->nextState( "cardEffect" );
+        } else {
+            $sql = "UPDATE playing_card SET active = FALSE, card_status = FALSE WHERE active = TRUE";
+            $this->gamestate->nextState( "playerTurn" );
         }
     }
 
@@ -693,6 +702,9 @@ class Aniversus extends Table
                 // endEffect have two type : normal and active
                 $this->endEffect($player_id, "active");
                 break;
+            case "2":
+                // do something
+                break;
             case "7":
                 $sql = "UPDATE player SET player_productivity =  player_productivity + 2 WHERE player_id = $player_id";
                 self::DbQuery( $sql );
@@ -702,7 +714,6 @@ class Aniversus extends Table
                 break;
         }
     }
-
 
     function stEndHand() {
         // End the game and do some scoring here

@@ -101,7 +101,7 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must play a card or shoot or pass'),
         "type" => "activeplayer",
         "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass", "shoot" ),
-        "transitions" => array( "counterattact" => stateCounterattack , "launch" => stateCardEffect,
+        "transitions" => array( "counterattack" => stateCounterattack , "launch" => stateCardEffect,
         "shoot" => stateShoot, "throwCard" => stateThrowCard )
     ),
 
@@ -126,10 +126,9 @@ $machinestates = array(
     30 => array(
         "name" => "counterattack",
         "description" => clienttranslate('Counterattack'),
-        "type" => "game",
-        "action" => "stCounterattack",
-        "possibleactions" => array( "counterattack" ),
-        "transitions" => array( "playerTurn" => statePlayerTurn, "Counterattack" => stateCounterattack, "cardEffect" => stateCardEffect )
+        "type" => "activeplayer",
+        "possibleactions" => array( "intercept_counterattack", "pass_counterattack" ),
+        "transitions" => array( "playerTurn" => statePlayerTurn, "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect )
     ),
 
     31 => array(
