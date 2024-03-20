@@ -21,11 +21,13 @@ require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
 require_once("modules/gamelogic/aniversus.utils.php");
 require_once("modules/gamelogic/aniversus.stateaction.php");
 require_once("modules/gamelogic/aniversus.playeraction.php");
+require_once("modules/gamelogic/aniversus.stateargs.php");
 class Aniversus extends Table
 {
     use AniversusUtils;
     use AniversusStateActions;
     use AniversusPlayerActions;
+    use AniversusStateArgs;
 	function __construct( )
 	{
         // Your global variables labels:
@@ -82,7 +84,7 @@ class Aniversus extends Table
         //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
 
-        // TODO: setup the initial game situation here
+        // ANCHOR: setupNewGame
         
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
@@ -144,7 +146,7 @@ class Aniversus extends Table
     }
 
     /*
-        getAllDatas: 
+        // ANCHOR getAllDatas
         
         Gather all informations about current game situation (visible by the current player).
         
@@ -167,7 +169,7 @@ class Aniversus extends Table
         $result['players'] = self::getCollectionFromDb( $sql );
         $current_player = $result['players'][$current_player_id];
         $result['current_player'] = $current_player;
-        // TODO: Gather all information about current game situation (visible by player $current_player_id).
+        // Gather all information about current game situation (visible by player $current_player_id).
         // Cards in player hand
         $result['hand'] = $this->getActivePlayerDeck($current_player_id)->getCardsInLocation( 'hand', $current_player_id );
         // common information, create a new array to store the common information
@@ -193,7 +195,7 @@ class Aniversus extends Table
     }
 
     /*
-        getGameProgression:
+       // ANCHOR getGameProgression
         
         Compute and return the current game progression.
         The number returned must be an integer beween 0 (=the game just started) and
@@ -204,91 +206,17 @@ class Aniversus extends Table
     */
     function getGameProgression()
     {
-        // TODO: compute and return the game progression
+        // compute and return the game progression
 
         return 0;
     }
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////
-//////////// Game state arguments
-////////////
-
-    /*
-        Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
-        These methods function is to return some additional information that is specific to the current
-        game state.
-    */
-
-    /*
-    
-    Example for game state "MyGameState":
-    
-    function argMyGameState()
-    {
-        // Get some values from the current game situation in database...
-    
-        // return values:
-        return array(
-            'variable1' => $value1,
-            'variable2' => $value2,
-            ...
-        );
-    }    
-    */
-    function argCardEffect()
-    {
-        // it must return the array
-        // fetch playing_card table to get the card id and card type by active player id
-        $sql = "SELECT card_id, card_type, card_type_arg, player_id, card_status, card_location FROM playing_card WHERE active = TRUE";
-        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
-
-        return array(
-            'card_id' => $playing_card_info['card_id'],
-            'card_type' => $playing_card_info['card_type'],
-            'card_type_arg' => $playing_card_info['card_type_arg'],
-            'player_id' => $playing_card_info['player_id'],
-            'card_status' => $playing_card_info['card_status'],
-            'card_location' => $playing_card_info['card_location'],
-
-        );
-    }
-
-    function argCardActiveEffect()
-    {
-        // it must return the array
-        // fetch playing_card table to get the card id and card type by active player id
-        $sql = "SELECT card_id, card_type, card_type_arg, player_id, card_status, card_location FROM playing_card WHERE active = TRUE";
-        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
-        switch ($playing_card_info['card_type_arg']) {
-            case `1`:
-                $message = "must discard a card from the hand";
-                break;
-            default:
-                $card_effect = "You can play a card from your hand to the playmat";
-                break;
-        }
-        return array(
-            'card_id' => $playing_card_info['card_id'],
-            'card_type' => $playing_card_info['card_type'],
-            'card_type_arg' => $playing_card_info['card_type_arg'],
-            'player_id' => $playing_card_info['player_id'],
-            'card_status' => $playing_card_info['card_status'],
-            'card_location' => $playing_card_info['card_location'],
-            'message' => $message,
-        );
-    
-    }
-
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Zombie
 ////////////
 
     /*
-        zombieTurn:
+        // ANCHOR zombieTurn:
         
         This method is called each time it is the turn of a player who has quit the game (= "zombie" player).
         You can do whatever you want in order to make sure the turn of this player ends appropriately
@@ -327,7 +255,7 @@ class Aniversus extends Table
 ///////////////////////////////////////////////////////////////////////////////////:
 ////////// DB upgrade
 //////////
-
+    // ANCHOR upgradeTableDb
     /*
         upgradeTableDb:
         

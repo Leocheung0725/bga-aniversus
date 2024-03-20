@@ -70,7 +70,7 @@ function (dojo, declare) {
         
         /*
             setup:
-            
+            // ANCHOR Setup Part
             This method must set up the game user interface according to current game situation specified
             in parameters.
             
@@ -99,7 +99,6 @@ function (dojo, declare) {
             {
                 var player = gamedatas.players[player_id];
                 this.playerCounter[player_id] = {};
-                // TODO: Setting up players boards if needed
                 var player_board_div = $('player_board_'+ player_id);
                 dojo.place( this.format_block('jstpl_player_board', {"player_id" : player_id}), player_board_div );
                 this.playerCounter[player_id]['productivity'] = new ebg.counter();
@@ -115,7 +114,7 @@ function (dojo, declare) {
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // TODO: Set up your game interface here, according to "gamedatas"
+            // Set up your game interface here, according to "gamedatas"
             // Player hand Setup
             // player hand
             this.playerdeck = new ebg.stock(); // new stock object for hand
@@ -205,7 +204,7 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Game & client states
-        
+        // ANCHOR onEnteringState
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
@@ -220,10 +219,6 @@ function (dojo, declare) {
             }
         },
 
-        // onEnteringState_dummmy: function(args) {
-        //     console.log('Entering state: dummy');
-        //     console.log(args);
-        // },
         onEnteringState_cardEffect: function(args) {
             console.log('cardEffect state: the enterfunction is called');
             console.log(args);
@@ -247,9 +242,9 @@ function (dojo, declare) {
         onEnteringState_cardActiveEffect: function(args) {
             console.log('cardActiveEffect state: the enterfunction is called');
             console.log(args);
+            this.playerdeck.setSelectionMode(1);
             switch (args.card_type_arg) {
                 case '1':
-                    this.playerdeck.setSelectionMode(1);
                     break;
                 case other:
                     console.log('The card type is other');
@@ -260,12 +255,13 @@ function (dojo, declare) {
         onEnteringState_counterattack: function(args) {
             console.log('counterattack state: the enterfunction is called');
             console.log(args);
+            this.playerdeck.setSelectionMode(0);
             
         },
         // -------------------------------------                        -------------------------------------------- //
         // ------------------------------------- End of onEnteringState -------------------------------------------- //
 
-
+        //ANCHOR - onLeavingState
         // onLeavingState: this method is called each time we are leaving a game state.
         //                 You can use this method to perform some user interface changes at this moment.
         //
@@ -288,6 +284,7 @@ function (dojo, declare) {
                 break;
             }            
         }, 
+        //ANCHOR - onUpdateActionButtons
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
         //                        action status bar (ie: the HTML links in the status bar).
         //        
@@ -322,7 +319,7 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Utility methods
-        
+        //ANCHOR - Utility methods
         /*
         
             Here, you can defines some utility methods that you can use everywhere in your javascript
@@ -414,7 +411,7 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Player's action
-        
+        // ANCHOR Player's action
         /*
         
             Here, you are defining methods to handle player's action (ex: results of mouse click on 
@@ -531,7 +528,7 @@ function (dojo, declare) {
         
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
-
+        // ANCHOR Notifications
         /*
             setupNotifications:
             
@@ -545,7 +542,7 @@ function (dojo, declare) {
         {
             console.log( 'notifications subscriptions setup' );
             
-            // TODO: here, associate your game notifications with local methods
+            // here, associate your game notifications with local methods
             // Example 2: standard notification handling + tell the user interface to wait
             //            during 3 seconds after calling the method in order to let the players
             //            see what is happening in the game.
@@ -560,7 +557,7 @@ function (dojo, declare) {
             dojo.subscribe('cardThrown', this, "notif_cardThrown");
         },  
         
-        // TODO: from this point and below, you can write your game notifications handling methods
+        // from this point and below, you can write your game notifications handling methods
         // This Notification is called when the shooting is successful
         notif_updatePlayerBoard: function( notif ) {
             console.log(`**** Notification: updatePlayerBoard `)
@@ -580,7 +577,7 @@ function (dojo, declare) {
         // This Notification is called when a function card is played
         notif_playFunctionCard: function( notif ) {
             console.log(`**** Notification: playFunctionCard `)
-            console.log(notif);
+            // Input: player_id, card_id, card_type
             const player_id = notif.args.player_id;
             const card_id = notif.args.card_id;
             const card_type = notif.args.card_type;

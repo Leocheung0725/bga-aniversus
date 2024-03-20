@@ -77,16 +77,48 @@ trait AniversusUtils {
         return !empty($locationArgs) ? max($locationArgs) : 0;
     }
 
-    function endEffect($player_id, $end_type) {
+    function endEffect($end_type) {
         if ($end_type == 'normal') {
-            $sql = "UPDATE playing_card SET active = FALSE WHERE active = TRUE AND player_id = $player_id";
+            $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE AND player_id = $player_id";
             self::DbQuery( $sql );
-            $this->gamestate->changeActivePlayer( $player_id );
             $this->gamestate->nextState( "playerTurn" );
-        } else if ($end_type == 'active') {
-            $this->gamestate->changeActivePlayer( $player_id );
+        } else if ($end_type == 'activeplayerEffect') {
             $this->gamestate->nextState( "cardActiveEffect" );
         }
     }
+
+    function playFunctionCard2Discard($player_id, $card_id) {
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        // get discard pile cards list
+        $discard_pile_cards = $player_deck->getCardsInLocation('discard');
+        // find the next location_arg for the discard pile
+        $largest_location_arg = $this->findLargestLocationArg($discard_pile_cards);
+        $player_deck->moveCard($card_id, 'discard', $largest_location_arg + 1);
+    }
+
+    function countPlayerBoard($player_id) {
+        // get two decks
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+        // get all information of the cards on the playmat for two players
+        $allPlayerCards_me = $player_deck->getCardsInLocation('playmat');
+        $allPlayerCards_opponent = $opponent_deck->getCardsInLocation('playmat');
+        $total_power = 0;
+        $total_productivity_limit = 0;
+        foreach ($allPlayerCards_me as $card) {
+            $card_info = $this->getCardinfoFromCardsInfo($card_type);
+            $position = $this->decodePlayerLocation($card['location_arg']);
+            $row = $position['row'];
+            $column = $position['col'];
+            if ( $row == 1 ) {
+
+            }
+            switch ($card['type_arg']) {
+                case 1:
+                    break;
+            }
+        }
+    }
+
 }
 

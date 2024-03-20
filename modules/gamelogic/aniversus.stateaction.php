@@ -17,6 +17,7 @@ trait AniversusStateActions {
     */
     
     function stNewHand() {
+        // ANCHOR stNewHand
         try {
             // Red color player plays first
             // Find who is first player
@@ -85,6 +86,7 @@ trait AniversusStateActions {
     }
 
     function stCardDrawing() {
+        // ANCHOR stCardDrawing
         // get active player team
         $active_player = self::getActivePlayerId();
         $active_player_team = $this->getActivePlayerDeck($active_player);
@@ -97,13 +99,15 @@ trait AniversusStateActions {
     }
 
     function stCardEffect() {
+        // ANCHOR stCardEffect
         // determine what card effect should be done / finished
-        $sql = "SELECT card_id, card_type, card_type_arg, player_id, card_status, card_location FROM playing_card WHERE active = TRUE";
+        $sql = "SELECT * FROM playing_card WHERE diabled = FALSE";
         $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
         $player_id = $card_effect_info['player_id'];
+        $card_type_arg = $card_effect_info['card_type_arg'];
         $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
         switch ($card_type_arg) {
-            case "1":
+            case 1:
                 // do something
                 $card_num = 3;
                 $picked_cards_list = $player_deck->pickCards( $card_num, 'deck', $card_effect_info['player_id'] );
@@ -113,15 +117,15 @@ trait AniversusStateActions {
                     'player_id' => $player_id,
                 ]);
                 // endEffect have two type : normal and active
-                $this->endEffect($player_id, "active");
+                $this->endEffect("activeplayerEffect");
                 break;
-            case "2":
+            case 2:
                 // do something
                 break;
-            case "7":
+            case 7:
                 $sql = "UPDATE player SET player_productivity =  player_productivity + 2 WHERE player_id = $player_id";
                 self::DbQuery( $sql );
-                $this->endEffect($player_id, "normal");
+                $this->endEffect("normal");
                 break;
             default:
                 break;
@@ -129,9 +133,28 @@ trait AniversusStateActions {
     }
 
     function stEndHand() {
+        // ANCHOR stEndHand 
         // End the game and do some scoring here
 
         // ... code the function
         $this->gamestate->nextState( "endGame" );
+    }
+
+    function stChangeActivePlayer() {
+        // ANCHOR stChangeActivePlayer
+        $sql = "SELECT * from playing_card WHERE disabled = FALSE";
+        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        if ( $playing_card_info['card_status'] == "validating" ) {
+            $this->gamestate->activeNextPlayer();
+            $this->gamestate->nextState( "counterattack" );
+        } else if ( $playing_card_info['card_status'] == "validated" ) {
+            $this->gamestate->changeActivePlayer( $playing_card_info['player_id'] );
+            if ( $playing_card_info['card_launch'] ) {
+                $this->gamestate->nextState( "cardEffect" );
+            } else {
+                $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE";
+                $this->gamestate->nextState( "playerTurn" );
+            }
+        }
     }
 }

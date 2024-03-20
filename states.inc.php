@@ -56,6 +56,7 @@ if (!defined('stateEndGame')) { // ensure this block is only invoked once, since
     define("stateCounterattack", 30);
     define("stateCardEffect", 31);
     define("stateCardActiveEffect", 32);
+    define("stateChangeActivePlayer_counterattack", 33);
     define("stateShoot", 23);
     define("stateThrowCard", 24);
     define("stateEndHand", 90);
@@ -86,7 +87,7 @@ $machinestates = array(
         "updateGameProgression" => true,
         "transitions" => array( "playerTurn" => statePlayerTurn )
     ),
-    // normal process section
+    // SECTION normal process section
     21 => array(
         "name" => "cardDrawing",
         "description" => clienttranslate('Drawing cards'),
@@ -101,7 +102,7 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must play a card or shoot or pass'),
         "type" => "activeplayer",
         "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass", "shoot" ),
-        "transitions" => array( "counterattack" => stateCounterattack , "launch" => stateCardEffect,
+        "transitions" => array( "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack , "launch" => stateCardEffect,
         "shoot" => stateShoot, "throwCard" => stateThrowCard )
     ),
 
@@ -122,13 +123,17 @@ $machinestates = array(
         "possibleactions" => array( "thrawnCard" ),
         "transitions" => array( "cardDrawing" => stateCardDrawing, "endHand" => stateEndHand )
     ),
-    // playerTurn section 
+    // !SECTION normal process section
+
+
+    // SECTION playerTurn section 
     30 => array(
         "name" => "counterattack",
-        "description" => clienttranslate('Counterattack'),
+        "description" => clienttranslate('${actplayer} must counterattack or pass'),
+        "descriptionmyturn" => clienttranslate('${you} must counterattack or pass'),
         "type" => "activeplayer",
         "possibleactions" => array( "intercept_counterattack", "pass_counterattack" ),
-        "transitions" => array( "playerTurn" => statePlayerTurn, "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect )
+        "transitions" => array( "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack )
     ),
 
     31 => array(
@@ -150,6 +155,15 @@ $machinestates = array(
         "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect )
     ),
     
+    33 => array(
+        "name" => "changeActivePlayer_counterattack",
+        "description" => clienttranslate(''),
+        "type" => "game",
+        "action" => "stChangeActivePlayer",
+        "transitions" => array( "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, "playerTurn" => statePlayerTurn )
+    ),
+    // !SECTION playerTurn section 
+
     // End hand section
     
     90 => array(

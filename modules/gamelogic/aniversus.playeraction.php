@@ -8,6 +8,7 @@ trait AniversusPlayerActions {
         (note: each method below must match an input method in aniversus.action.php)
     */
     public function playFunctionCard( $player_id, $card_id, $card_type ) {
+        //ANCHOR - playFUnctionCard
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'playFunctionCard' );
         // get the active player id
@@ -49,11 +50,7 @@ trait AniversusPlayerActions {
         ";
         self::DbQuery( $sql );
         // move the card from hand to discard Pile because this is function card
-        // get discard pile cards list
-        $discard_pile_cards = $player_deck->getCardsInLocation('discard');
-        // find the next location_arg for the discard pile
-        $largest_location_arg = $this->findLargestLocationArg($discard_pile_cards);
-        $player_deck->moveCard($card_id, 'discard', $largest_location_arg + 1);
+        $this->playFunctionCard2Discard($player_id, $card_id);
         // Notify all players about the card played
         self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} plays ${card_name} : ${card_effect}' ), array(
             'player_id' => $player_id,
@@ -77,24 +74,24 @@ trait AniversusPlayerActions {
         . "card_id = " . intval($card_id) . ", "
         . "card_type = '" . addslashes($card_info['type']) . "', "
         . "card_type_arg = " . intval($card_info['id']) . ", "
-        . "card_location = 'discard', "
-        . "card_status = TRUE, "
-        . "active = TRUE "
+        . "card_launch = TRUE, "
+        . "card_status = 'validating', "
+        . "disabled = FALSE "
         . "WHERE player_id = " . intval($player_id);
         self::DbQuery( $sql );
         // check whether the opponent has counter attack card in hand
         $opponent_deck = $this->getNonActivePlayerDeck($player_id);
         if (empty($opponent_deck->getCardsOfTypeInLocation( 'Function' , 5 , 'hand' ))) {
             // Go to launch state, the card effect would be done
-            $this->activeNextPlayer();
             $this->gamestate->nextState( "launch" );
         } else {
             // Go to counterAttack state
-            $this->gamestate->nextState( "counterattack" );
+            $this->gamestate->nextState( "changeActivePlayer_counterattack" );
         }
     }
 
     public function playPlayerCard($player_id, $card_id, $card_type, $row, $col) {
+        // ANCHOR - playPlayerCard
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'playPlayerCard' );
         // get the active player id
@@ -170,7 +167,8 @@ trait AniversusPlayerActions {
         ) );
     }
 
-    public function throwCards( $card_ids ) {
+    public function throwCards( $player_id, $card_ids ) {
+        // ANCHOR - throwCards
         // Ensure that the $card_ids is actually an array
         if (!is_array($card_ids)) {
             throw new BgaUserException("Invalid card IDs.");
@@ -180,7 +178,7 @@ trait AniversusPlayerActions {
         $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
         foreach ($card_ids as $card_id) {
-            $player_deck->moveCard($card_id, 'discard');
+            $this->playFunctionCard2Discard($player_id, $card_id);
             $card = $player_deck->getCard($card_id);
             self::notifyAllPlayers( "cardThrown", clienttranslate( '${player_name} throws ${card_name}' ), array(
                 'player_id' => $player_id,
@@ -192,25 +190,50 @@ trait AniversusPlayerActions {
         }
     }
     public function intercept_counterattack() {
+        // ANCHOR - intercept_counterattack
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'intercept_counterattack' );
         $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
+        $intercept_cards = $player_deck->getCardsOfTypeInLocation( 'Function' , 5 , 'hand' );
+        if (empty($intercept_cards)) {
+            throw new BgaUserException( self::_("You do not have any intercept card in hand") );
+        }
+        $intercept_card = $intercept_cards[0];
+        $this->playFunctionCard2Discard($player_id, $intercept_card['id']);
+        self::notifyAllPlayers( "playFunctionCard", clientranslate( '${player_name} intercepts the card' ), array(
+            'player_id' => $player_id,
+            'player_name' => self::getActivePlayerName(),
+            'card_id' => $intercept_card['id'],
+            'card_type' => $intercept_card['type_arg'],
+        ) );
+
+        // UPDATE the player_card database
+        // check whether the opponent has counter attack card in hand
+        $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+        if (empty($opponent_deck->getCardsOfTypeInLocation( 'Function' , 5 , 'hand' ))) {
+            // Opponent does not have a counter attack card in hand
+            // UPDATE the playing_card database to reverse card_launch and set card_status to "validated"
+            $sql = "UPDATE `playing_card` SET `card_launch` = NOT `card_launch`, `card_status` = 'validated'
+            WHERE `disabled` = FALSE";
+            self::DbQuery($sql);
+            $this->gamestate->nextState( "changeActivePlayer_counterattack" );
+        } else {
+            // Opponent has a counter attack card in hand
+            // UPDATE the playing_card database just to reverse card_launch
+            $sql = "UPDATE `playing_card` SET `card_launch` = NOT `card_launch` WHERE `disabled` = FALSE";
+            self::DbQuery($sql);
+            // Go to counterAttack state
+            $this->gamestate->nextState("changeActivePlayer_counterattack");
+        }
     }
 
 
     public function pass_counterattack() {
+        // ANCHOR - pass_counterattack
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'pass_counterattack' );
-        $player_id = self::getActivePlayerId();
-        $sql = "SELECT player_id FROM playing_card WHERE active = TRUE";
-        $active_player_id = self::getUniqueValueFromDB( $sql );
-        if ($player_id != $active_player_id) {
-            $sql = "UPDATE playing_card SET card_status = TRUE WHERE active = TRUE";
-            $this->gamestate->nextState( "cardEffect" );
-        } else {
-            $sql = "UPDATE playing_card SET active = FALSE, card_status = FALSE WHERE active = TRUE";
-            $this->gamestate->nextState( "playerTurn" );
-        }
+        $sql = "UPDATE `playing_card` SET `card_status` = 'validated' WHERE `disabled` = FALSE";
+        $this->gamestate->nextState( "changeActivePlayer_counterattack" );
     }
 }
