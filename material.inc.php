@@ -94,6 +94,7 @@ $this->gameConstants = array(
 require_once("modules/aniversus_utils.php");
 $this->cards_info = read_card_infos($cards_info_CSVdata);
 
+
 $this->id2card_type_arg = [
     1 => 1,
     2 => 1,

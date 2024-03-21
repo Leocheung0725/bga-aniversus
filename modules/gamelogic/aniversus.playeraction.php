@@ -61,13 +61,14 @@ trait AniversusPlayerActions {
             'card_effect' => $card_info['function'],
         ) );
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
+        $sql = "select player_score, player_action, player_productivity, player_power from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
             'player_id' => $player_id,
             'player_productivity' => $player['player_productivity'],
             'player_action' => $player['player_action'],
             'player_score' => $player['player_score'],
+            'player_power' => $player['player_power'],
         ) );
         // update database that what card the active player has played
         $sql = "UPDATE playing_card SET "
@@ -174,21 +175,31 @@ trait AniversusPlayerActions {
             throw new BgaUserException("Invalid card IDs.");
         }
         // checking the action
-        // self::checkAction( 'throwCard' );
+        self::checkAction( 'throwCards' );
         $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
         foreach ($card_ids as $card_id) {
             $this->playFunctionCard2Discard($player_id, $card_id);
             $card = $player_deck->getCard($card_id);
-            self::notifyAllPlayers( "cardThrown", clienttranslate( '${player_name} throws ${card_name}' ), array(
+            self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} throws ${card_name}' ), array(
                 'player_id' => $player_id,
                 'player_name' => self::getActivePlayerName(),
-                'card_name' => $this->cards_info[$card['type_arg']]['name'],
+                'card_name' => $this->cards_info[$card['type_arg'] - 1 ]['name'],
                 'card_id' => $card_id,
-                'card_type_arg' => $card['type_arg'],
+                'card_type' => $card['type_arg'],
             ) );
         }
+        $state_name = $this->getStateName();
+        switch ($state_name) {
+            case 'cardActiveEffect':
+                $this->gamestate->nextState( "playerTurn" );
+                break;
+            default:
+                break;
+        }
     }
+
+
     public function intercept_counterattack() {
         // ANCHOR - intercept_counterattack
         // check that this is player's turn and that it is a "possible action" at this game state
@@ -199,9 +210,9 @@ trait AniversusPlayerActions {
         if (empty($intercept_cards)) {
             throw new BgaUserException( self::_("You do not have any intercept card in hand") );
         }
-        $intercept_card = $intercept_cards[0];
+        $intercept_card = array_shift($intercept_cards);
         $this->playFunctionCard2Discard($player_id, $intercept_card['id']);
-        self::notifyAllPlayers( "playFunctionCard", clientranslate( '${player_name} intercepts the card' ), array(
+        self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} intercepts the card' ), array(
             'player_id' => $player_id,
             'player_name' => self::getActivePlayerName(),
             'card_id' => $intercept_card['id'],
@@ -234,6 +245,14 @@ trait AniversusPlayerActions {
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'pass_counterattack' );
         $sql = "UPDATE `playing_card` SET `card_status` = 'validated' WHERE `disabled` = FALSE";
+        self::DbQuery($sql);
         $this->gamestate->nextState( "changeActivePlayer_counterattack" );
+    }
+
+    public function pass_playerTurn() {
+        // ANCHOR - pass_playerTurn
+        // check that this is player's turn and that it is a "possible action" at this game state
+        self::checkAction( 'pass_playerTurn' );
+        $this->gamestate->nextState( "throwCard" );
     }
 }

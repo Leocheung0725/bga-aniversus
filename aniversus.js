@@ -70,7 +70,7 @@ function (dojo, declare) {
         
         /*
             setup:
-            // ANCHOR Setup Part
+            // SECTION Setup Part
             This method must set up the game user interface according to current game situation specified
             in parameters.
             
@@ -80,7 +80,6 @@ function (dojo, declare) {
             
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
-        
         setup: function( gamedatas )
         {
             console.log( "Starting game setup" );
@@ -93,7 +92,7 @@ function (dojo, declare) {
             }
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Setting up player boards
+            // ANCHOR Setting up player boards
             this.playerCounter = {};
             for( let player_id in gamedatas.players )
             {
@@ -114,7 +113,7 @@ function (dojo, declare) {
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Set up your game interface here, according to "gamedatas"
+            // ANCHOR Set up your game interface here, according to "gamedatas"
             // Player hand Setup
             // player hand
             this.playerdeck = new ebg.stock(); // new stock object for hand
@@ -145,7 +144,7 @@ function (dojo, declare) {
             dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Discard pile setup
+            // ANCHOR Discard pile setup
             this.playerOnPlaymat['me']['discardpile'].create( this, 'discardPile_field_me', this.cardwidth, this.cardheight );
             this.playerOnPlaymat['opponent']['discardpile'].create( this, 'discardPile_field_opponent', this.cardwidth, this.cardheight );
             // player playmat setup
@@ -158,9 +157,9 @@ function (dojo, declare) {
                     }
                 }
             }
-            // Add cards to the playmat and discard pile
+            // ANCHOR Add cards to the playmat and discard pile
             for ( let player_id in this.gamedatas.players ) {
-                if (player_id == this.getActivePlayerId()) {
+                if (player_id == this.player_id) {
                     //// Add cards to the Discard pile
                     //// Get the top three cards in the discard pile
                     let topThreeDiscardPile = this.gamedatas['players'][player_id]['discardpile'].slice(0, 3);
@@ -195,16 +194,16 @@ function (dojo, declare) {
             }
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Setup game notifications to handle (see "setupNotifications" method below)
+            // ANCHOR Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
             console.log( "Ending game setup" );
         },
-
+        // !SECTION setup
 
         ///////////////////////////////////////////////////
         //// Game & client states
-        // ANCHOR onEnteringState
+        // SECTION onEnteringState
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
@@ -218,50 +217,58 @@ function (dojo, declare) {
                 this[methodName](args.args);
             }
         },
-
+        // ANCHOR cardEffect state
         onEnteringState_cardEffect: function(args) {
             console.log('cardEffect state: the enterfunction is called');
             console.log(args);
-            switch (args.card_type_arg) {
-                case '7':
+            let card_type_arg = Number(args.card_type_arg);
+            switch (card_type_arg) {
+                case 7:
                     this.playerCounter[player_id]['productivity'].toValue(player_productivity);
                     break;
-                case other:
+                default:
                     console.log('The card type is other');
                     break;
             }
         },
-
+        // ANCHOR playerTurn state
         onEnteringState_playerTurn: function(args) {
             console.log('playerTurn state: the enterfunction is called');
             console.log(args);
             // set playerdeck selection mode
             this.playerdeck.setSelectionMode(1);
         },
-
+        // ANCHOR cardActiveEffect state
         onEnteringState_cardActiveEffect: function(args) {
             console.log('cardActiveEffect state: the enterfunction is called');
             console.log(args);
-            this.playerdeck.setSelectionMode(1);
-            switch (args.card_type_arg) {
-                case '1':
+            let card_type_arg = Number(args.card_type_arg);
+            switch (card_type_arg) {
+                case 1:
+                    this.playerdeck.setSelectionMode(1);
                     break;
                 case other:
                     console.log('The card type is other');
                     break;
             }
         },
-
+        // ANCHOR counterattack state
         onEnteringState_counterattack: function(args) {
             console.log('counterattack state: the enterfunction is called');
             console.log(args);
             this.playerdeck.setSelectionMode(0);
             
         },
-        // -------------------------------------                        -------------------------------------------- //
+        // ANCHOR throwCard state
+        onEnteringState_throwCard: function(args) {
+            console.log('throwCard state: the enterfunction is called');
+            console.log(args);
+            this.playerdeck.setSelectionMode(2);
+        },
+        // !SECTION onEnteringState
         // ------------------------------------- End of onEnteringState -------------------------------------------- //
 
-        //ANCHOR - onLeavingState
+        //SECTION - onLeavingState
         // onLeavingState: this method is called each time we are leaving a game state.
         //                 You can use this method to perform some user interface changes at this moment.
         //
@@ -284,14 +291,15 @@ function (dojo, declare) {
                 break;
             }            
         }, 
-        //ANCHOR - onUpdateActionButtons
+        // !SECTION - onLeavingState
+        ///////////////////////////////////////////////////
+        // SECTION - onUpdateActionButtons
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
         //                        action status bar (ie: the HTML links in the status bar).
         //        
         onUpdateActionButtons: function( stateName, args )
         {
             console.log( 'onUpdateActionButtons: '+stateName );
-                      
             if( this.isCurrentPlayerActive() )
             {            
                 switch( stateName )
@@ -306,8 +314,14 @@ function (dojo, declare) {
                     // }
                 case 'playerTurn':
                     this.addActionButton( 'playerTurn_btn_play', _('Play'), 'onPlayCard_PlayerTurn' );
-                    this.addActionButton( 'playerTurn_btn_shoot', _('Shoot'), 'onShoot_PlayerTurn' );
                     this.addActionButton( 'playerTurn_btn_pass', _('Pass'), 'onPass_PlayerTurn' );
+                    this.addActionButton( 'playerTurn_btn_shoot', _('Shoot'), 'onShoot_PlayerTurn' );
+                    if (this.playerCounter[this.player_id]['action'].getValue() == 0) {
+                        dojo.addClass('playerTurn_btn_play', 'disabled');
+                    }
+                    if (this.playerCounter[this.player_id]['power'].getValue() < 10) {
+                        dojo.addClass('playerTurn_btn_shoot', 'disabled');
+                    }
                     break;
                 case 'counterattack':
                     this.addActionButton( 'counterattack_btn_intercept', _('Intercept'), 'onIntercept_counterattack' );
@@ -316,10 +330,10 @@ function (dojo, declare) {
                 }
             }
         },        
-
+        // !SECTION - onUpdateActionButtons
         ///////////////////////////////////////////////////
         //// Utility methods
-        //ANCHOR - Utility methods
+        // SECTION - Utility methods
         /*
         
             Here, you can defines some utility methods that you can use everywhere in your javascript
@@ -339,7 +353,7 @@ function (dojo, declare) {
                 return value;
             })
         },
-
+        // ANCHOR getCardBackgroundPosition
         // This function returns the css background position of a card
         getCardBackgroundPosition: function(card_type) {
             const type2css = this.gamedatas['card_type_arg2css_position'];
@@ -352,8 +366,11 @@ function (dojo, declare) {
             var y = row * card_height;
             return {x: -x, y: -y};
         },
-
+        // ANCHOR getJstplCard
         getJstplCard: function(player_id, card_id, card_type, from, to) {
+            console.log(
+                "The player id:", player_id, "the card id:", card_id, "the card type:", card_type, "is called."
+            );
             const position = this.getCardBackgroundPosition(card_type);
             // create card on table
             dojo.place( this.format_block('jstpl_cardsOnTable', {
@@ -366,7 +383,7 @@ function (dojo, declare) {
             // slide the card to the table
             this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , to).play();
         },
-
+        // ANCHOR getTooltipHtml
         getTooltipHtml: function(card_id) {
             var card = this.gamedatas.cards_info.find((card) => card.id == card_id);
             var card_name = card.name;
@@ -408,10 +425,11 @@ function (dojo, declare) {
             const column = (location_arg - 1) % num_columns + 1;
             return { row: row, col: column };
         },
+        // !SECTION - Utility methods
+
 
         ///////////////////////////////////////////////////
-        //// Player's action
-        // ANCHOR Player's action
+        // SECTION Player's action
         /*
         
             Here, you are defining methods to handle player's action (ex: results of mouse click on 
@@ -423,6 +441,7 @@ function (dojo, declare) {
         
         */
         ///////////////////////////////////////////////////
+        // ANCHOR onClickPlayPlayerCard
         onClickPlayPlayerCard: function(card_id, card_type, row, col) {
             if (this.checkAction('playPlayerCard', true)) {
                 this.ajaxcallwrapper('playPlayerCard', {
@@ -434,6 +453,7 @@ function (dojo, declare) {
                 });
             }
         },
+        // ANCHOR onPlayCard_PlayerTurn
         onPlayCard_PlayerTurn : function(evt) {
             var items = this.playerdeck.getSelectedItems();
             if (items.length > 0) {
@@ -468,7 +488,7 @@ function (dojo, declare) {
                 }
             }
         },
-
+        // ANCHOR onPlayerHandSelectionChanged
         onPlayerHandSelectionChanged : function( evt ) {
             if (!this.isCurrentPlayerActive()) {
                 this.playerdeck.unselectAll();
@@ -476,6 +496,7 @@ function (dojo, declare) {
             }
             var items = this.playerdeck.getSelectedItems();
             if (items.length > 0) {
+                console.log("The player selected the card: ", items);
             } else {
                 // Remove the selection for user to play the player to playmat
                 for (var row = 1; row <= 2; row++) {
@@ -487,7 +508,7 @@ function (dojo, declare) {
                 
             }
         },
-
+        // ANCHOR onThrowCard_CardActiveEffect
         onThrowCard_CardActiveEffect: function(evt) {
             dojo.stopEvent(evt);
             if (!this.isCurrentPlayerActive()) {
@@ -495,40 +516,43 @@ function (dojo, declare) {
                 return;
             }
             var items = this.playerdeck.getSelectedItems();
-            
+            let player_id = this.getActivePlayerId();
             if (items.length > 0) {
                 var items_ids = items.map((item) => Number(item.id));
+                console.log("items_ids: ", items_ids);
                 // make to check the action
                 this.ajaxcallwrapper('throwCards', {
-                    "card_ids": items_ids,
+                    "player_id": player_id,
+                    "card_ids": JSON.stringify(items_ids),
                 });
             }
         },
-
+        // ANCHOR onShoot_PlayerTurn
         onShoot_PlayerTurn: function(evt) {
             dojo.stopEvent(evt);
         },
-
+        // ANCHOR onPass_PlayerTurn
         onPass_PlayerTurn: function(evt) {
             dojo.stopEvent(evt);
         },
-
+        // ANCHOR onIntercept_counterattack
         onIntercept_counterattack: function(evt) {
             dojo.stopEvent(evt);
             if (this.checkAction('intercept_counterattack', true)) {
                 this.ajaxcallwrapper('intercept_counterattack');
             }
         },
-        onPass__counterattack: function(evt) {
+        // ANCHOR onPass_counterattack
+        onPass_counterattack: function(evt) {
             if (this.checkAction('pass_counterattack', true)) {
                 this.ajaxcallwrapper('pass_counterattack');
             }
         },
-
+        // !SECTION Player's action
         
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
-        // ANCHOR Notifications
+        // SECTION Notifications
         /*
             setupNotifications:
             
@@ -559,6 +583,7 @@ function (dojo, declare) {
         
         // from this point and below, you can write your game notifications handling methods
         // This Notification is called when the shooting is successful
+        // ANCHOR updatePlayerBoard
         notif_updatePlayerBoard: function( notif ) {
             console.log(`**** Notification: updatePlayerBoard `)
             console.log(notif);
@@ -573,15 +598,16 @@ function (dojo, declare) {
             this.scoreCtrl[player_id].toValue(score);
             this.playerCounter[player_id]['power'].toValue(player_power);
         },
-
+        // ANCHOR playFunctionCard
         // This Notification is called when a function card is played
         notif_playFunctionCard: function( notif ) {
             console.log(`**** Notification: playFunctionCard `)
+            console.log(notif);
             // Input: player_id, card_id, card_type
             const player_id = notif.args.player_id;
             const card_id = notif.args.card_id;
             const card_type = notif.args.card_type;
-            if (player_id == this.getActivePlayerId()) {
+            if (player_id == this.player_id) {
                 this.getJstplCard(player_id, card_id, card_type, 'myhand_item_' + card_id, 'discardPile_field_me');
                 this.playerdeck.removeFromStockById(card_id);
                 if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
@@ -596,7 +622,7 @@ function (dojo, declare) {
                 this.playerOnPlaymat['opponent']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
             }
         },
-
+        // ANCHOR playPlayerCard
         notif_playPlayerCard: function( notif ){
             console.log(`**** Notification: playPlayerCard `)
             console.log(notif);
@@ -628,6 +654,7 @@ function (dojo, declare) {
                 }
             }
         },
+        // ANCHOR cardDrawn
         // This Notification is called when a card is drawn
         notif_cardDrawn: function( notif ) {
             console.log(`**** Notification: cardDrawn `)
@@ -641,6 +668,7 @@ function (dojo, declare) {
             }
         },
         // This Notification is called when a card is thrown
+        // ANCHOR cardThrown
         notif_cardThrown: function( notif ) {
             console.log(`**** Notification: cardThrown `)
             console.log(notif);
@@ -651,5 +679,6 @@ function (dojo, declare) {
             this.playerOnPlaymat['me']['discardpile'].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
             this.playerdeck.removeFromStockById(Number(card_id));
         }
+        // !SECTION Notifications
    });             
 });

@@ -44,13 +44,11 @@
     {
         // setAjaxMode is required to make an action call
         self::setAjaxMode();
-
         // Retrieve arguments
         $card_id = self::getArg( "card_id", AT_posint, true );
         $card_type = self::getArg( "card_type", AT_posint, true );
         $player_id = self::getArg( "player_id", AT_alphanum, true );
         $this->game->playFunctionCard( $player_id, $card_id, $card_type );
-
         // End of the action
         self::ajaxResponse();
     }
@@ -59,7 +57,6 @@
     {
         // setAjaxMode is required to make an action call
         self::setAjaxMode();
-
         // Retrieve arguments
         $card_id = self::getArg( "card_id", AT_posint, true );
         $card_type = self::getArg( "card_type", AT_posint, true );
@@ -67,7 +64,6 @@
         $row = self::getArg( "row", AT_posint, true );
         $col = self::getArg( "col", AT_posint, true );
         $this->game->playPlayerCard( $player_id, $card_id, $card_type, $row, $col );
-
         // End of the action
         self::ajaxResponse();
     }
@@ -76,11 +72,11 @@
     {
         // setAjaxMode is required to make an action call
         self::setAjaxMode();
-
         // Retrieve arguments
-        $card_ids = self::getArg( "card_ids", AT_numberlist, true );
-        $this->game->throwCards( $card_ids );
-
+        $card_ids = self::getArg( "card_ids", AT_json, true );
+        $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
+        $player_id = self::getArg( "player_id", AT_alphanum, true );
+        $this->game->throwCards( $player_id, $card_ids );
         // End of the action
         self::ajaxResponse();
     }
@@ -89,10 +85,8 @@
     {
         // setAjaxMode is required to make an action call
         self::setAjaxMode();
-
         // Retrieve arguments
         $this->game->intercept_counterattack();
-
         // End of the action
         self::ajaxResponse();
     }
@@ -103,34 +97,20 @@
     {
         // setAjaxMode is required to make an action call
         self::setAjaxMode();
-
         // Retrieve arguments
         $this->game->pass_counterattack();
-
         // End of the action
         self::ajaxResponse();
     }
-    /*
-    
-    Example:
-  	
-    public function myAction()
-    {
-        self::setAjaxMode();     
 
+    public function pass_playerTurn() {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
         // Retrieve arguments
-        // Note: these arguments correspond to what has been sent through the javascript "ajaxcall" method
-        $arg1 = self::getArg( "myArgument1", AT_posint, true );
-        $arg2 = self::getArg( "myArgument2", AT_posint, true );
-
-        // Then, call the appropriate method in your game logic, like "playCard" or "myAction"
-        $this->game->myAction( $arg1, $arg2 );
-
-        self::ajaxResponse( );
+        $this->game->pass_playerTurn();
+        // End of the action
+        self::ajaxResponse();
     }
-    
-    */
-
   }
   
 

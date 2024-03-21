@@ -96,6 +96,13 @@ trait AniversusUtils {
         $player_deck->moveCard($card_id, 'discard', $largest_location_arg + 1);
     }
 
+    function getNonActivePlayerId() {
+        $active_player_id = self::getActivePlayerId();
+        $sql = "SELECT player_id FROM player WHERE player_id != $active_player_id";
+        $non_active_player_id = self::getUniqueValueFromDB( $sql );
+        return $non_active_player_id;
+    }
+
     function countPlayerBoard($player_id) {
         // get two decks
         $player_deck = $this->getActivePlayerDeck($player_id);
@@ -111,13 +118,41 @@ trait AniversusUtils {
             $row = $position['row'];
             $column = $position['col'];
             if ( $row == 1 ) {
-
+                $total_power += $card_info['power'];
+            } else if ( $row == 2 ) {
+                $total_productivity_limit += $card_info['productivity'];
             }
             switch ($card['type_arg']) {
                 case 1:
                     break;
+                default:
+                    break;
             }
         }
+    }
+
+    public function getStateName() {
+        $state = $this->gamestate->state();
+        return $state['name'];
+    }
+
+    public function validateJSonAlphaNum($value, $argName = 'unknown')
+    {
+        if (is_array($value)) {
+            foreach ($value as $key => $v) {
+            $this->validateJSonAlphaNum($key, $argName);
+            $this->validateJSonAlphaNum($v, $argName);
+            }
+            return true;
+        }
+        if (is_int($value)) {
+            return true;
+        }
+        $bValid = preg_match("/^[_0-9a-zA-Z- ]*$/", $value) === 1;
+        if (!$bValid) {
+            throw new BgaSystemException("Bad value for: $argName", true, true, FEX_bad_input_argument);
+        }
+        return true;
     }
 
 }
