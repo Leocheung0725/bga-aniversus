@@ -71,7 +71,7 @@ trait AniversusStateActions {
             // Deal cards to players
             $cards_to_first_player = $this->{$first_player_deck}->pickCards( 7, 'deck', $first_player['player_id'] );
             self::notifyPlayer($first_player['player_id'], 'newHand', '', array('cards' => $cards_to_first_player) );
-            $cards_to_second_player = $this->{$second_player_deck}->pickCards( 8, 'deck', $second_player['player_id'] );
+            $cards_to_second_player = $this->{$second_player_deck}->pickCards( 6, 'deck', $second_player['player_id'] );
             self::notifyPlayer($second_player['player_id'], 'newHand', '', array('cards' => $cards_to_second_player) );
             // Activate first player (which is in general a good idea :) )
             $this->gamestate->changeActivePlayer( $first_player['player_id'] );
@@ -183,5 +183,11 @@ trait AniversusStateActions {
                 $this->gamestate->nextState( "playerTurn" );
             }
         }
+    }
+
+    function stPlayerEndTurn() {
+        // ANCHOR stPlayerEndTurn
+        $this->activeNextPlayer();
+        $this->gamestate->nextState( "cardDrawing" );
     }
 }

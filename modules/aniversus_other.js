@@ -4,7 +4,6 @@ define([
 {
 return declare("bgagame.other", null, { // null here if we don't want to inherit from anything
         constructor: function(){
-
             this.rollDice_html_content = 
             `<div class="rolldice-main">
                 <div class="rolldice-game">
@@ -82,19 +81,19 @@ return declare("bgagame.other", null, { // null here if we don't want to inherit
                     </div>
                 </div> 
                 </div>
-                <div id='roll' class="roll-button"><button class="rolldice-button">Roll dice!</button></div>
                 </div>
             </div>`;
-
-
+        
         },
+
+        // <div id='roll' class="roll-button"><button class="rolldice-button">Roll dice!</button></div>
+
         rollDice: function() {
+            
             // Generate random dice rolls
             var diceOne = Math.floor(Math.random() * 6) + 1;
             var diceTwo = Math.floor(Math.random() * 6) + 1;
-        
-            console.log(diceOne + ' ' + diceTwo);
-        
+
             // Update the dice visuals using Dojo
             for (var i = 1; i <= 6; i++) {
                 dojo.removeClass('dice1', 'show-' + i);
@@ -109,14 +108,8 @@ return declare("bgagame.other", null, { // null here if we don't want to inherit
                     dojo.addClass('dice2', 'show-' + k);
                 }
             }
-        
         },
-        // continueGame: function() {
 
-
-
-        
-        //     // Hide the game over screen
     });
         
 });

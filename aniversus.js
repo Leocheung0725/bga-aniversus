@@ -66,14 +66,11 @@ function (dojo, declare) {
                     }
                 }
             });
-            // create the expandable section
-            // Roll dice test
-            this.placeJstplSection("rolldice-area", "roll-dice-test", this.other.rollDice_html_content);
-            dojo.connect($('roll'), 'onclick', this, () => {this.other.rollDice();});
 
-            // this.roll_dice_test.expand();
-            // this.expanded.collapse();
-            // this.expanded.toggle(); / switch between expanded and collapsed
+            // Shooting roll dice area -------------------------------------------------------------------------------- 
+            // this.placeJstplSection("rolldice-area", "roll-dice", this.other.rollDice_html_content);
+            // dojo.connect($('roll'), 'onclick', this, () => {this.other.rollDice();});
+            // Shooting roll dice area -------------------------------------------------------------------------------- 
         },
         
         /*
@@ -273,6 +270,7 @@ function (dojo, declare) {
             console.log(args);
             this.playerdeck.setSelectionMode(2);
         },
+
         // !SECTION onEnteringState
         // ------------------------------------- End of onEnteringState -------------------------------------------- //
 
@@ -307,7 +305,7 @@ function (dojo, declare) {
         //        
         onUpdateActionButtons: function( stateName, args )
         {
-            console.log( 'onUpdateActionButtons: '+stateName );
+            console.log( 'onUpdateActionButtons: ' + stateName );
             if( this.isCurrentPlayerActive() )
             {            
                 switch( stateName )
@@ -334,6 +332,18 @@ function (dojo, declare) {
                 case 'counterattack':
                     this.addActionButton( 'counterattack_btn_intercept', _('Intercept'), 'onIntercept_counterattack' );
                     this.addActionButton( 'counterattack_btn_pass', _('Pass'), 'onPass_counterattack' );
+                    break;
+                case 'throwCard':
+                    this.addActionButton( 'throwCard_btn_throw', _('Throw'), 'onThrowCard_throwCard' );
+                    this.addActionButton( 'throwCard_btn_pass', _('Pass'), 'onThrowCard_pass' );
+                    if (args.thrownumber > 0) {
+                        dojo.addClass('throwCard_btn_pass', 'disabled');
+                    } else {
+                        dojo.addClass('throwCard_btn_throw', 'disabled');
+                    }
+                    break;
+                case 'shoot':
+                    this.addActionButton( 'shoot_btn_roll', _('Shoot'), 'onShoot_roll' );
                     break;
                 }
             }
@@ -547,6 +557,9 @@ function (dojo, declare) {
         // ANCHOR onPass_PlayerTurn
         onPass_PlayerTurn: function(evt) {
             dojo.stopEvent(evt);
+            if (this.checkAction('pass_playerTurn', true)) {
+                this.ajaxcallwrapper('pass_playerTurn');
+            }
         },
         // ANCHOR onIntercept_counterattack
         onIntercept_counterattack: function(evt) {
@@ -557,8 +570,43 @@ function (dojo, declare) {
         },
         // ANCHOR onPass_counterattack
         onPass_counterattack: function(evt) {
+            dojo.stopEvent(evt);
             if (this.checkAction('pass_counterattack', true)) {
                 this.ajaxcallwrapper('pass_counterattack');
+            }
+        },
+
+        // ANCHOR onThrowCard_throwCard
+        onThrowCard_throwCard: function(evt) {
+            dojo.stopEvent(evt);
+            if (!this.isCurrentPlayerActive()) {
+                this.playerdeck.unselectAll();
+                return;
+            }
+            var player_id = this.getActivePlayerId();
+            var items = this.playerdeck.getSelectedItems();
+            if (items.length > 0) {
+                var items_ids = items.map((item) => Number(item.id));
+                // make to check the action
+                this.ajaxcallwrapper('throwCard_throwCard', {
+                    "player_id": player_id,
+                    "card_ids": JSON.stringify(items_ids),
+                });
+            }
+        },
+        // ANCHOR onThrowCard_pass
+        onThrowCard_pass: function(evt) {
+            dojo.stopEvent(evt);
+            
+            if (this.checkAction('throwCard_pass', true)) {
+                this.ajaxcallwrapper('throwCard_pass');
+            }
+        },
+
+        onShoot_roll: function(evt) {
+            dojo.stopEvent(evt);
+            if (this.checkAction('shoot_roll', true)) {
+                this.ajaxcallwrapper('shoot_roll');
             }
         },
         // !SECTION Player's action
@@ -588,6 +636,7 @@ function (dojo, declare) {
             // 
 
             dojo.subscribe('playFunctionCard', this, "notif_playFunctionCard");
+            this.notifqueue.setSynchronous('playFunctionCard', 500);
             dojo.subscribe('updatePlayerBoard', this, "notif_updatePlayerBoard");
             dojo.subscribe('playPlayerCard', this, "notif_playPlayerCard");
             dojo.subscribe('cardDrawn', this, "notif_cardDrawn");

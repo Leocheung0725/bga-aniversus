@@ -65,6 +65,23 @@ trait AniversusStateArgs {
             'card_status' => $playing_card_info['card_status'],
             'message' => $message,
         );
-    
+    }
+    // ANCHOR argThrowCard
+    function argThrowCard()
+    {
+        // it must return the array
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $player_handCardNumber = $player_deck->countCardInLocation('hand', $player_id);
+        $throwNumber = $player_handCardNumber - 5;
+        if ($throwNumber <= 0) {
+            $message = "don't have to throw any card from hand";
+        } else {
+            $message = "must throw {$throwNumber} card(s) from hand";
+        }
+        return array(
+            "message" => $message,
+            "thrownumber" => $throwNumber,  
+        );
     }
 }

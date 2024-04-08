@@ -93,7 +93,6 @@ trait AniversusPlayerActions {
 
     public function playPlayerCard($player_id, $card_id, $card_type, $row, $col) {
         // ANCHOR - playPlayerCard
-        // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'playPlayerCard' );
         // get the active player id
         $ActivePlayer = self::getActivePlayerId();
@@ -178,12 +177,13 @@ trait AniversusPlayerActions {
         self::checkAction( 'throwCards' );
         $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
+        $player_name = self::getActivePlayerName();
         foreach ($card_ids as $card_id) {
             $this->playFunctionCard2Discard($player_id, $card_id);
             $card = $player_deck->getCard($card_id);
             self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} throws ${card_name}' ), array(
                 'player_id' => $player_id,
-                'player_name' => self::getActivePlayerName(),
+                'player_name' => $player_name,
                 'card_name' => $this->cards_info[$card['type_arg'] - 1 ]['name'],
                 'card_id' => $card_id,
                 'card_type' => $card['type_arg'],
@@ -194,6 +194,9 @@ trait AniversusPlayerActions {
             case 'cardActiveEffect':
                 $this->gamestate->nextState( "playerTurn" );
                 break;
+            case 'throwCard':
+                $this->gamestate->nextState( "playerEndTurn" );
+                break;
             default:
                 break;
         }
@@ -202,7 +205,6 @@ trait AniversusPlayerActions {
 
     public function intercept_counterattack() {
         // ANCHOR - intercept_counterattack
-        // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'intercept_counterattack' );
         $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
@@ -239,10 +241,8 @@ trait AniversusPlayerActions {
         }
     }
 
-
     public function pass_counterattack() {
         // ANCHOR - pass_counterattack
-        // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'pass_counterattack' );
         $sql = "UPDATE `playing_card` SET `card_status` = 'validated' WHERE `disabled` = FALSE";
         self::DbQuery($sql);
@@ -251,8 +251,27 @@ trait AniversusPlayerActions {
 
     public function pass_playerTurn() {
         // ANCHOR - pass_playerTurn
-        // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'pass_playerTurn' );
         $this->gamestate->nextState( "throwCard" );
+    }
+
+    public function throwCard_throwCard( $player_id, $card_ids ) {
+        // ANCHOR - throwCard_throwCard
+        self::checkAction( 'throwCard_throwCard' );
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $player_handCardNumber = $player_deck->countCardInLocation('hand', $player_id);
+        $throwNumber = $player_handCardNumber - 5;
+        // if card_ids length is not equal to throwNumber, throw an exception
+        if (count($card_ids) != $throwNumber) {
+            throw new BgaUserException( self::_("Please ensure that you discard exactly {$throwNumber} card(s) from your hand; selecting more or fewer cards than required is not permitted.") );
+        }
+        $this->throwCards($player_id, $card_ids);
+    }
+
+    public function throwCard_pass() {
+        // ANCHOR - throwCard_pass
+        self::checkAction( 'throwCard_pass' );
+        $this->gamestate->nextState( "playerEndTurn" );
     }
 }

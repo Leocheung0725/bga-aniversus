@@ -59,6 +59,7 @@ if (!defined('stateEndGame')) { // ensure this block is only invoked once, since
     define("stateChangeActivePlayer_counterattack", 33);
     define("stateShoot", 23);
     define("stateThrowCard", 24);
+    define("statePlayerEndTurn", 25);
     define("stateEndHand", 90);
     define("stateEndGame", 99);
  }
@@ -90,10 +91,10 @@ $machinestates = array(
     // SECTION normal process section
     21 => array(
         "name" => "cardDrawing",
-        "description" => clienttranslate('Drawing cards'),
+        "description" => clienttranslate('${actplayer} is Drawing cards.'),
         "type" => "game",
         "action" => "stCardDrawing",
-        "transitions" => array( "nextPlayer" => statePlayerTurn )
+        "transitions" => array( "playerTurn" => statePlayerTurn )
     ),
 
     22 => array(
@@ -111,16 +112,25 @@ $machinestates = array(
         "description" => clienttranslate('Shoot'),
         "type" => "activeplayer",
         "action" => "stShoot",
-        "possibleactions" => array( "shoot", "playRedCard" ),
+        "possibleactions" => array( "shoot_roll", "playRedCard" ),
         "transitions" => array( "thrawncard" => stateThrowCard, "endHand" => stateEndHand )
     ),
 
     24 => array(
         "name" => "throwCard",
-        "description" => clienttranslate('Thrawn card'),
+        "description" => clienttranslate('${actplayer} ${message}'),
+        "descriptionmyturn" => clienttranslate('${you} ${message}'),
         "type" => "activeplayer",
-        "action" => "throwCard",
-        "possibleactions" => array( "thrawnCard" ),
+        "args" => "argThrowCard",
+        "possibleactions" => array( "throwCard_throwCard", "throwCard_pass", "throwCards" ),
+        "transitions" => array( "playerEndTurn" => statePlayerEndTurn )
+    ),
+
+
+    25 => array(
+        "name" => "playerEndTurn",
+        "type" => "game",
+        "action" => "stPlayerEndTurn",
         "transitions" => array( "cardDrawing" => stateCardDrawing, "endHand" => stateEndHand )
     ),
     // !SECTION normal process section

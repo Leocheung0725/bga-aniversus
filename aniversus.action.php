@@ -111,6 +111,36 @@
         // End of the action
         self::ajaxResponse();
     }
+
+    public function throwCard_throwCard() {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+        // Retrieve arguments
+        $card_ids = self::getArg( "card_ids", AT_json, true );
+        $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
+        $player_id = self::getArg( "player_id", AT_alphanum, true );
+        $this->game->throwCard_throwCard( $player_id, $card_ids );
+        // End of the action
+        self::ajaxResponse();
+    }
+
+    public function throwCard_pass() {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+        // Retrieve arguments
+        $this->game->throwCard_pass();
+        // End of the action
+        self::ajaxResponse();
+    }
+
+    public function shoot_roll() {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+        // Retrieve arguments
+        $this->game->shoot_roll();
+        // End of the action
+        self::ajaxResponse();
+    }
   }
   
 
