@@ -102,7 +102,7 @@ $machinestates = array(
         "description" => clienttranslate('${actplayer} must play a card or shoot or pass'),
         "descriptionmyturn" => clienttranslate('${you} must play a card or shoot or pass'),
         "type" => "activeplayer",
-        "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", "shoot" ),
+        "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", "shoot_playerTurn" ),
         "transitions" => array( "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack , "launch" => stateCardEffect,
         "shoot" => stateShoot, "throwCard" => stateThrowCard )
     ),
@@ -110,10 +110,9 @@ $machinestates = array(
     23 => array(
         "name" => "shoot",
         "description" => clienttranslate('Shoot'),
-        "type" => "activeplayer",
+        "type" => "game",
         "action" => "stShoot",
-        "possibleactions" => array( "shoot_roll", "playRedCard" ),
-        "transitions" => array( "thrawncard" => stateThrowCard, "endHand" => stateEndHand )
+        "transitions" => array( "throwCard" => stateThrowCard, "endHand" => stateEndHand )
     ),
 
     24 => array(
@@ -122,7 +121,7 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} ${message}'),
         "type" => "activeplayer",
         "args" => "argThrowCard",
-        "possibleactions" => array( "throwCard_throwCard", "throwCard_pass", "throwCards" ),
+        "possibleactions" => array( "throwCard_throwCard", "pass_throwCard", "throwCards" ),
         "transitions" => array( "playerEndTurn" => statePlayerEndTurn )
     ),
 

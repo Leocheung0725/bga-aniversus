@@ -88,28 +88,21 @@ return declare("bgagame.other", null, { // null here if we don't want to inherit
 
         // <div id='roll' class="roll-button"><button class="rolldice-button">Roll dice!</button></div>
 
-        rollDice: function() {
-            
-            // Generate random dice rolls
-            var diceOne = Math.floor(Math.random() * 6) + 1;
-            var diceTwo = Math.floor(Math.random() * 6) + 1;
-
+        rollDice: function(diceOne, diceTwo) {
+            console.log(`Rolling dice: ${diceOne} and ${diceTwo}`)
             // Update the dice visuals using Dojo
+            // Loop through all possible dice values
             for (var i = 1; i <= 6; i++) {
+                // Remove the class indicating the dice value for both dice
                 dojo.removeClass('dice1', 'show-' + i);
-                if (diceOne === i) {
-                    dojo.addClass('dice1', 'show-' + i);
-                }
+                dojo.removeClass('dice2', 'show-' + i);
             }
-        
-            for (var k = 1; k <= 6; k++) {
-                dojo.removeClass('dice2', 'show-' + k);
-                if (diceTwo === k) {
-                    dojo.addClass('dice2', 'show-' + k);
-                }
-            }
+            
+            // Add the class indicating the current dice value
+            dojo.addClass('dice1', 'show-' + diceOne);
+            dojo.addClass('dice2', 'show-' + diceTwo);
         },
-
+        
     });
         
 });

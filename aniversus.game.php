@@ -96,10 +96,15 @@ class Aniversus extends Table
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
         $sql = "INSERT INTO player (player_id, player_color, player_canal, 
         player_name, player_avatar, player_team, player_productivity_limit, 
-        player_productivity, player_action_limit, player_action, player_power) VALUES ";
+        player_productivity, player_action_limit, player_action, player_power, shooting_number) VALUES ";
         $values = array();
         $player_team = array("cat","squirrel");
         shuffle($player_team);
+        // Define the shooting numbers for each team
+        $shooting_numbers = array(
+            "cat" => $this->cat_original_shooting_numbers,
+            "squirrel" => $this->squirrel_original_shooting_numbers
+        );
         foreach( $players as $player_id => $player )
         {
             // Retrieve and remove the first color from the default colors array.
@@ -107,7 +112,8 @@ class Aniversus extends Table
 
             // Retrieve and remove the first team from the player team array.
             $team = array_shift($player_team);
-        
+            // Get the shooting number JSON string for the team
+            $shootingNumberJson = $shooting_numbers[$team];
             // Create the player's data string for insertion into the database.
             // Be sure to properly escape strings to prevent injection attacks.
             $playerNameEscaped = addslashes($player['player_name']);
@@ -125,7 +131,8 @@ class Aniversus extends Table
                 100,
                 0,
                 100,
-                0
+                10,
+                '{$shootingNumberJson}'
             )";
         }
         $sql .= implode( ',' , $values );

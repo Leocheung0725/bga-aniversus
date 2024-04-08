@@ -69,6 +69,8 @@ ALTER TABLE `player` ADD `player_action_limit` INT(11) NOT NULL;
 ALTER TABLE `player` ADD `player_action` INT(11) NOT NULL;
 ALTER TABLE `player` ADD `player_power` INT(11) NOT NULL;
 ALTER TABLE `player` ADD `player_status` TEXT;
+ALTER TABLE `player` ADD `shooting_number` TEXT;
+
 
 -- Playing Card DATABASE
 CREATE TABLE IF NOT EXISTS `playing_card` (

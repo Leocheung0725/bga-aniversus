@@ -190,4 +190,71 @@ trait AniversusStateActions {
         $this->activeNextPlayer();
         $this->gamestate->nextState( "cardDrawing" );
     }
+
+    public function stShoot() {
+        // ANCHOR - stShoot
+        $player_id = self::getActivePlayerId();
+        // checking the user has enough power to shoot
+        $sql = "SELECT player_power FROM player WHERE player_id = $player_id";
+        $player_power = self::getUniqueValueFromDB( $sql );
+        if ($player_power < 10) {
+            throw new BgaUserException( self::_("You do not have enough power to shoot") );
+        }
+        // roll the dice, get the two dice number
+        $diceOne = mt_rand(1, 6);
+        $diceTwo = mt_rand(1, 6);
+        $diceTotal = $diceOne + $diceTwo;
+        // get the player's shooting_number
+        $sql = "SELECT shooting_number FROM player WHERE player_id = $player_id";
+        $shooting_number_text = self::getUniqueValueFromDB( $sql );
+        $shooting_number = json_decode($shooting_number_text);
+        // check whether the diceTotal is in the shooting_number
+        if (in_array($diceTotal, $shooting_number)) {
+            // the player has shot the goal
+            $sql = "UPDATE player SET player_score = player_score + 1 WHERE player_id = $player_id";
+            self::DbQuery( $sql );
+            if (in_array(100, $shooting_number)) {
+                $sql = "UPDATE player SET shooting_number = '{$this->cat_original_shooting_numbers}' WHERE player_id = $player_id";
+                self::DbQuery( $sql );
+            } else if (in_array(101, $shooting_number)) {
+                $sql = "UPDATE player SET shooting_number = '{$this->squirrel_original_shooting_numbers}' WHERE player_id = $player_id";
+                self::DbQuery( $sql );
+            }
+            // Refresh the player board by using lastest data (Fetch the data from database again this time) 
+            $sql = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $player_id";
+            $player = self::getNonEmptyObjectFromDB( $sql );
+            self::notifyAllPlayers( "updatePlayerBoard", "", array(
+                'player_id' => $player_id,
+                'player_productivity' => $player['player_productivity'],
+                'player_action' => $player['player_action'],
+                'player_score' => $player['player_score'],
+                'player_power' => $player['player_power'],
+            ) );
+            self::notifyAllPlayers( "shoot_roll", clienttranslate( '${player_name} shoots the goal by hitting number ${diceTotal}' ), array(
+                'player_id' => $player_id,
+                'player_name' => self::getActivePlayerName(),
+                'diceOne' => $diceOne,
+                'diceTwo' => $diceTwo,
+                'diceTotal' => $diceTotal,
+            ) );
+
+            // change the game state to playerEndTurn
+            $this->gamestate->nextState( "throwCard" );
+        } else {
+            // add one more shooting number to the shooting_number
+            $new_shooting_number = $this->addShootingNumbersFromSmallestNumber($shooting_number);
+            $sql = "UPDATE player SET shooting_number = '{$new_shooting_number}' WHERE player_id = $player_id";
+            self::DbQuery( $sql );
+            self::notifyAllPlayers( "shoot_roll", clienttranslate( '${player_name} misses the goal by hitting number ${diceTotal}' ), array(
+                'player_id' => $player_id,
+                'player_name' => self::getActivePlayerName(),
+                'diceOne' => $diceOne,
+                'diceTwo' => $diceTwo,
+                'diceTotal' => $diceTotal,
+            ) );
+            // change the game state to playerEndTurn
+            $this->gamestate->nextState( "throwCard" );
+        }
+        
+    }
 }

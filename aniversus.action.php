@@ -112,6 +112,15 @@
         self::ajaxResponse();
     }
 
+    public function shoot_playerTurn() {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+        // Retrieve arguments
+        $this->game->shoot_playerTurn();
+        // End of the action
+        self::ajaxResponse();
+    }
+
     public function throwCard_throwCard() {
         // setAjaxMode is required to make an action call
         self::setAjaxMode();
@@ -124,20 +133,12 @@
         self::ajaxResponse();
     }
 
-    public function throwCard_pass() {
-        // setAjaxMode is required to make an action call
-        self::setAjaxMode();
-        // Retrieve arguments
-        $this->game->throwCard_pass();
-        // End of the action
-        self::ajaxResponse();
-    }
 
-    public function shoot_roll() {
+    public function pass_throwCard() {
         // setAjaxMode is required to make an action call
         self::setAjaxMode();
         // Retrieve arguments
-        $this->game->shoot_roll();
+        $this->game->pass_throwCard();
         // End of the action
         self::ajaxResponse();
     }

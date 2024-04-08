@@ -232,3 +232,6 @@ $this->card_type_arg2css_position = [
     113 => 39,
     114 => 40,
 ];
+
+$this->cat_original_shooting_numbers = json_encode([1, 3, 5, 7, 9, 100]);
+$this->squirrel_original_shooting_numbers = json_encode([2, 4, 6, 8, 10, 12, 101]);

@@ -255,6 +255,12 @@ trait AniversusPlayerActions {
         $this->gamestate->nextState( "throwCard" );
     }
 
+    public function shoot_playerTurn() {
+        // ANCHOR - shoot_playerTurn
+        self::checkAction( 'shoot_playerTurn' );
+        $this->gamestate->nextState( "shoot" );
+    }
+
     public function throwCard_throwCard( $player_id, $card_ids ) {
         // ANCHOR - throwCard_throwCard
         self::checkAction( 'throwCard_throwCard' );
@@ -269,9 +275,10 @@ trait AniversusPlayerActions {
         $this->throwCards($player_id, $card_ids);
     }
 
-    public function throwCard_pass() {
+    public function pass_throwCard() {
         // ANCHOR - throwCard_pass
-        self::checkAction( 'throwCard_pass' );
+        self::checkAction( 'pass_throwCard' );
         $this->gamestate->nextState( "playerEndTurn" );
     }
+
 }

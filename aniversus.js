@@ -271,6 +271,13 @@ function (dojo, declare) {
             this.playerdeck.setSelectionMode(2);
         },
 
+        // ANCHOR shoot state
+        onEnteringState_shoot: function(args) {
+            console.log('shoot state: the enterfunction is called');
+            console.log(args);
+            this.placeJstplSection("rolldice-area", "roll-dice", this.other.rollDice_html_content);
+        },
+
         // !SECTION onEnteringState
         // ------------------------------------- End of onEnteringState -------------------------------------------- //
 
@@ -292,6 +299,9 @@ function (dojo, declare) {
            */
             case 'cardActiveEffect':
 
+                break;
+            case 'shoot':
+                dojo.destroy('roll-dice');
                 break;
             case 'dummmy':
                 break;
@@ -335,15 +345,12 @@ function (dojo, declare) {
                     break;
                 case 'throwCard':
                     this.addActionButton( 'throwCard_btn_throw', _('Throw'), 'onThrowCard_throwCard' );
-                    this.addActionButton( 'throwCard_btn_pass', _('Pass'), 'onThrowCard_pass' );
+                    this.addActionButton( 'throwCard_btn_pass', _('Pass'), 'onPass_throwCard' );
                     if (args.thrownumber > 0) {
                         dojo.addClass('throwCard_btn_pass', 'disabled');
                     } else {
                         dojo.addClass('throwCard_btn_throw', 'disabled');
                     }
-                    break;
-                case 'shoot':
-                    this.addActionButton( 'shoot_btn_roll', _('Shoot'), 'onShoot_roll' );
                     break;
                 }
             }
@@ -553,6 +560,9 @@ function (dojo, declare) {
         // ANCHOR onShoot_PlayerTurn
         onShoot_PlayerTurn: function(evt) {
             dojo.stopEvent(evt);
+            if (this.checkAction('shoot_playerTurn', true)) {
+                this.ajaxcallwrapper('shoot_playerTurn');
+            }
         },
         // ANCHOR onPass_PlayerTurn
         onPass_PlayerTurn: function(evt) {
@@ -595,18 +605,11 @@ function (dojo, declare) {
             }
         },
         // ANCHOR onThrowCard_pass
-        onThrowCard_pass: function(evt) {
+        onPass_throwCard: function(evt) {
             dojo.stopEvent(evt);
             
-            if (this.checkAction('throwCard_pass', true)) {
-                this.ajaxcallwrapper('throwCard_pass');
-            }
-        },
-
-        onShoot_roll: function(evt) {
-            dojo.stopEvent(evt);
-            if (this.checkAction('shoot_roll', true)) {
-                this.ajaxcallwrapper('shoot_roll');
+            if (this.checkAction('pass_throwCard', true)) {
+                this.ajaxcallwrapper('pass_throwCard');
             }
         },
         // !SECTION Player's action
@@ -641,6 +644,8 @@ function (dojo, declare) {
             dojo.subscribe('playPlayerCard', this, "notif_playPlayerCard");
             dojo.subscribe('cardDrawn', this, "notif_cardDrawn");
             dojo.subscribe('cardThrown', this, "notif_cardThrown");
+            dojo.subscribe('shoot_roll', this, "notif_shoot_roll");
+            this.notifqueue.setSynchronous('shoot_roll', 5000);
         },  
         
         // from this point and below, you can write your game notifications handling methods
@@ -740,7 +745,17 @@ function (dojo, declare) {
             this.getJstplCard(player_id, card_id, card_type_arg, 'myhand_item_' + card_id, 'discardPile_field_me');
             this.playerOnPlaymat['me']['discardpile'].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
             this.playerdeck.removeFromStockById(Number(card_id));
-        }
+        },
+
+        // ANCHOR shoot_roll
+        notif_shoot_roll: function( notif ) {
+            console.log(`**** Notification: shoot_roll `)
+            console.log(notif);
+            const player_id = notif.args.player_id;
+            // show the roll dice
+            this.other.rollDice(notif.args.diceOne, notif.args.diceTwo);
+        },
+
         // !SECTION Notifications
    });             
 });

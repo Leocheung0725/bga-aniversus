@@ -131,6 +131,18 @@ trait AniversusUtils {
         }
     }
 
+    function addShootingNumbersFromSmallestNumber($shooting_numbers) {
+        // Find the smallest number not already in the array
+        for ($i = 1; $i <= 12; $i++) {
+            if (!in_array($i, $shooting_numbers)) {
+                // Add the smallest number to the array
+                $shooting_numbers[] = $i;
+                break;
+            }
+        }
+        return json_encode($shooting_numbers);
+    }
+
     public function getStateName() {
         $state = $this->gamestate->state();
         return $state['name'];
