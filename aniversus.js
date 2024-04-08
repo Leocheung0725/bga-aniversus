@@ -38,7 +38,8 @@ define([
     "ebg/core/gamegui",
     "ebg/counter",
     "ebg/stock",
-    "ebg/zone"
+    "ebg/zone",
+    g_gamethemeurl + "modules/aniversus_other.js",
     
 ],
 function (dojo, declare) {
@@ -51,7 +52,7 @@ function (dojo, declare) {
             this.cardwidth = 124;
             this.cardheight = 174;
             
-            
+            this.other = new bgagame.other();
             // Zone control (Player Playmat)
             // Create a array of zone objects for player playmat
             this.playerOnPlaymat = {};
@@ -65,7 +66,14 @@ function (dojo, declare) {
                     }
                 }
             });
-            //
+            // create the expandable section
+            // Roll dice test
+            this.placeJstplSection("rolldice-area", "roll-dice-test", this.other.rollDice_html_content);
+            dojo.connect($('roll'), 'onclick', this, () => {this.other.rollDice();});
+
+            // this.roll_dice_test.expand();
+            // this.expanded.collapse();
+            // this.expanded.toggle(); / switch between expanded and collapsed
         },
         
         /*
@@ -340,6 +348,11 @@ function (dojo, declare) {
             script.
         
         */
+        // ANCHOR placeJstplSection
+        placeJstplSection: function(parent_id, id, content) { 
+            html = this.format_block('jstpl_content', { id: id, content: content }); 
+            dojo.place(html,parent_id); 
+        },
         safeStringify: function(obj) {
         const seen = new WeakSet();
             return JSON.stringify(obj, (key, value) => {

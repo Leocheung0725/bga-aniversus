@@ -22,7 +22,7 @@ $gameinfos = array(
 'artist' => 'Annie Wong',         
 
 // Year of FIRST publication of this game. Can be negative.
-'year' => 2023,                 
+'year' => 2024,                 
 
 // Game publisher (use empty string if there is no publisher)
 'publisher' => 'NovBee Limited',                     

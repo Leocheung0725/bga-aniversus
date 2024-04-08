@@ -2,6 +2,7 @@
 
 
 <div id="gamefield">
+    <div id="rolldice-area" class="rolldice-area-class"></div>
 	<div class="playmat_field whiteblock">
         <div class="player_playmat reverse" id="player_playmat_opponent">
                 <!-- BEGIN playeronplaymat_opponent -->
@@ -27,13 +28,6 @@
 
 <script type="text/javascript">
 
-// Javascript HTML templates
-
-/*
-// Example:
-var jstpl_some_game_item='<div class="my_game_item" id="my_game_item_${MY_ITEM_ID}"></div>';
-
-*/
 
 var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
 
@@ -66,6 +60,10 @@ var jstpl_player_board =
     '</div>' +
 '</div>';
 
+var jstpl_content = 
+'<div id="${id}">' +
+    '${content}' +
+'</div>';
 
 </script>  
 
