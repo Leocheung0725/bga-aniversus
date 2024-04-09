@@ -324,9 +324,10 @@ function (dojo, declare) {
                 switch( stateName )
                 {
                 case 'cardActiveEffect':
-                    var button_list = JSON.parse(args.button_list);
+                    this.addActionButton( 'cardActiveEffect_btn_throw', _('Throw'), 'onThrowCard_CardActiveEffect' );
+                    let button_list = JSON.parse(args.button_list);
                     if (1 in button_list) {
-                        this.addActionButton( 'cardActiveEffect_btn_throw', _('Throw'), 'onThrowCard_CardActiveEffect' );
+                        dojo.addClass('cardActiveEffect_btn_throw', 'disabled');
                     }
                     break;
                 case 'playerTurn':
@@ -552,7 +553,7 @@ function (dojo, declare) {
                 var items_ids = items.map((item) => Number(item.id));
                 console.log("items_ids: ", items_ids);
                 // make to check the action
-                this.ajaxcallwrapper('throwCard_CardActiveEffects', {
+                this.ajaxcallwrapper('throwCard_CardActiveEffect', {
                     "player_id": player_id,
                     "card_ids": JSON.stringify(items_ids),
                 });

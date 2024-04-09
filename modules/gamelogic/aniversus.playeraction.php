@@ -8,7 +8,7 @@ trait AniversusPlayerActions {
         (note: each method below must match an input method in aniversus.action.php)
     */
     public function playFunctionCard( $player_id, $card_id, $card_type ) {
-        //ANCHOR - playFUnctionCard
+        //ANCHOR - playFunctionCard
         // check that this is player's turn and that it is a "possible action" at this game state
         self::checkAction( 'playFunctionCard' );
         // get the active player id
@@ -86,6 +86,7 @@ trait AniversusPlayerActions {
             'player_power' => $player['player_power'],
         ) );
         // update database that what card the active player has played
+        // playing_card updating
         $sql = "UPDATE playing_card SET "
         . "card_id = " . intval($card_id) . ", "
         . "card_type = '" . addslashes($card_info['type']) . "', "
@@ -301,20 +302,24 @@ trait AniversusPlayerActions {
         self::checkAction( 'throwCard_CardActiveEffect' );
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
-        $card_id = $card_effect_info['card_id'];
+        // $card_id = $card_effect_info['card_id'];
         $card_type_arg = $card_effect_info['card_type_arg'];
-        $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
+        // $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
         switch ($card_type_arg) {
             case 1:
                 if (count($card_ids) != 1) {
                     throw new BgaUserException( self::_("Please ensure that you discard exactly 1 card from your hand; selecting more or fewer cards than required is not permitted.") );
                 }
+                $this->disablePlayingCard();
                 $this->throwCards($player_id, $card_ids);
+                break;
             case 56:
                 if (count($card_ids) != 2) {
                     throw new BgaUserException( self::_("Please ensure that you discard exactly 2 cards from your hand; selecting more or fewer cards than required is not permitted.") );
                 }
+                $this->disablePlayingCard();
                 $this->throwCards($player_id, $card_ids);
+                break;
             default:
                 $card_effect = "You can play a card from your hand to the playmat";
                 break;

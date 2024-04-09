@@ -87,13 +87,44 @@ trait AniversusStateActions {
 
     function stCardDrawing() {
         // ANCHOR stCardDrawing
+        // Some special card effects may be triggered here
+        $player_id = self::getActivePlayerId();
+        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        $player_status = json_decode($player['player_status']);
+        foreach ($player_status as $status) {
+            switch ($status) {
+                case 13:
+                    $sql = "UPDATE player SET player_action = player_action + 2 WHERE player_id = $player_id";
+                    self::DbQuery( $sql );
+                    $this->updatePlayerBoard($player_id);
+                    $this->removeStatusFromStatusLst($player_id, 13);
+                    break;
+                case 10:
+                    $sql = "UPDATE player SET player_productivity = player_productivity - 2 WHERE player_id = $player_id";
+                    self::DbQuery( $sql );
+                    $this->updatePlayerBoard($player_id);
+                    $this->removeStatusFromStatusLst($player_id, 10);
+                    break;
+                case 55: // can not draw cards
+                    $this->addStatus2StatusLst($player_id, False, 55);
+                    $this->gamestate->nextState( "playerTurn" );
+                    break;
+                case 105: // skip one round
+                    $this->addStatus2StatusLst($player_id, False, 105);
+                    $this->gamestate->nextState( "playerEndTurn" );
+                    break;
+            }
+        }
+
+        // Normal Drawing Phase
         // get active player team
-        $active_player = self::getActivePlayerId();
-        $active_player_team = $this->getActivePlayerDeck($active_player);
+
+        $active_player_team = $this->getActivePlayerDeck($player_id);
         // Draw a card from the deck
-        $pick_cards = $active_player_team->pickCards( 2, 'deck', $active_player );
+        $pick_cards = $active_player_team->pickCards( 2, 'deck', $player_id );
         // Notify the player about the card drawn
-        self::notifyPlayer($active_player, 'cardDrawn', '', $pick_cards);
+        self::notifyPlayer($player_id, 'cardDrawn', '', $pick_cards);
         // switch to next state
         $this->gamestate->nextState( "playerTurn" );
     }
@@ -110,9 +141,8 @@ trait AniversusStateActions {
         switch ($card_type_arg) {
             case 1: // Draw 3 cards, then discard 1 card from your hand. (seems ok)
                 $picked_cards_list = $player_deck->pickCards( 3, 'deck', $player_id );
-                self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw ${card_num} cards' ), [
+                self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw 3 cards' ), [
                     'cards' => $picked_cards_list,
-                    'card_num' => $card_num,
                     'player_id' => $player_id,
                 ]);
                 // endEffect have two type : normal and active
@@ -186,6 +216,7 @@ trait AniversusStateActions {
                 $this->endEffect("normal");
                 break;
             case 108: // Return 1 card from the field to your hand.
+                $this->endEffect("activeplayerEffect");
                 break;
             default:
                 break;
@@ -225,6 +256,24 @@ trait AniversusStateActions {
 
     function stPlayerEndTurn() {
         // ANCHOR stPlayerEndTurn
+        // reset the player to limit
+        $player_id = self::getActivePlayerId();
+        $sql = "UPDATE player SET player_productivity = player_productivity_limit, player_action = player_action_limit WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        // handle player status
+        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        $player_status = json_decode($player['player_status']);
+        foreach ($player_status as $status) {
+            switch ($status) {
+                case 54: // deduct 2 power
+                    $sql = "UPDATE player SET player_power = player_power - 2 WHERE player_id = $player_id";
+                    self::DbQuery( $sql );
+                    $this->updatePlayerBoard($player_id);
+                    $this->removeStatusFromStatusLst($player_id, 54);
+                    break;
+            }
+        }
         $this->activeNextPlayer();
         $this->gamestate->nextState( "cardDrawing" );
     }
