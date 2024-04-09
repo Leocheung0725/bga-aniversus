@@ -96,7 +96,8 @@ class Aniversus extends Table
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
         $sql = "INSERT INTO player (player_id, player_color, player_canal, 
         player_name, player_avatar, player_team, player_productivity_limit, 
-        player_productivity, player_action_limit, player_action, player_power, shooting_number) VALUES ";
+        player_productivity, player_action_limit, player_action, player_power, shooting_number,
+        player_status) VALUES ";
         $values = array();
         $player_team = array("cat","squirrel");
         shuffle($player_team);
@@ -118,7 +119,8 @@ class Aniversus extends Table
             // Be sure to properly escape strings to prevent injection attacks.
             $playerNameEscaped = addslashes($player['player_name']);
             $playerAvatarEscaped = addslashes($player['player_avatar']);
-        
+            // player_status array setup
+            $player_status = json_encode([]);
             // Structure the data in a tuple format for SQL insertion.
             $values[] = "(
                 '{$player_id}',
@@ -132,7 +134,8 @@ class Aniversus extends Table
                 0,
                 100,
                 10,
-                '{$shootingNumberJson}'
+                '{$shootingNumberJson}',
+                '{$player_status}'
             )";
         }
         $sql .= implode( ',' , $values );

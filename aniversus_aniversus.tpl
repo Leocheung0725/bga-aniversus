@@ -65,6 +65,9 @@ var jstpl_content =
     '${content}' +
 '</div>';
 
+var jstpl_rollValue = 
+'<span id="rollValue_${player_id}">${rollValue}</span>';
+
 </script>  
 
 {OVERALL_GAME_FOOTER}

@@ -639,7 +639,7 @@ function (dojo, declare) {
             // 
 
             dojo.subscribe('playFunctionCard', this, "notif_playFunctionCard");
-            this.notifqueue.setSynchronous('playFunctionCard', 500);
+            this.notifqueue.setSynchronous('playFunctionCard', 1000);
             dojo.subscribe('updatePlayerBoard', this, "notif_updatePlayerBoard");
             dojo.subscribe('playPlayerCard', this, "notif_playPlayerCard");
             dojo.subscribe('cardDrawn', this, "notif_cardDrawn");
@@ -754,6 +754,12 @@ function (dojo, declare) {
             const player_id = notif.args.player_id;
             // show the roll dice
             this.other.rollDice(notif.args.diceOne, notif.args.diceTwo);
+            let diceTotal = Number(notif.args.diceOne) + Number(notif.args.diceTwo);
+            dojo.place(this.format_block('jstpl_rollValue', {
+                player_id: player_id,
+                rollValue: diceTotal
+            }), "roll_result");
+            dojo.addClass('roll_result', 'roll-result');
         },
 
         // !SECTION Notifications

@@ -108,8 +108,7 @@ trait AniversusStateActions {
         $card_type_arg = $card_effect_info['card_type_arg'];
         $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
         switch ($card_type_arg) {
-            case 1:
-                // do something
+            case 1: // Draw 3 cards, then discard 1 card from your hand. (seems ok)
                 $card_num = 3;
                 $picked_cards_list = $player_deck->pickCards( $card_num, 'deck', $card_effect_info['player_id'] );
                 self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw ${card_num} cards' ), [
@@ -120,10 +119,9 @@ trait AniversusStateActions {
                 // endEffect have two type : normal and active
                 $this->endEffect("activeplayerEffect");
                 break;
-            case 2:
-                // do something
+            case 2: // Play a card without paying its cost. (DOES NOT count as an action)
                 break;
-            case 6:
+            case 6: // Choose 1 card, at random, from your opponent's hand and discard it.
                 $opponent_playerId = $this->getNonActivePlayerId(); 
                 $player_deck_opponent = $this->getNonActivePlayerDeck($player_id);
                 $opponent_hand = $player_deck_opponent->getPlayerHand($opponent_playerId);
@@ -136,17 +134,18 @@ trait AniversusStateActions {
                     'card_type_arg' => $card_type_arg,
                 ]);
                 break;
-            case 7:
+            case 7: // active player Gain 2 energy in this round. (ok)
                 $sql = "UPDATE player SET player_productivity =  player_productivity + 2 WHERE player_id = $player_id";
                 self::DbQuery( $sql );
+                $this->updatePlayerBoard($player_id);
                 $this->endEffect("normal");
                 break;
-            case 13:
-                $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
-                $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
-                $player_status[] = 1;
-                $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id = $player_id";
-                self::DbQuery( $sql );
+            case 10: // Opponent -2 energy next round.
+                $this->addStatus2StatusLst($player_id, True, 2);
+                $this->endEffect("normal");
+                break;
+            case 13: // Get extra 2 actions in your next round
+                $this->addStatus2StatusLst($player_id, False, 1);
                 $this->endEffect("normal");
                 break;
             default:

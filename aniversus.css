@@ -369,6 +369,12 @@ ul.no-bullet {
 
 
 
+.roll-result {
+  text-align: center; /* Center the text */
+  font-size: 4.5rem; /* Large text for better visibility */
+  color: #fff; /* White text color */
+  /* Add more styles as needed */
+}
 
 
 

@@ -81,12 +81,12 @@ return declare("bgagame.other", null, { // null here if we don't want to inherit
                     </div>
                 </div> 
                 </div>
+                <div id="roll_result"></div>
                 </div>
             </div>`;
         
         },
 
-        // <div id='roll' class="roll-button"><button class="rolldice-button">Roll dice!</button></div>
 
         rollDice: function(diceOne, diceTwo) {
             console.log(`Rolling dice: ${diceOne} and ${diceTwo}`)

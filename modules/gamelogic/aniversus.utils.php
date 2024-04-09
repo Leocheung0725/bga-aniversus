@@ -4,6 +4,7 @@
     /* In this space, you can put any utility methods useful for your game logic */
 //////////////////////////////////////////////////////////////////////////////
 trait AniversusUtils {
+    // ANCHOR getActivePlayerDeck
     function getActivePlayerDeck($player_id) {
         // get the player team information and determine which deck would be used
         $sql = "SELECT player_id, player_name, player_color, player_team FROM player";
@@ -16,6 +17,7 @@ trait AniversusUtils {
             return $this->squirrelDeck;
         }
     }
+    // ANCHOR getNonActivePlayerDeck
     // $player_id = self::getActivePlayerId();
     function getNonActivePlayerDeck($player_id) {
         // get the player team information and determine which deck would be used
@@ -29,13 +31,14 @@ trait AniversusUtils {
             return $this->catDeck;
         }
     }
+    // ANCHOR getCardinfoFromCardsInfo
     // $card_id = card_type
     function getCardinfoFromCardsInfo($card_id) {
         return current(array_filter($this->cards_info, function($card) use ($card_id){
             return $card['id'] == $card_id;
         }));
     }
-
+    // ANCHOR encodePlayerLocation
     function encodePlayerLocation($row, $column) {
         /*
         To encode row 1, column 1
@@ -46,7 +49,7 @@ trait AniversusUtils {
         $num_columns = 5;
         return ($row - 1) * $num_columns + $column;
     }
-    
+    // ANCHOR decodePlayerLocation
     function decodePlayerLocation($location_arg) {
         /*
         To decode location_arg 1
@@ -59,7 +62,7 @@ trait AniversusUtils {
         $column = ($location_arg - 1) % $num_columns + 1;
         return array('row' => $row, 'col' => $column);
     }
-
+    // ANCHOR findLargestLocationArg
     function findLargestLocationArg($cards) {
         // Check if the input is null or an empty array
         if (is_null($cards) || empty($cards)) {
@@ -76,7 +79,7 @@ trait AniversusUtils {
         // If locationArgs is empty, return 0, otherwise return the max value
         return !empty($locationArgs) ? max($locationArgs) : 0;
     }
-
+    // ANCHOR endEffect
     function endEffect($end_type) {
         if ($end_type == 'normal') {
             $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE AND player_id = $player_id";
@@ -86,7 +89,7 @@ trait AniversusUtils {
             $this->gamestate->nextState( "cardActiveEffect" );
         }
     }
-
+    // ANCHOR playFunctionCard2Discard
     function playFunctionCard2Discard($player_id, $card_id) {
         $player_deck = $this->getActivePlayerDeck($player_id);
         // get discard pile cards list
@@ -95,14 +98,14 @@ trait AniversusUtils {
         $largest_location_arg = $this->findLargestLocationArg($discard_pile_cards);
         $player_deck->moveCard($card_id, 'discard', $largest_location_arg + 1);
     }
-
+    // ANCHOR getNonActivePlayerId
     function getNonActivePlayerId() {
         $active_player_id = self::getActivePlayerId();
         $sql = "SELECT player_id FROM player WHERE player_id != $active_player_id";
         $non_active_player_id = self::getUniqueValueFromDB( $sql );
         return $non_active_player_id;
     }
-
+    // ANCHOR countPlayerBoard
     function countPlayerBoard($player_id) {
         // get two decks
         $player_deck = $this->getActivePlayerDeck($player_id);
@@ -130,7 +133,7 @@ trait AniversusUtils {
             }
         }
     }
-
+    // ANCHOR addShootingNumbersFromSmallestNumber
     function addShootingNumbersFromSmallestNumber($shooting_numbers) {
         // Find the smallest number not already in the array
         for ($i = 1; $i <= 12; $i++) {
@@ -142,12 +145,12 @@ trait AniversusUtils {
         }
         return json_encode($shooting_numbers);
     }
-
+    // ANCHOR getStateName
     public function getStateName() {
         $state = $this->gamestate->state();
         return $state['name'];
     }
-
+    // ANCHOR validateJSonAlphaNum
     public function validateJSonAlphaNum($value, $argName = 'unknown')
     {
         if (is_array($value)) {
@@ -165,6 +168,36 @@ trait AniversusUtils {
             throw new BgaSystemException("Bad value for: $argName", true, true, FEX_bad_input_argument);
         }
         return true;
+    }
+    // ANCHOR updatePlayerBoard
+    public function updatePlayerBoard($player_id)
+    {
+        // Refresh the player board by using lastest data (Fetch the data from database again this time) 
+        $sql = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        self::notifyAllPlayers( "updatePlayerBoard", "", array(
+            'player_id' => $player_id,
+            'player_productivity' => $player['player_productivity'],
+            'player_action' => $player['player_action'],
+            'player_score' => $player['player_score'],
+            'player_power' => $player['player_power'],
+        ) );
+    }
+    // ANCHOR addStatus2StatusLst
+    public function addStatus2StatusLst($player_id, $IsOpponent, $status) {
+        if ($IsOpponent) {
+            $sql = "SELECT player_status FROM player WHERE player_id != $player_id";
+            $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+            $player_status[] = $status;
+            $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id != $player_id";
+            self::DbQuery( $sql );
+        } else {
+            $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+            $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+            $player_status[] = $status;
+            $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id = $player_id";
+            self::DbQuery( $sql );
+        }
     }
 
 }
