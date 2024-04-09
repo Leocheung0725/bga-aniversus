@@ -291,9 +291,33 @@ trait AniversusPlayerActions {
     }
 
     public function pass_throwCard() {
-        // ANCHOR - throwCard_pass
+        // ANCHOR - pass_throwCard
         self::checkAction( 'pass_throwCard' );
         $this->gamestate->nextState( "playerEndTurn" );
     }
 
+    public function throwCard_CardActiveEffect( $player_id, $card_ids ) {
+        // ANCHOR - throwCard_CardActiveEffect
+        self::checkAction( 'throwCard_CardActiveEffect' );
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
+        $card_id = $card_effect_info['card_id'];
+        $card_type_arg = $card_effect_info['card_type_arg'];
+        $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
+        switch ($card_type_arg) {
+            case 1:
+                if (count($card_ids) != 1) {
+                    throw new BgaUserException( self::_("Please ensure that you discard exactly 1 card from your hand; selecting more or fewer cards than required is not permitted.") );
+                }
+                $this->throwCards($player_id, $card_ids);
+            case 56:
+                if (count($card_ids) != 2) {
+                    throw new BgaUserException( self::_("Please ensure that you discard exactly 2 cards from your hand; selecting more or fewer cards than required is not permitted.") );
+                }
+                $this->throwCards($player_id, $card_ids);
+            default:
+                $card_effect = "You can play a card from your hand to the playmat";
+                break;
+        }
+    }
 }

@@ -181,6 +181,12 @@ trait AniversusStateActions {
                 ]);
                 $this->endEffect("activeplayerEffect");
                 break;
+            case 105: // Your opponent skips 1 round.
+                $this->addStatus2StatusLst($player_id, True, 105);
+                $this->endEffect("normal");
+                break;
+            case 108: // Return 1 card from the field to your hand.
+                break;
             default:
                 break;
         }

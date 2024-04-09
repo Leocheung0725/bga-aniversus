@@ -142,6 +142,18 @@
         // End of the action
         self::ajaxResponse();
     }
+
+    public function throwCard_CardActiveEffect() {
+        // setAjaxMode is required to make an action call
+        self::setAjaxMode();
+        // Retrieve arguments
+        $card_ids = self::getArg( "card_ids", AT_json, true );
+        $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
+        $player_id = self::getArg( "player_id", AT_alphanum, true );
+        $this->game->throwCard_CardActiveEffect( $player_id, $card_ids );
+        // End of the action
+        self::ajaxResponse();
+    }
   }
   
 

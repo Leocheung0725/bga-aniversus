@@ -324,13 +324,11 @@ function (dojo, declare) {
                 switch( stateName )
                 {
                 case 'cardActiveEffect':
-                    this.addActionButton( 'cardActiveEffect_btn_throw', _('Throw'), 'onThrowCard_CardActiveEffect' );
+                    var button_list = JSON.parse(args.button_list);
+                    if (1 in button_list) {
+                        this.addActionButton( 'cardActiveEffect_btn_throw', _('Throw'), 'onThrowCard_CardActiveEffect' );
+                    }
                     break;
-                    // you can add disabled class to the button, then it will be disabled
-                    // this.addActionButton('play_button_id', _('Play 1 to 3 cards'), 'playFunctionButton'); 
-                    // if (condition) {
-                    //   dojo.addClass('play_button_id', 'disabled');
-                    // }
                 case 'playerTurn':
                     this.addActionButton( 'playerTurn_btn_play', _('Play'), 'onPlayCard_PlayerTurn' );
                     this.addActionButton( 'playerTurn_btn_pass', _('Pass'), 'onPass_PlayerTurn' );
@@ -554,7 +552,7 @@ function (dojo, declare) {
                 var items_ids = items.map((item) => Number(item.id));
                 console.log("items_ids: ", items_ids);
                 // make to check the action
-                this.ajaxcallwrapper('throwCards', {
+                this.ajaxcallwrapper('throwCard_CardActiveEffects', {
                     "player_id": player_id,
                     "card_ids": JSON.stringify(items_ids),
                 });

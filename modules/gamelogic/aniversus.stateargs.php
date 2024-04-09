@@ -49,14 +49,22 @@ trait AniversusStateArgs {
         // fetch playing_card table to get the card id and card type by active player id
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        // throw button: 1
+        $button_list = array();
         switch ($playing_card_info['card_type_arg']) {
             case 1:
                 $message = "must discard a card from the hand";
+                $button_list[] = 1;
+                break;
+            case 56:
+                $message = "must discard 2 cards from the hand";
+                $button_list[] = 1;
                 break;
             default:
                 $card_effect = "You can play a card from your hand to the playmat";
                 break;
         }
+        $button_list = json_encode($button_list);
         return array(
             'card_id' => $playing_card_info['card_id'],
             'card_type' => $playing_card_info['card_type'],
@@ -64,6 +72,7 @@ trait AniversusStateArgs {
             'player_id' => $playing_card_info['player_id'],
             'card_status' => $playing_card_info['card_status'],
             'message' => $message,
+            'button_list' => $button_list,
         );
     }
     // ANCHOR argThrowCard
