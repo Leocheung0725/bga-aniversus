@@ -109,8 +109,7 @@ trait AniversusStateActions {
         $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
         switch ($card_type_arg) {
             case 1: // Draw 3 cards, then discard 1 card from your hand. (seems ok)
-                $card_num = 3;
-                $picked_cards_list = $player_deck->pickCards( $card_num, 'deck', $card_effect_info['player_id'] );
+                $picked_cards_list = $player_deck->pickCards( 3, 'deck', $player_id );
                 self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw ${card_num} cards' ), [
                     'cards' => $picked_cards_list,
                     'card_num' => $card_num,
@@ -120,6 +119,10 @@ trait AniversusStateActions {
                 $this->endEffect("activeplayerEffect");
                 break;
             case 2: // Play a card without paying its cost. (DOES NOT count as an action)
+                break;
+            case 3: // Double the effect of a function card. (Play this card first, then the function card)
+                break;
+            case 4: // Dismiss 1 opponent's forward player. (This card can be played during opponent's SHOOTING phase, which DOES NOT count as an action)
                 break;
             case 6: // Choose 1 card, at random, from your opponent's hand and discard it.
                 $opponent_playerId = $this->getNonActivePlayerId(); 
@@ -140,13 +143,43 @@ trait AniversusStateActions {
                 $this->updatePlayerBoard($player_id);
                 $this->endEffect("normal");
                 break;
+            case 8: // Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.
+                break;
             case 10: // Opponent -2 energy next round.
-                $this->addStatus2StatusLst($player_id, True, 2);
+                $this->addStatus2StatusLst($player_id, True, 10);
                 $this->endEffect("normal");
                 break;
             case 13: // Get extra 2 actions in your next round
-                $this->addStatus2StatusLst($player_id, False, 1);
+                $this->addStatus2StatusLst($player_id, False, 13);
                 $this->endEffect("normal");
+                break;
+            case 53: // This card can only be played when you have 3 cards or fewer in your hand. Draw 3 cards.
+                $picked_cards_list = $player_deck->pickCards( 3, 'deck', $player_id );
+                self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw ${card_num} cards' ), [
+                    'cards' => $picked_cards_list,
+                    'card_num' => $card_num,
+                    'player_id' => $player_id,
+                ]);
+                $this->endEffect("normal");
+            case 54: // Power + 2 this round
+                $sql = "UPDATE player SET player_power =  player_power + 2 WHERE player_id = $player_id";
+                self::DbQuery( $sql );
+                $this->addStatus2StatusLst($player_id, False, 54);
+                $this->updatePlayerBoard($player_id);
+                $this->endEffect("normal");
+                break;
+            case 55: //Your opponent cannot draw cards next round.
+                $this->addStatus2StatusLst($player_id, True, 55);
+                $this->endEffect("normal");
+                break;
+            case 56: // Draw 2 cards, then discard 2 cards from all your hand cards.
+                $picked_cards_list = $player_deck->pickCards( 2, 'deck', $player_id );
+                self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw ${card_num} cards' ), [
+                    'cards' => $picked_cards_list,
+                    'card_num' => $card_num,
+                    'player_id' => $player_id,
+                ]);
+                $this->endEffect("activeplayerEffect");
                 break;
             default:
                 break;

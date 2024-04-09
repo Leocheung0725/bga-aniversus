@@ -13,9 +13,25 @@ trait AniversusPlayerActions {
         self::checkAction( 'playFunctionCard' );
         // get the active player id
         $ActivePlayer = self::getActivePlayerId();
-
+        $player_deck = $this->getActivePlayerDeck($player_id);
         if ($player_id != $ActivePlayer) {
             throw new BgaUserException( self::_("You are not the active player") );
+        }
+        switch ($card_type) {
+            case 9:
+                // handle the id: 9 card, it is a unplayable card
+                throw new BgaUserException( self::_("This card is unplayable. Please select other cards to play.") );
+                break;
+            case 5:
+                // handle the id:5 card (counter attack card)
+                throw new BgaUserException( self::_("This card is a counterattack card, it just can be used for reaction of opponent's function card. Please select other cards to play.") );
+                break;
+            case 53:
+                if ($player_deck->countCardInLocation('hand') > 3 ) {
+                    throw new BgaUserException( self::_("You can not have more than 3 cards in hand") );
+                }
+            default:
+                break;
         }
         $card_info = $this->getCardinfoFromCardsInfo($card_type);
         $card_cost = $card_info['cost'];
@@ -24,7 +40,6 @@ trait AniversusPlayerActions {
         ///  .....
         ////
         $card_team = $card_info['team'];
-        $player_deck = $this->getActivePlayerDeck($player_id);
         // check whether the user have this card in hand
         $card_deck_info = $player_deck->getCard($card_id);
         if ( $card_deck_info['location'] != 'hand' ) {

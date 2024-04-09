@@ -200,5 +200,22 @@ trait AniversusUtils {
         }
     }
 
+    // ANCHOR removeStatusFromStatusLst
+    public function removeStatusFromStatusLst($player_id, $IsOpponent, $status) {
+        if ($IsOpponent) {
+            $sql = "SELECT player_status FROM player WHERE player_id != $player_id";
+            $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+            $player_status = array_diff($player_status, array($status));
+            $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id != $player_id";
+            self::DbQuery( $sql );
+        } else {
+            $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+            $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+            $player_status = array_diff($player_status, array($status));
+            $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id = $player_id";
+            self::DbQuery( $sql );
+        }
+    }
+
 }
 
