@@ -114,6 +114,8 @@ trait AniversusStateActions {
                     $this->addStatus2StatusLst($player_id, False, 105);
                     $this->gamestate->nextState( "playerEndTurn" );
                     break;
+                default:
+                    break;
             }
         }
 
@@ -149,8 +151,13 @@ trait AniversusStateActions {
                 $this->endEffect("activeplayerEffect");
                 break;
             case 2: // Play a card without paying its cost. (DOES NOT count as an action)
+                $sql = "UPDATE player SET player_action = player_action + 1 WHERE player_id = $player_id";
+                self::DbQuery( $sql );
+                $this->updatePlayerBoard($player_id);
+                $this->addStatus2StatusLst($player_id, False, 2);
                 break;
             case 3: // Double the effect of a function card. (Play this card first, then the function card)
+                $this->addStatus2StatusLst($player_id, False, 3);
                 break;
             case 4: // Dismiss 1 opponent's forward player. (This card can be played during opponent's SHOOTING phase, which DOES NOT count as an action)
                 break;
@@ -171,17 +178,13 @@ trait AniversusStateActions {
                 $sql = "UPDATE player SET player_productivity =  player_productivity + 2 WHERE player_id = $player_id";
                 self::DbQuery( $sql );
                 $this->updatePlayerBoard($player_id);
-                $this->endEffect("normal");
-                break;
             case 8: // Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.
                 break;
             case 10: // Opponent -2 energy next round.
                 $this->addStatus2StatusLst($player_id, True, 10);
-                $this->endEffect("normal");
                 break;
             case 13: // Get extra 2 actions in your next round
                 $this->addStatus2StatusLst($player_id, False, 13);
-                $this->endEffect("normal");
                 break;
             case 53: // This card can only be played when you have 3 cards or fewer in your hand. Draw 3 cards.
                 $picked_cards_list = $player_deck->pickCards( 3, 'deck', $player_id );
@@ -190,17 +193,14 @@ trait AniversusStateActions {
                     'card_num' => $card_num,
                     'player_id' => $player_id,
                 ]);
-                $this->endEffect("normal");
             case 54: // Power + 2 this round
                 $sql = "UPDATE player SET player_power =  player_power + 2 WHERE player_id = $player_id";
                 self::DbQuery( $sql );
                 $this->addStatus2StatusLst($player_id, False, 54);
                 $this->updatePlayerBoard($player_id);
-                $this->endEffect("normal");
                 break;
             case 55: //Your opponent cannot draw cards next round.
                 $this->addStatus2StatusLst($player_id, True, 55);
-                $this->endEffect("normal");
                 break;
             case 56: // Draw 2 cards, then discard 2 cards from all your hand cards.
                 $picked_cards_list = $player_deck->pickCards( 2, 'deck', $player_id );
@@ -211,9 +211,11 @@ trait AniversusStateActions {
                 ]);
                 $this->endEffect("activeplayerEffect");
                 break;
+            case 57: // When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.
+                $this->endEffect("activeplayerEffect");
+                break;
             case 105: // Your opponent skips 1 round.
                 $this->addStatus2StatusLst($player_id, True, 105);
-                $this->endEffect("normal");
                 break;
             case 108: // Return 1 card from the field to your hand.
                 $this->endEffect("activeplayerEffect");
@@ -221,6 +223,20 @@ trait AniversusStateActions {
             default:
                 break;
         }
+        // handle player status
+        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        $player_status = json_decode($player['player_status']);
+        foreach ($player_status as $status) {
+            switch ($status) {
+                case 3:
+                    $this->endEffect("again");
+                    break;
+                default:
+                    break;
+            }
+        }
+        $this->endEffect("normal");
     }
 
     function stCardActiveEffect() {
@@ -271,6 +287,11 @@ trait AniversusStateActions {
                     self::DbQuery( $sql );
                     $this->updatePlayerBoard($player_id);
                     $this->removeStatusFromStatusLst($player_id, 54);
+                    break;
+                case 3: // remove the status, double effect is only for one round
+                    $this->removeStatusFromStatusLst($player_id, 3);
+                    break;
+                default:
                     break;
             }
         }

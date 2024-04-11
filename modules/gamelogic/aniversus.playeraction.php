@@ -17,6 +17,23 @@ trait AniversusPlayerActions {
         if ($player_id != $ActivePlayer) {
             throw new BgaUserException( self::_("You are not the active player") );
         }
+        $card_info = $this->getCardinfoFromCardsInfo($card_type);
+        $card_cost = $card_info['cost'];
+        $card_team = $card_info['team'];
+        $comsumed_action = 1;
+        // check whether the user have this card in hand
+        $card_deck_info = $player_deck->getCard($card_id);
+        if ( $card_deck_info['location'] != 'hand' ) {
+            throw new BgaUserException( self::_("This card is not in your hand") );
+        }
+        // get the active player energy and action number
+        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        // check whether the card belongs to the player's team
+        if ($player['player_team'] != $card_team && $card_team != "basic") {
+            throw new BgaUserException( self::_("This card does not belong to your team") );
+        }
+        // special handling for some cards
         switch ($card_type) {
             case 9:
                 // handle the id: 9 card, it is a unplayable card
@@ -30,27 +47,14 @@ trait AniversusPlayerActions {
                 if ($player_deck->countCardInLocation('hand') > 3 ) {
                     throw new BgaUserException( self::_("You can not have more than 3 cards in hand") );
                 }
+                break;
+            case 2:
+                $sql = "UPDATE player SET player_productivity = player_productivity + $card_cost WHERE player_id = $player_id";
+                break;
             default:
                 break;
         }
-        $card_info = $this->getCardinfoFromCardsInfo($card_type);
-        $card_cost = $card_info['cost'];
-        // write a function to handle the cost free
-        /////
-        ///  .....
-        ////
-        $card_team = $card_info['team'];
-        // check whether the user have this card in hand
-        $card_deck_info = $player_deck->getCard($card_id);
-        if ( $card_deck_info['location'] != 'hand' ) {
-            throw new BgaUserException( self::_("This card is not in your hand") );
-        }
-        // get the active player energy and action number
-        $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
-        $player = self::getNonEmptyObjectFromDB( $sql );
-        if ($player['player_team'] != $card_team && $card_team != "basic") {
-            throw new BgaUserException( self::_("This card does not belong to your team") );
-        }
+        // check whether the user have enough action and productivity to play this card
         if ($player['player_action'] <= 0) {
             throw new BgaUserException( self::_("You do not have enough action to play this card") );
         }
@@ -58,11 +62,7 @@ trait AniversusPlayerActions {
             throw new BgaUserException( self::_("You do not have enough productivity to play this card") );
         }
         // play the card
-        $sql = "
-        UPDATE player
-        SET player_action = player_action - 1, player_productivity = player_productivity - $card_cost
-        WHERE player_id = $player_id
-        ";
+        $sql = "UPDATE player SET player_action = player_action - $comsumed_action, player_productivity = player_productivity - $card_cost WHERE player_id = $player_id";
         self::DbQuery( $sql );
         // move the card from hand to discard Pile because this is function card
         $this->playFunctionCard2Discard($player_id, $card_id);
@@ -118,6 +118,7 @@ trait AniversusPlayerActions {
         $card_info = $this->getCardinfoFromCardsInfo($card_type);
         $card_cost = $card_info['cost'];
         $card_team = $card_info['team'];
+        $comsumed_action = 1;
         $player_deck = $this->getActivePlayerDeck($player_id);
         // check whether the user have this card in hand
         $card_deck_info = $player_deck->getCard($card_id);
@@ -134,6 +135,7 @@ trait AniversusPlayerActions {
             throw new BgaUserException( self::_("You do not have enough action to play this card") );
         }
         // play the card
+
         // minus the action and productivity of player in this round
         if ($row == "1") {
             if ($player['player_productivity'] < $card_cost) {
@@ -142,7 +144,7 @@ trait AniversusPlayerActions {
             $card_power = $card_info['power'];
             $sql = "
             UPDATE player
-            SET player_action = player_action - 1, 
+            SET player_action = player_action - $comsumed_action, 
             player_productivity = player_productivity - $card_cost,
             player_power = player_power + $card_power
             WHERE player_id = $player_id
@@ -152,7 +154,7 @@ trait AniversusPlayerActions {
             $card_productivity = $card_info['productivity'];
             $sql = "
             UPDATE player
-            SET player_action = player_action - 1, 
+            SET player_action = player_action - $comsumed_action, 
             player_productivity = player_productivity + $card_productivity, 
             player_productivity_limit = player_productivity_limit + $card_productivity
             WHERE player_id = $player_id
@@ -171,16 +173,18 @@ trait AniversusPlayerActions {
             'row' => $row,
             'col' => $col,
         ) );
+        // calculate special case
+
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-        $sql = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $player_id";
-        $player = self::getNonEmptyObjectFromDB( $sql );
-        self::notifyAllPlayers( "updatePlayerBoard", "", array(
-            'player_id' => $player_id,
-            'player_productivity' => $player['player_productivity'],
-            'player_action' => $player['player_action'],
-            'player_score' => $player['player_score'],
-            'player_power' => $player['player_power'],
-        ) );
+        $this->updatePlayerBoard($player_id);
+        // determine whether need to enter the cardEffect state to do the card effect, if not, just go to playerTurn state and let the player to player next card
+        switch ($card_type) {
+            case 57:
+                $this->gamestate->nextState( "launch" );
+                break;
+            default:
+                break;
+        }
     }
 
     public function throwCards( $player_id, $card_ids ) {

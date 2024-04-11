@@ -151,7 +151,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stCardEffect",
         "args" => "argCardEffect",
-        "transitions" => array( "playerTurn" => statePlayerTurn, "cardActiveEffect" => stateCardActiveEffect )
+        "transitions" => array( "playerTurn" => statePlayerTurn, "cardActiveEffect" => stateCardActiveEffect, "cardEffect" => stateCardEffect)
     ),
 
     32 => array(

@@ -87,6 +87,10 @@ trait AniversusUtils {
             $this->gamestate->nextState( "playerTurn" );
         } else if ($end_type == 'activeplayerEffect') {
             $this->gamestate->nextState( "cardActiveEffect" );
+        } else if ($end_type == "again") {
+            $player_id = self::getActivePlayerId();
+            $this->removeStatusFromStatusLst($player_id, 3);
+            $this->gamestate->nextState( "cardEffect" );
         }
     }
     // ANCHOR playFunctionCard2Discard
@@ -182,6 +186,67 @@ trait AniversusUtils {
             'player_score' => $player['player_score'],
             'player_power' => $player['player_power'],
         ) );
+    }
+
+    // ANCHOR updatePlayerAbility
+    public function updatePlayerAbility($player_id)
+    {
+        // get the player team player in playmat information 
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+        $player_playmat = $player_deck->getCardsInLocation('playmat');
+        $opponent_playmat = $opponent_deck->getCardsInLocation('playmat');
+        $player_playmatInfo = [];
+        $opponent_playmatInfo = [];
+        foreach ($player_playmat as $playercard) {
+            $player_playmatInfo[$playercard['location_arg']] = $this->getCardinfoFromCardsInfo($playercard['type_arg']);
+        }
+        foreach ($opponent_playmat as $opponentcard) {
+            $opponent_playmatInfo[$opponentcard['location_arg']] = $this->getCardinfoFromCardsInfo($opponentcard['type_arg']);
+        }
+
+        foreach ($player_playmat as $playercard) {
+            $marco_bros = 0;
+            switch ($playercard['type_arg']) {
+                case 58: // The player in the same position on the opponent's field -2 power. (for as long as Sergio is in play)
+                    $thiscard_position = $playercard['location_arg'];
+                    $opponent_thiscard_position = $opponent_playmatInfo[$thiscard_position] ?? null;
+                    if ($opponent_thiscard_position != null) {
+                        $new_power = $player_playmatInfo[$thiscard_position]['power'];
+                        $player_playmatInfo[$thiscard_position]['power'] = $new_power;
+                    }
+                    break;
+                case 59: // *** The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field)
+                    $thiscard_position = $playercard['location_arg'];
+                    $opponent_thiscard_position = $opponent_playmatInfo[$thiscard_position] ?? null;
+                    if ($opponent_thiscard_position != null) {
+                        $new_power = max(0, $player_playmatInfo[$thiscard_position]['power'] - 2);
+                        $player_playmatInfo[$thiscard_position]['power'] = $new_power;
+                    }
+                    break;
+                case 60: // 3 squirrels, one squirrel = 1 power, two = 3 power and three = 6 power
+                    $marco_bros++;
+                    if ($marco_bros == 3) {
+                        $new_power = 6;
+                        $player_playmatInfo[$playercard['location_arg']]['power'] = $new_power;
+                    } else if ($marco_bros == 2) {
+                        $new_power = 3;
+                        $player_playmatInfo[$playercard['location_arg']]['power'] = $new_power;
+                    } else if ($marco_bros == 1) {
+                        $new_power = 1;
+                        $player_playmatInfo[$playercard['location_arg']]['power'] = $new_power;
+                    }
+                    break;
+                case 62: // All Pauls on the field gain +1 power. Pauls id = 61
+                    
+                    break;
+                default:
+                    break;
+            }
+        }
+        $this->getNonActivePlayerDeck($player_id);
+        $sql = "select player_productivity_limit, player_team, player_power from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
     }
     // ANCHOR addStatus2StatusLst
     public function addStatus2StatusLst($player_id, $IsOpponent, $status) {
