@@ -213,11 +213,21 @@ trait AniversusStateActions {
                 break;
             case 57: // When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.
                 $this->endEffect("activeplayerEffect");
+                // TODO: implement this in activeplayerEffect state
+                break;
+            case 63: // When Jude is placed, the productivity player in the same position on opponent's side must leave the field to discard pile.
+                // TODO: implement this
+                break;
+            case 64: // When Ceci is placed, discard 1 card from your hand.
+                $this->endEffect("activeplayerEffect");
                 break;
             case 105: // Your opponent skips 1 round.
                 $this->addStatus2StatusLst($player_id, True, 105);
                 break;
             case 108: // Return 1 card from the field to your hand.
+                $this->endEffect("activeplayerEffect");
+                break;
+            case 109: // When Harry is placed, discard 2 cards from your hand.
                 $this->endEffect("activeplayerEffect");
                 break;
             default:

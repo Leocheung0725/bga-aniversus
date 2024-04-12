@@ -188,7 +188,7 @@ trait AniversusUtils {
         ) );
     }
 
-    // ANCHOR updatePlayerAbility
+    // SECTION updatePlayerAbility
     public function updatePlayerAbility($player_id)
     {
         // get the player team player in playmat information 
@@ -196,6 +196,7 @@ trait AniversusUtils {
         $opponent_deck = $this->getNonActivePlayerDeck($player_id);
         $player_playmat = $player_deck->getCardsInLocation('playmat');
         $opponent_playmat = $opponent_deck->getCardsInLocation('playmat');
+        $temp_two_playmat = [$player_playmat, $opponent_playmat];
         $player_playmatInfo = [];
         $opponent_playmatInfo = [];
         foreach ($player_playmat as $playercard) {
@@ -204,50 +205,117 @@ trait AniversusUtils {
         foreach ($opponent_playmat as $opponentcard) {
             $opponent_playmatInfo[$opponentcard['location_arg']] = $this->getCardinfoFromCardsInfo($opponentcard['type_arg']);
         }
-
+        $this->calculatePlayerAbility($player_playmat, $opponent_playmat, $player_playmatInfo, $opponent_playmatInfo);
+        $this->calculatePlayerAbility($opponent_playmat, $player_playmat, $opponent_playmatInfo, $player_playmatInfo);
+        $total_mypower = 0;
+        $total_myproductivity = 0;
+        $total_oppopower = 0;
+        $total_oppoproductivity = 0;
+        foreach ($player_playmatInfo as $card_position => $card) {
+            if ($card_position <= 5) {
+                $total_mypower += $card['power'];
+            } else {
+                $total_myproductivity += $card['productivity'];
+            }
+        }
+        foreach ($opponent_playmatInfo as $card_position => $card) {
+            if ($card_position <= 5) {
+                $total_oppopower += $card['power'];
+            } else {
+                $total_oppoproductivity += $card['productivity'];
+            }
+        }
+        $sql = "UPDATE player SET player_power = $total_mypower, player_productivity_limit = $total_myproductivity WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        $sql = "UPDATE player SET player_power = $total_oppopower, player_productivity_limit = $total_oppoproductivity WHERE player_id != $player_id";
+        self::DbQuery( $sql );
+        $this->updatePlayerBoard($player_id);
+        $this->updatePlayerBoard($this->getNonActivePlayerId());
+    }
+    // ANCHOR calculatePlayerAbility
+    public function calculatePlayerAbility($player_playmat, $opponent_playmat, &$player_playmatInfo, &$opponent_playmatInfo) {
+        $marco_bros = 0;
         foreach ($player_playmat as $playercard) {
-            $marco_bros = 0;
+            $playercard_position = $playercard['location_arg'];
             switch ($playercard['type_arg']) {
                 case 58: // The player in the same position on the opponent's field -2 power. (for as long as Sergio is in play)
-                    $thiscard_position = $playercard['location_arg'];
-                    $opponent_thiscard_position = $opponent_playmatInfo[$thiscard_position] ?? null;
+                    $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
                     if ($opponent_thiscard_position != null) {
-                        $new_power = $player_playmatInfo[$thiscard_position]['power'];
-                        $player_playmatInfo[$thiscard_position]['power'] = $new_power;
+                        $new_power = $player_playmatInfo[$playercard_position]['power'] - 2;
+                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
                     }
                     break;
                 case 59: // *** The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field)
-                    $thiscard_position = $playercard['location_arg'];
-                    $opponent_thiscard_position = $opponent_playmatInfo[$thiscard_position] ?? null;
-                    if ($opponent_thiscard_position != null) {
-                        $new_power = max(0, $player_playmatInfo[$thiscard_position]['power'] - 2);
-                        $player_playmatInfo[$thiscard_position]['power'] = $new_power;
+                    $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
+                    if ($opponent_thiscard_position != null ) {
+                        $new_productivity = 0;
+                        $opponent_playmatInfo[$playercard_position]['productivity'] = $new_productivity;
                     }
                     break;
                 case 60: // 3 squirrels, one squirrel = 1 power, two = 3 power and three = 6 power
                     $marco_bros++;
                     if ($marco_bros == 3) {
                         $new_power = 6;
-                        $player_playmatInfo[$playercard['location_arg']]['power'] = $new_power;
+                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
                     } else if ($marco_bros == 2) {
                         $new_power = 3;
-                        $player_playmatInfo[$playercard['location_arg']]['power'] = $new_power;
+                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
                     } else if ($marco_bros == 1) {
                         $new_power = 1;
-                        $player_playmatInfo[$playercard['location_arg']]['power'] = $new_power;
+                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
                     }
                     break;
-                case 62: // All Pauls on the field gain +1 power. Pauls id = 61
-                    
+                case 61: 
+                    foreach ($player_playmat as $playercard_searchAaron) {
+                        if ($playercard_searchAaron['type_arg'] == 62) {
+                            $player_playmatInfo[$playercard_position]['power'] += 1;
+                            break;
+                        }
+                    }
+                    break;
+                case 103:
+                    $count_opponent_forward_players = 0;
+                    foreach ($opponent_playmat as $opponentcard) {
+                        if ( $opponentcard['location_arg'] <= 5 ) {
+                            $count_opponent_forward_players++;
+                        }
+                    }
+                    $new_power = floor($count_opponent_forward_players / 2) + $player_playmatInfo[$playercard_position]['power'];
+                    $player_playmatInfo[$playercard_position]['power'] = $new_power;
+                    break;
+                case 110:
+                    $count_forward_players = 0;
+                    foreach ($player_playmat as $playercard) {
+                        if ( $playercard['location_arg'] <= 5 ) {
+                            $count_forward_players++;
+                        }
+                    }
+                    $new_productivity = floor($count_forward_players / 2) + $player_playmatInfo[$playercard_position]['productivity'];
+                    $player_playmatInfo[$playercard_position]['productivity'] = $new_productivity;
+                    break;
+                case 110:
+                    $count_forward_players = 0;
+                    foreach ($player_playmat as $playercard) {
+                        if ( $playercard['location_arg'] <= 5 ) {
+                            $count_forward_players++;
+                        }
+                    }
+                    $new_productivity = floor($count_forward_players / 2) + $player_playmatInfo[$playercard_position]['productivity'];
+                    $player_playmatInfo[$playercard_position]['productivity'] = $new_productivity;
+                    break;
+                case 111: // The player in the same position on the opponent's field -1 power. (for as long as Lucia is in play)
+                    $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
+                    if ( $opponent_thiscard_position != null ) {
+                        $new_power = $player_playmatInfo[$playercard_position]['power'] - 1;
+                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
+                    }
                     break;
                 default:
                     break;
             }
         }
-        $this->getNonActivePlayerDeck($player_id);
-        $sql = "select player_productivity_limit, player_team, player_power from player where player_id = $player_id";
-        $player = self::getNonEmptyObjectFromDB( $sql );
     }
+    // !SECTION updatePlayerAbility
     // ANCHOR addStatus2StatusLst
     public function addStatus2StatusLst($player_id, $IsOpponent, $status) {
         if ($IsOpponent) {

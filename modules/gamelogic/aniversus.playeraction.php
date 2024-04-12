@@ -125,6 +125,40 @@ trait AniversusPlayerActions {
         if ( $card_deck_info['location'] != 'hand' ) {
             throw new BgaUserException( self::_("This card is not in your hand") );
         }
+        // some special handling for some cards
+        switch ($card_type) {
+            case 102:
+                if ($player_deck->countCardInLocation('training') == 0) {
+                    throw new BgaUserException( self::_("You do not have any training card in playmat") );
+                }
+                break;
+            case 104:
+                $count_myself_forward_players = 0;
+                $myself_playmat = $player_deck->getCardsInLocation('playmat');
+                foreach ( $myself_playmat as $myselfcard ) {
+                    if ( $myselfcard['location_arg'] <= 5 ) {
+                        $count_opponent_forward_players++;
+                    }
+                }
+                if ($count_myself_forward_players > 2) {
+                    throw new BgaUserException( self::_("You can only have 2 other players in your forward row when Timo is in play") );
+                }
+                break;
+            case 106:
+                $count_myself_forward_players = 0;
+                $myself_playmat = $player_deck->getCardsInLocation('playmat');
+                foreach ( $myself_playmat as $myselfcard ) {
+                    if ( $myselfcard['location_arg'] <= 5 ) {
+                        $count_myself_forward_players++;
+                    }
+                }
+                if ($count_myself_forward_players < 3) {
+                    throw new BgaUserException( self::_("Leo can only be placed if you have 3 or more forward players on the field") );
+                }
+                break;
+            default:
+                break;
+        }
         // get the active player energy and action number
         $sql = "select player_score, player_action, player_productivity, player_team from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
@@ -173,8 +207,18 @@ trait AniversusPlayerActions {
             'row' => $row,
             'col' => $col,
         ) );
+        // update database that what card the active player has played
+        // playing_card updating
+        $sql = "UPDATE playing_card SET "
+        . "card_id = " . intval($card_id) . ", "
+        . "card_type = '" . addslashes($card_info['type']) . "', "
+        . "card_type_arg = " . intval($card_info['id']) . ", "
+        . "card_launch = TRUE, "
+        . "card_status = 'validating', "
+        . "disabled = FALSE "
+        . "WHERE player_id = " . intval($player_id);
+        self::DbQuery( $sql );
         // calculate special case
-
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
         $this->updatePlayerBoard($player_id);
         // determine whether need to enter the cardEffect state to do the card effect, if not, just go to playerTurn state and let the player to player next card
@@ -182,9 +226,18 @@ trait AniversusPlayerActions {
             case 57:
                 $this->gamestate->nextState( "launch" );
                 break;
+            case 63:
+                $this->gamestate->nextState( "launch" );
+                break;
+            case 109:
+                $this->gamestate->nextState( "launch" );
+                break;
             default:
                 break;
         }
+        // if no special case, update the playing_card disabled to TRUE
+        $sql = "UPDATE playing_card SET disabled = TRUE WHERE player_id = $player_id";
+        self::DbQuery( $sql );
     }
 
     public function throwCards( $player_id, $card_ids ) {
