@@ -20,7 +20,7 @@
         <div class="discardPile_field" id="discardPile_field_me"></div>
     </div>
 </div>
-
+<div id="tempstock-area"></div>
 <div id="myhand_wrap" class="whiteblock">
     <h3>{MY_HAND}</h3>
     <div id="myhand" class="playertablecard"></div>
@@ -31,6 +31,7 @@
 
 var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
 
+var jstpl_tempCardStock = '<div id="tempStock"><div id"tempCardMessage">${message}</div><div id="tempCardStock"></div></div>';
 
 var jstpl_cardToolTip = 
 '<div class=\'tooltip-main\'>' +

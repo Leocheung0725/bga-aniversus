@@ -382,4 +382,69 @@ trait AniversusPlayerActions {
                 break;
         }
     }
+
+    public function eightEffect_CardActiveEffect( $top_items, $bottom_items) {
+        // ANCHOR - eightEffect_CardActiveEffect
+        self::checkAction( 'eightEffect_CardActiveEffect' );
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
+        $card_type_arg = $card_effect_info['card_type_arg'];
+        if ( $card_type_arg != 8 ) {
+            throw new BgaUserException( self::_("This card does not have an effect that can be activated") );
+        } else {
+            $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+            $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+            $random_pick_cards = json_decode($playing_card_info['card_info'], true);
+
+            foreach ($top_items as $top_item) {
+                // Filter $random_pick_cards to find all items with the matching type_arg
+                $matches = array_filter($random_pick_cards, function($card) use ($top_item) {
+                    return $card['type_arg'] == $top_item['type'];
+                });
+                
+                // If no matching cards, throw an exception
+                if (empty($matches)) {
+                    throw new BgaUserException(self::_("Invalid top cards selected Error: playeraction Line at 407"));
+                }
+                
+                // Randomly pick one of the matching cards
+                $keys = array_keys($matches);
+                $random_key = $keys[array_rand($keys)];
+                $selected_card = $matches[$random_key];
+                
+                // Perform your operation with $selected_card here
+                $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
+                $player_deck->insertCardOnExtremePosition($selected_card['id'], 'deck', true);
+                // Now remove the selected item from $random_pick_cards
+                unset($random_pick_cards[$random_key]);
+            }
+
+            for ($i = 0; $i < count($bottom_items); $i++) {
+                // Filter $random_pick_cards to find all items with the matching type_arg
+                $matches = array_filter($random_pick_cards, function($card) use ($bottom_items, $i) {
+                    return $card['type_arg'] == $bottom_items[$i]['type'];
+                });
+                
+                // If no matching cards, throw an exception
+                if (empty($matches)) {
+                    throw new BgaUserException(self::_("Invalid bottom cards selected"));
+                }
+                
+                // Randomly pick one of the matching cards
+                $keys = array_keys($matches);
+                $random_key = $keys[array_rand($keys)];
+                $selected_card = $matches[$random_key];
+                
+                // Perform your operation with $selected_card here
+                $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
+                $player_deck->insertCardOnExtremePosition($selected_card['id'], 'deck', false);
+                // Now remove the selected item from $random_pick_cards
+                unset($random_pick_cards[$random_key]);
+            }
+            // notify player
+            self::notifyPlayer( $playing_card_info['player_id'], "terminateTempStock", "", array(
+                'player_id' => $playing_card_info['player_id'],
+            ) );
+        }
+    }
 }

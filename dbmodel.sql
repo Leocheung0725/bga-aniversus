@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `playing_card` (
     `card_type_arg` int(11),
     `card_launch` BOOLEAN,
     `card_status` varchar(16),
+    `card_info` TEXT,
     `disabled` BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

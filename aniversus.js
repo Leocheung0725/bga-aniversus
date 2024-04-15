@@ -121,32 +121,13 @@ function (dojo, declare) {
             // ANCHOR Set up your game interface here, according to "gamedatas"
             // Player hand Setup
             // player hand
-            this.playerdeck = new ebg.stock(); // new stock object for hand
-            this.playerdeck.create( this, $('myhand'), this.cardwidth, this.cardheight );
-            // config stock object
-            this.playerdeck.image_items_per_row = 10;
-            this.playerdeck.centerItems = true; // Center items (actually i don't know what it does)
-            // this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
-            this.playerdeck.setSelectionMode(1); // Allow only one card to be selected
-            this.playerdeck.setSelectionAppearance('class'); // Add a class to selected
-            this.playerdeck.item_margin = 13; // Add margin between cards
-            // Create cards types:
-            // addItemType(type: number, weight: number, image: string, image_position: number )
-
-            this.gamedatas.cards_info.forEach((key) => {
-                this.playerdeck.addItemType(Number(key.id), 1, 
-                    "https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png", Number(key.css_position));
-                    
-            });
-            console.log(this.playerdeck);
+            this.playerdeck = this.setNewCardStock('myhand', 1, 'onPlayerHandSelectionChanged');
             // show hand
             for ( let i in this.gamedatas.hand) {
                 var card = this.gamedatas.hand[i];
-                this.playerdeck.addToStockWithId(Number(card.type_arg), card.id);
-                this.addTooltipHtml('myhand_item_' + card.id, this.getTooltipHtml(Number(card.type_arg)));
+                this.getCard2hand(card);
             }
-            // setup connect
-            dojo.connect( this.playerdeck, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
+            
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // ANCHOR Discard pile setup
@@ -255,6 +236,14 @@ function (dojo, declare) {
                 case 56:
                     this.playerdeck.setSelectionMode(2);
                     break;
+                case 8:
+                    this.playerdeck.setSelectionMode(0);
+                    dojo.place(this.format_block('jstpl_tempCardStock', {
+                        'message': 'Select the cards that you want to put on the top of your draw deck. other cards would be put on the bottom.'
+                    }, 'tempstock-area'));
+                    this.tempstock = this.setNewCardStock('tempCardStock', 2, 'onPlayerHandSelectionChanged');
+                    dojo.addClass('tempstock-area', 'whiteblock');
+                    break;
                 case other:
                     console.log('The card type is other');
                     break;
@@ -325,9 +314,13 @@ function (dojo, declare) {
                 {
                 case 'cardActiveEffect':
                     this.addActionButton( 'cardActiveEffect_btn_throw', _('Throw'), 'onThrowCard_CardActiveEffect' );
+                    this.addActionButton( 'cardActiveEffect_btn_eight', _('Confirm'), 'onEightEffect_CardActiveEffect' );
                     let button_list = JSON.parse(args.button_list);
-                    if (1 in button_list) {
-                        dojo.addClass('cardActiveEffect_btn_throw', 'disabled');
+                    if (!(1 in button_list)) {
+                        dojo.addClass('cardActiveEffect_btn_throw', 'none');
+                    }
+                    if (!(2 in button_list)) {
+                        dojo.addClass('cardActiveEffect_btn_eight', 'none');
                     }
                     break;
                 case 'playerTurn':
@@ -398,11 +391,14 @@ function (dojo, declare) {
             var y = row * card_height;
             return {x: -x, y: -y};
         },
+
+        // ANCHOR getCard2hand
+        getCard2hand: function(card) {
+            this.playerdeck.addToStockWithId(Number(card.type_arg), card.id);
+            this.addTooltipHtml('myhand_item_' + card.id, this.getTooltipHtml(Number(card.type_arg)));
+        },
         // ANCHOR getJstplCard
         getJstplCard: function(player_id, card_id, card_type, from, to) {
-            console.log(
-                "The player id:", player_id, "the card id:", card_id, "the card type:", card_type, "is called."
-            );
             const position = this.getCardBackgroundPosition(card_type);
             // create card on table
             dojo.place( this.format_block('jstpl_cardsOnTable', {
@@ -412,6 +408,7 @@ function (dojo, declare) {
             }), to);
             // place the card on the player board
             this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, from);
+            this.addTooltipHtml('cardsOnTable_' + player_id + '_' + card_id, this.getTooltipHtml(card_type));
             // slide the card to the table
             this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , to).play();
         },
@@ -434,7 +431,7 @@ function (dojo, declare) {
             });
         },
         
-        
+        // ANCHOR ajaxcallwrapper
         ajaxcallwrapper: function(action, args, handler) {
             if (!args) args = {}; // this allows to skip args parameter for action which do not require them
                 
@@ -449,6 +446,32 @@ function (dojo, declare) {
         // this.ajaxcallwrapper('pass'); // no args
         // this.ajaxcallwrapper('playCard', {card: card_id}); // with args
 
+        // ANCHOR setNewCardStock
+        setNewCardStock: function( div_id, selectionMode, onSelectionChangedMethod ) {
+            // Player hand Setup
+            // player hand
+            var newstock = new ebg.stock(); // new stock object for hand
+            newstock.create( this, $( div_id ), this.cardwidth, this.cardheight );
+            // config stock object
+            newstock.image_items_per_row = 10;
+            newstock.centerItems = true; // Center items (actually i don't know what it does)
+            // this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
+            newstock.setSelectionMode( selectionMode ); // Allow only one card to be selected
+            newstock.setSelectionAppearance('class'); // Add a class to selected
+            newstock.item_margin = 13; // Add margin between cards
+            // Create cards types:
+            // addItemType(type: number, weight: number, image: string, image_position: number )
+
+            this.gamedatas.cards_info.forEach((key) => {
+                newstock.addItemType(Number(key.id), 1, 
+                    "https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png", Number(key.css_position));
+                    
+            });
+            // setup connect
+            dojo.connect( newstock, 'onChangeSelection', this, onSelectionChangedMethod );
+
+            return newstock;
+        },
         ///////////////////////////////////////////////////
         decodePlayerLocation: function(location_arg) {
             location_arg = Number(location_arg);
@@ -475,15 +498,13 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         // ANCHOR onClickPlayPlayerCard
         onClickPlayPlayerCard: function(card_id, card_type, row, col) {
-            if (this.checkAction('playPlayerCard', true)) {
-                this.ajaxcallwrapper('playPlayerCard', {
-                    "card_id": card_id,
-                    "card_type": card_type,
-                    "player_id": this.getActivePlayerId(),
-                    "row": row,
-                    "col": col
-                });
-            }
+            this.ajaxcallwrapper('playPlayerCard', {
+                "card_id": card_id,
+                "card_type": card_type,
+                "player_id": this.getActivePlayerId(),
+                "row": row,
+                "col": col
+            });
         },
         // ANCHOR onPlayCard_PlayerTurn
         onPlayCard_PlayerTurn : function(evt) {
@@ -494,17 +515,14 @@ function (dojo, declare) {
                 var card_info = this.gamedatas.cards_info.find((card) => card.id == card_type);
                 // Can play a card
                 if (card_info.type == 'Function') {
-                    if (this.checkAction('playFunctionCard', true)) {
-                        // function card
-                        console.log(`The player card id : ${card_id} and card type: function is played.`);
-                        this.ajaxcallwrapper('playFunctionCard', {
-                            "card_id": card_id,
-                            "card_type": card_type,
-                            "player_id": this.getActivePlayerId()
-                        });
-                    }
+                    // function card
+                    console.log(`The player card id : ${card_id} and card type: function is played.`);
+                    this.ajaxcallwrapper('playFunctionCard', {
+                        "card_id": card_id,
+                        "card_type": card_type,
+                        "player_id": this.getActivePlayerId()
+                    });
                 } else {
-                    if ( this.checkAction('playPlayerCard', true) ) {
                     for (let row = 1; row <= 2; row++) {
                         for (let col = 1; col <= 5; col++) {
                             var div_id = `playerOnPlaymat_me_${row}_${col}`;
@@ -513,10 +531,6 @@ function (dojo, declare) {
                         }
                     }
                     console.log(`The player card id : ${card_id} and card type: player is played.`)
-                    } else {
-                        // Can't play a card
-                        this.playerdeck.unselectAll();
-                    }
                 }
             }
         },
@@ -543,10 +557,6 @@ function (dojo, declare) {
         // ANCHOR onThrowCard_CardActiveEffect
         onThrowCard_CardActiveEffect: function(evt) {
             dojo.stopEvent(evt);
-            if (!this.isCurrentPlayerActive()) {
-                this.playerdeck.unselectAll();
-                return;
-            }
             var items = this.playerdeck.getSelectedItems();
             let player_id = this.getActivePlayerId();
             if (items.length > 0) {
@@ -559,42 +569,43 @@ function (dojo, declare) {
                 });
             }
         },
+        // ANCHOR onEightEffect_CardActiveEffect:
+        onEightEffect_CardActiveEffect: function(evt) {
+            dojo.stopEvent(evt);
+            var top_items = this.tempstock.getSelectedItems();
+            if (top_items = 0 ) { 
+                var top_items = [];
+            }
+            var unselected_items = this.tempstock.getAllItems().filter((item) => !top_items.includes(item));
+            this.ajaxcallwrapper('eightEffect_CardActiveEffect', {
+                "top_items": JSON.stringify(top_items),
+                "bottom_items": JSON.stringify(unselected_items)
+            });
+        },
         // ANCHOR onShoot_PlayerTurn
         onShoot_PlayerTurn: function(evt) {
             dojo.stopEvent(evt);
-            if (this.checkAction('shoot_playerTurn', true)) {
-                this.ajaxcallwrapper('shoot_playerTurn');
-            }
+            this.ajaxcallwrapper('shoot_playerTurn');
         },
         // ANCHOR onPass_PlayerTurn
         onPass_PlayerTurn: function(evt) {
             dojo.stopEvent(evt);
-            if (this.checkAction('pass_playerTurn', true)) {
-                this.ajaxcallwrapper('pass_playerTurn');
-            }
+            this.ajaxcallwrapper('pass_playerTurn');
         },
         // ANCHOR onIntercept_counterattack
         onIntercept_counterattack: function(evt) {
             dojo.stopEvent(evt);
-            if (this.checkAction('intercept_counterattack', true)) {
-                this.ajaxcallwrapper('intercept_counterattack');
-            }
+            this.ajaxcallwrapper('intercept_counterattack');
         },
         // ANCHOR onPass_counterattack
         onPass_counterattack: function(evt) {
             dojo.stopEvent(evt);
-            if (this.checkAction('pass_counterattack', true)) {
-                this.ajaxcallwrapper('pass_counterattack');
-            }
+            this.ajaxcallwrapper('pass_counterattack');
         },
 
         // ANCHOR onThrowCard_throwCard
         onThrowCard_throwCard: function(evt) {
             dojo.stopEvent(evt);
-            if (!this.isCurrentPlayerActive()) {
-                this.playerdeck.unselectAll();
-                return;
-            }
             var player_id = this.getActivePlayerId();
             var items = this.playerdeck.getSelectedItems();
             if (items.length > 0) {
@@ -609,10 +620,7 @@ function (dojo, declare) {
         // ANCHOR onThrowCard_pass
         onPass_throwCard: function(evt) {
             dojo.stopEvent(evt);
-            
-            if (this.checkAction('pass_throwCard', true)) {
-                this.ajaxcallwrapper('pass_throwCard');
-            }
+            this.ajaxcallwrapper('pass_throwCard');
         },
         // !SECTION Player's action
         
@@ -639,7 +647,7 @@ function (dojo, declare) {
             // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
             // this.notifqueue.setSynchronous( 'cardPlayed', 3000 );
             // 
-
+            // Action Notifications
             dojo.subscribe('playFunctionCard', this, "notif_playFunctionCard");
             this.notifqueue.setSynchronous('playFunctionCard', 1000);
             dojo.subscribe('updatePlayerBoard', this, "notif_updatePlayerBoard");
@@ -648,10 +656,14 @@ function (dojo, declare) {
             dojo.subscribe('cardThrown', this, "notif_cardThrown");
             dojo.subscribe('shoot_roll', this, "notif_shoot_roll");
             this.notifqueue.setSynchronous('shoot_roll', 5000);
+            dojo.subscribe('showCardsOnTempStock', this, "notif_showCardsOnTempStock");
+            dojo.subscribe('terminateTempStock', this, "notif_terminateTempStock");
+            // broadcast notifications
         },  
         
         // from this point and below, you can write your game notifications handling methods
         // This Notification is called when the shooting is successful
+        // SECTION ACTION NOTIFICATIONS
         // ANCHOR updatePlayerBoard
         notif_updatePlayerBoard: function( notif ) {
             console.log(`**** Notification: updatePlayerBoard `)
@@ -732,8 +744,7 @@ function (dojo, declare) {
             const cards = notif.args.cards;
             for (let i in cards) {
                 var card = cards[i];
-                this.playerdeck.addToStockWithId(Number(card.type_arg), card.id, "player_board_" + player_id);
-                this.addTooltipHtml('myhand_item_' + card.id, this.getTooltipHtml(Number(card.type_arg)));
+                this.getCard2hand(card);
             }
         },
         // This Notification is called when a card is thrown
@@ -763,7 +774,32 @@ function (dojo, declare) {
             }), "roll_result");
             dojo.addClass('roll_result', 'roll-result');
         },
+        // ANCHOR showCardsOnTempStock
+        notif_showCardsOnTempStock: function( notif ) {
+            console.log(`**** Notification: showCardsOnTempStock `)
+            console.log(notif);
+            const cards = notif.args.cards;
+            for (let i in cards) {
+                var card = cards[i];
+                this.tempstock.addToStockWithId(Number(card.type_arg), card.id);
+                this.addTooltipHtml('tempstock_item_' + card.id, this.getTooltipHtml(Number(card.type_arg)));
+            }
+        },
 
+        // ANCHOR terminateTempStock
+        notif_terminateTempStock: function( notif ) {
+            console.log(`**** Notification: terminateTempStock `)
+            console.log(notif);
+            this.tempstock = null;
+            dojo.destroy('tempStock');
+        },
+        // !SECTION ACTION NOTIFICATIONS
+        // ------------------------------------- End of ACTION Notifications -------------------------------------------- //
+        // SECTION BROADCAST NOTIFICATIONS
+
+
+
+        // !SECTION BROADCAST NOTIFICATIONS
         // !SECTION Notifications
    });             
 });

@@ -179,6 +179,7 @@ trait AniversusStateActions {
                 self::DbQuery( $sql );
                 $this->updatePlayerBoard($player_id);
             case 8: // Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.
+                $this->endEffect("activeplayerEffect");
                 break;
             case 10: // Opponent -2 energy next round.
                 $this->addStatus2StatusLst($player_id, True, 10);
@@ -252,6 +253,23 @@ trait AniversusStateActions {
     function stCardActiveEffect() {
         // ANCHOR stCardActiveEffect
         // determine what card active effect should be done / finished
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $card_active_effect_info = self::getNonEmptyObjectFromDB( $sql );
+        switch ( $card_active_effect_info['card_type_arg'] ) {
+            case 8:
+                $all_draw_deck = $player_deck->getCardsInLocation('deck');
+                $top_five_cards = array_slice($all_draw_deck, 0, 5);
+                $top_five_cards_json = json_encode($top_five_cards);
+                $sql = "UPDATE playing_card SET card_info = '{$top_five_cards_json}' WHERE disabled = FALSE";
+                self::DbQuery( $sql );
+                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( 'You draw 5 cards and you need to rearrange them. (put on the top or the bottom)' ), [
+                    'cards' => $top_five_cards,
+                    'player_id' => $player_id,
+                ]);
+                break;
+            default:
+                break;
+        }
     }
 
     function stEndHand() {
@@ -278,6 +296,7 @@ trait AniversusStateActions {
                 $this->gamestate->nextState( "playerTurn" );
             }
         }
+
     }
 
     function stPlayerEndTurn() {

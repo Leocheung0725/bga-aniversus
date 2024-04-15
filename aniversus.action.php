@@ -55,39 +55,40 @@
 
     public function playPlayerCard()
     {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $card_id = self::getArg( "card_id", AT_posint, true );
         $card_type = self::getArg( "card_type", AT_posint, true );
         $player_id = self::getArg( "player_id", AT_alphanum, true );
         $row = self::getArg( "row", AT_posint, true );
         $col = self::getArg( "col", AT_posint, true );
         $this->game->playPlayerCard( $player_id, $card_id, $card_type, $row, $col );
-        // End of the action
         self::ajaxResponse();
     }
 
     public function throwCards()
     {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $card_ids = self::getArg( "card_ids", AT_json, true );
         $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
         $player_id = self::getArg( "player_id", AT_alphanum, true );
         $this->game->throwCards( $player_id, $card_ids );
-        // End of the action
+        self::ajaxResponse();
+    }
+
+    public function eightEffect_CardActiveEffect() {
+        self::setAjaxMode();
+        $top_items = self::getArg( "top_items", AT_json, true );
+        $this->game->validateJSonAlphaNum($top_items, 'top_items');
+        $bottom_items = self::getArg( "bottom_items", AT_json, true );
+        $this->game->validateJSonAlphaNum($bottom_items, 'bottom_items');
+        $this->game->eightEffect_CardActiveEffect( $top_items, $bottom_items );
         self::ajaxResponse();
     }
 
     public function intercept_counterattack()
     {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $this->game->intercept_counterattack();
-        // End of the action
         self::ajaxResponse();
     }
 
@@ -95,63 +96,45 @@
 
     public function pass_counterattack()
     {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $this->game->pass_counterattack();
-        // End of the action
         self::ajaxResponse();
     }
 
     public function pass_playerTurn() {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $this->game->pass_playerTurn();
-        // End of the action
         self::ajaxResponse();
     }
 
     public function shoot_playerTurn() {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $this->game->shoot_playerTurn();
-        // End of the action
         self::ajaxResponse();
     }
 
     public function throwCard_throwCard() {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $card_ids = self::getArg( "card_ids", AT_json, true );
         $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
         $player_id = self::getArg( "player_id", AT_alphanum, true );
         $this->game->throwCard_throwCard( $player_id, $card_ids );
-        // End of the action
         self::ajaxResponse();
     }
 
 
     public function pass_throwCard() {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $this->game->pass_throwCard();
-        // End of the action
         self::ajaxResponse();
     }
 
     public function throwCard_CardActiveEffect() {
-        // setAjaxMode is required to make an action call
         self::setAjaxMode();
-        // Retrieve arguments
         $card_ids = self::getArg( "card_ids", AT_json, true );
         $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
         $player_id = self::getArg( "player_id", AT_alphanum, true );
         $this->game->throwCard_CardActiveEffect( $player_id, $card_ids );
-        // End of the action
         self::ajaxResponse();
     }
   }

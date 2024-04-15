@@ -56,10 +56,15 @@ trait AniversusStateArgs {
                 $message = "must discard a card from the hand";
                 $button_list[] = 1;
                 break;
+            case 8:
+                $message = "would look at the top 5 card from the draw deck, then put them back in any order either on top of or at the bottom of the draw deck.";
+                $button_list[] = 2;
+                break;
             case 56:
                 $message = "must discard 2 cards from the hand";
                 $button_list[] = 1;
                 break;
+            
             default:
                 $card_effect = "You can play a card from your hand to the playmat";
                 break;
