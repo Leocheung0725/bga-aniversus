@@ -149,6 +149,7 @@ trait AniversusStateActions {
                 ]);
                 // endEffect have two type : normal and active
                 $this->endEffect("activeplayerEffect");
+                return;
                 break;
             case 2: // Play a card without paying its cost. (DOES NOT count as an action)
                 $sql = "UPDATE player SET player_action = player_action + 1 WHERE player_id = $player_id";
@@ -180,6 +181,7 @@ trait AniversusStateActions {
                 $this->updatePlayerBoard($player_id);
             case 8: // Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.
                 $this->endEffect("activeplayerEffect");
+                return;
                 break;
             case 10: // Opponent -2 energy next round.
                 $this->addStatus2StatusLst($player_id, True, 10);
@@ -211,43 +213,42 @@ trait AniversusStateActions {
                     'player_id' => $player_id,
                 ]);
                 $this->endEffect("activeplayerEffect");
+                return;
                 break;
             case 57: // When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.
                 $this->endEffect("activeplayerEffect");
                 // TODO: implement this in activeplayerEffect state
+                return;
                 break;
             case 63: // When Jude is placed, the productivity player in the same position on opponent's side must leave the field to discard pile.
                 // TODO: implement this
                 break;
             case 64: // When Ceci is placed, discard 1 card from your hand.
                 $this->endEffect("activeplayerEffect");
+                return;
                 break;
             case 105: // Your opponent skips 1 round.
                 $this->addStatus2StatusLst($player_id, True, 105);
                 break;
             case 108: // Return 1 card from the field to your hand.
                 $this->endEffect("activeplayerEffect");
+                return;
                 break;
             case 109: // When Harry is placed, discard 2 cards from your hand.
                 $this->endEffect("activeplayerEffect");
+                return;
                 break;
             default:
                 break;
         }
-        // handle player status
         $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
-        $player = self::getNonEmptyObjectFromDB( $sql );
-        $player_status = json_decode($player['player_status']);
-        foreach ($player_status as $status) {
-            switch ($status) {
-                case 3:
-                    $this->endEffect("again");
-                    break;
-                default:
-                    break;
-            }
+        $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+        if (in_array(3, $player_status)) {
+            $this->removeStatusFromStatusLst($player_id, 3);
+            $this->gamestate->nextState( "cardEffect" );
+        } else {
+            $this->endEffect("normal");
         }
-        $this->endEffect("normal");
     }
 
     function stCardActiveEffect() {
@@ -255,6 +256,7 @@ trait AniversusStateActions {
         // determine what card active effect should be done / finished
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $card_active_effect_info = self::getNonEmptyObjectFromDB( $sql );
+        $player_deck = $this->getActivePlayerDeck($card_active_effect_info['player_id']); // this is the deck of the player who plays the card
         switch ( $card_active_effect_info['card_type_arg'] ) {
             case 8:
                 $all_draw_deck = $player_deck->getCardsInLocation('deck');
@@ -264,6 +266,14 @@ trait AniversusStateActions {
                 self::DbQuery( $sql );
                 self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( 'You draw 5 cards and you need to rearrange them. (put on the top or the bottom)' ), [
                     'cards' => $top_five_cards,
+                    'player_id' => $player_id,
+                    'card_type_arg' => 8,
+                ]);
+                break;
+            case 57:
+                $all_discard_cards = $player_deck->getCardsInLocation('discard');
+                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( 'You picks 3 cards from discard pile' ), [
+                    'cards' => $all_discard_cards,
                     'player_id' => $player_id,
                 ]);
                 break;

@@ -87,10 +87,6 @@ trait AniversusUtils {
             $this->gamestate->nextState( "playerTurn" );
         } else if ($end_type == 'activeplayerEffect') {
             $this->gamestate->nextState( "cardActiveEffect" );
-        } else if ($end_type == "again") {
-            $player_id = self::getActivePlayerId();
-            $this->removeStatusFromStatusLst($player_id, 3);
-            $this->gamestate->nextState( "cardEffect" );
         }
     }
     // ANCHOR playFunctionCard2Discard

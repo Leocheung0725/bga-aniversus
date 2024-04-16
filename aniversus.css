@@ -76,7 +76,6 @@
 .playerCardOnPlaymat {
 	height: 50%;
 	width: 19.94%;
-	pointer-events: none;
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -90,7 +89,6 @@
 
 .playerCardOnPlaymat.available:hover {
 	position: relative;
-	z-index: 1;
 }
 
 .playerCardOnPlaymat.available:hover::after {
@@ -100,7 +98,6 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	z-index: -1;
 }
 
 .btn_container {
@@ -149,6 +146,11 @@
   transform: rotate(180deg);
 }
 
+.js-cardsontable.available {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 /* ---------------------- Tooltip CSS ----------------------- */
 
 .tooltip-main {
@@ -157,6 +159,7 @@
   border-radius: 1rem;
   font-family: "Arial";
   padding: 8px;
+  z-index: 1000;
 }
 
 ul.no-bullet {

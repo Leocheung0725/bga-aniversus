@@ -67,6 +67,10 @@ function (dojo, declare) {
                 }
             });
 
+            // OnClickMethod store
+            this.onClickMethod = {};
+            this.onClickMethod['playerOnPlaymat'] = {};
+
             // Shooting roll dice area -------------------------------------------------------------------------------- 
             // this.placeJstplSection("rolldice-area", "roll-dice", this.other.rollDice_html_content);
             // dojo.connect($('roll'), 'onclick', this, () => {this.other.rollDice();});
@@ -207,15 +211,12 @@ function (dojo, declare) {
         onEnteringState_cardEffect: function(args) {
             console.log('cardEffect state: the enterfunction is called');
             console.log(args);
-            let card_type_arg = Number(args.card_type_arg);
-            switch (card_type_arg) {
-                case 7:
-                    this.playerCounter[player_id]['productivity'].toValue(player_productivity);
-                    break;
-                default:
-                    console.log('The card type is other');
-                    break;
-            }
+            // let card_type_arg = Number(args.card_type_arg);
+            // switch (card_type_arg) {
+            //     default:
+            //         console.log('The card type is other');
+            //         break;
+            // }
         },
         // ANCHOR playerTurn state
         onEnteringState_playerTurn: function(args) {
@@ -238,13 +239,8 @@ function (dojo, declare) {
                     break;
                 case 8:
                     this.playerdeck.setSelectionMode(0);
-                    dojo.place(this.format_block('jstpl_tempCardStock', {
-                        'message': 'Select the cards that you want to put on the top of your draw deck. other cards would be put on the bottom.'
-                    }, 'tempstock-area'));
-                    this.tempstock = this.setNewCardStock('tempCardStock', 2, 'onPlayerHandSelectionChanged');
-                    dojo.addClass('tempstock-area', 'whiteblock');
                     break;
-                case other:
+                default:
                     console.log('The card type is other');
                     break;
             }
@@ -315,12 +311,16 @@ function (dojo, declare) {
                 case 'cardActiveEffect':
                     this.addActionButton( 'cardActiveEffect_btn_throw', _('Throw'), 'onThrowCard_CardActiveEffect' );
                     this.addActionButton( 'cardActiveEffect_btn_eight', _('Confirm'), 'onEightEffect_CardActiveEffect' );
+                    this.addActionButton( 'cardActiveEffect_btn_getCard', _('Confirm'), 'onGetCard_CardActiveEffect' );
                     let button_list = JSON.parse(args.button_list);
                     if (!(1 in button_list)) {
                         dojo.addClass('cardActiveEffect_btn_throw', 'none');
                     }
                     if (!(2 in button_list)) {
                         dojo.addClass('cardActiveEffect_btn_eight', 'none');
+                    }
+                    if (!(3 in button_list)) {
+                        dojo.addClass('cardActiveEffect_btn_getCard', 'none');
                     }
                     break;
                 case 'playerTurn':
@@ -406,11 +406,11 @@ function (dojo, declare) {
                 card_id: card_id,
                 ...position
             }), to);
+            var cardOnTable_id = `cardsOnTable_${player_id}_${card_id}`
             // place the card on the player board
-            this.placeOnObject('cardsOnTable_' + player_id + '_' + card_id, from);
-            this.addTooltipHtml('cardsOnTable_' + player_id + '_' + card_id, this.getTooltipHtml(card_type));
+            this.placeOnObject($(cardOnTable_id), from);
             // slide the card to the table
-            this.slideToObject( 'cardsOnTable_' + player_id + '_' + card_id , to).play();
+            this.attachToNewParent(cardOnTable_id, to);
         },
         // ANCHOR getTooltipHtml
         getTooltipHtml: function(card_id) {
@@ -498,6 +498,12 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         // ANCHOR onClickPlayPlayerCard
         onClickPlayPlayerCard: function(card_id, card_type, row, col) {
+            for (let row = 1; row <= 2; row++) {
+                for (let col = 1; col <= 5; col++) {
+                    var div_id = `playerOnPlaymat_me_${row}_${col}`;
+                    dojo.disconnect(this.onClickMethod['playerOnPlaymat'][`${row}_${col}`]);
+                }
+            }
             this.ajaxcallwrapper('playPlayerCard', {
                 "card_id": card_id,
                 "card_type": card_type,
@@ -527,7 +533,7 @@ function (dojo, declare) {
                         for (let col = 1; col <= 5; col++) {
                             var div_id = `playerOnPlaymat_me_${row}_${col}`;
                             dojo.addClass(div_id, 'available');
-                            dojo.connect($(div_id), 'onclick', this, () => this.onClickPlayPlayerCard(card_id, card_type, row, col));
+                            this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onClickPlayPlayerCard(card_id, card_type, row, col));
                         }
                     }
                     console.log(`The player card id : ${card_id} and card type: player is played.`)
@@ -581,6 +587,18 @@ function (dojo, declare) {
                 "top_items": JSON.stringify(top_items),
                 "bottom_items": JSON.stringify(unselected_items)
             });
+        },
+
+        // ANCHOR onGetCard_CardActiveEffect
+        onGetCard_CardActiveEffect: function(evt) {
+            dojo.stopEvent(evt);
+            var items = this.tempstock.getSelectedItems();
+            if (items.length > 0) {
+                var items_ids = items.map((item) => Number(item.id));
+                this.ajaxcallwrapper('getCard_CardActiveEffect', {
+                    "card_ids": JSON.stringify(items_ids)
+                });
+            }
         },
         // ANCHOR onShoot_PlayerTurn
         onShoot_PlayerTurn: function(evt) {
@@ -695,12 +713,15 @@ function (dojo, declare) {
                     this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
                 this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
+                this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id ), this.getTooltipHtml(Number(card_type)));
+
             } else {
                 this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, 'discardPile_field_opponent');
                 if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
                     this.playerOnPlaymat['opponent']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
                 this.playerOnPlaymat['opponent']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
+                this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id ), this.getTooltipHtml(Number(card_type)));
             }
         },
         // ANCHOR playPlayerCard
@@ -715,16 +736,18 @@ function (dojo, declare) {
             const col = notif.args.col;
             console.log(`The player id: ${player_id} and card id: ${card_id} and card type: ${card_type} and row: ${row} and col: ${col}`)
             // opponent part
-            if (player_id != this.getActivePlayerId()) {
+            if (this.player_id != player_id) {
                 this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, `playerOnPlaymat_opponent_${row}_${col}`);
                 this.playerOnPlaymat['opponent'][row][col].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
-            } else {
+                this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id), this.getTooltipHtml(Number(card_type)));
+            } else if (this.player_id == player_id) {
                 // me part
                 if ($('myhand_item_' + card_id)) {
                     this.getJstplCard(player_id, card_id, card_type, 'myhand_item_' + card_id, `playerOnPlaymat_me_${row}_${col}`);
                     this.playerdeck.removeFromStockById(card_id);
                     console.log(`This handled about the position of row: ${row} and col: ${col}`)
                     this.playerOnPlaymat['me'][row][col].placeInZone('cardsOnTable_' + player_id + '_' + card_id, 0);
+                    this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id), this.getTooltipHtml(Number(card_type)));
                     for (let row = 1; row <= 2; row++) {
                         for (let col = 1; col <= 5; col++) {
                             var div_id = `playerOnPlaymat_me_${row}_${col}`;
@@ -779,6 +802,23 @@ function (dojo, declare) {
             console.log(`**** Notification: showCardsOnTempStock `)
             console.log(notif);
             const cards = notif.args.cards;
+            const card_type_arg = notif.args.card_type_arg;
+            var message;
+            switch (card_type_arg) {
+                case 8:
+                    message = 'Select the cards that you want to put on the top of your draw deck. other cards would be put on the bottom.';
+                    break;
+                case 57:
+                    message = "Select 3 cards from your discard pile and put them in your hand."
+                default:
+                    break;
+            }
+            dojo.place(this.format_block('jstpl_tempCardStock', {
+                'message': message
+            }, 'tempstock-area'));
+            this.tempstock = this.setNewCardStock('tempCardStock', 2, 'onPlayerHandSelectionChanged');
+            dojo.addClass('tempstock-area', 'whiteblock');
+            
             for (let i in cards) {
                 var card = cards[i];
                 this.tempstock.addToStockWithId(Number(card.type_arg), card.id);

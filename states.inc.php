@@ -147,7 +147,6 @@ $machinestates = array(
 
     31 => array(
         "name" => "cardEffect",
-        "description" => clienttranslate(''),
         "type" => "game",
         "action" => "stCardEffect",
         "args" => "argCardEffect",

@@ -112,9 +112,7 @@ trait AniversusPlayerActions {
         self::checkAction( 'playPlayerCard' );
         // get the active player id
         $ActivePlayer = self::getActivePlayerId();
-        if ($player_id != $ActivePlayer) {
-            throw new BgaUserException( self::_("You are not the active player") );
-        }
+        if ($player_id != $ActivePlayer) { throw new BgaUserException( self::_("You are not the active player") ); }
         $card_info = $this->getCardinfoFromCardsInfo($card_type);
         $card_cost = $card_info['cost'];
         $card_team = $card_info['team'];
@@ -122,9 +120,8 @@ trait AniversusPlayerActions {
         $player_deck = $this->getActivePlayerDeck($player_id);
         // check whether the user have this card in hand
         $card_deck_info = $player_deck->getCard($card_id);
-        if ( $card_deck_info['location'] != 'hand' ) {
-            throw new BgaUserException( self::_("This card is not in your hand") );
-        }
+        var_export($card_deck_info);
+        if ( $card_deck_info['location'] != 'hand' ) { throw new BgaUserException( self::_("This card is not in your hand") ); }
         // some special handling for some cards
         switch ($card_type) {
             case 102:
@@ -265,7 +262,14 @@ trait AniversusPlayerActions {
         $state_name = $this->getStateName();
         switch ($state_name) {
             case 'cardActiveEffect':
-                $this->gamestate->nextState( "playerTurn" );
+                $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+                $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+                if (in_array(3, $player_status)) {
+                    $this->removeStatusFromStatusLst($player_id, 3);
+                    $this->gamestate->nextState( "cardEffect" );
+                } else {
+                    $this->endEffect('normal');
+                }
                 break;
             case 'throwCard':
                 $this->gamestate->nextState( "playerEndTurn" );
@@ -293,7 +297,6 @@ trait AniversusPlayerActions {
             'card_id' => $intercept_card['id'],
             'card_type' => $intercept_card['type_arg'],
         ) );
-
         // UPDATE the player_card database
         // check whether the opponent has counter attack card in hand
         $opponent_deck = $this->getNonActivePlayerDeck($player_id);
@@ -445,6 +448,8 @@ trait AniversusPlayerActions {
             self::notifyPlayer( $playing_card_info['player_id'], "terminateTempStock", "", array(
                 'player_id' => $playing_card_info['player_id'],
             ) );
+
+            $this->endEffect('normal'); // end the effect
         }
     }
 }
