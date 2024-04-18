@@ -190,6 +190,7 @@ trait AniversusStateActions {
                 $this->addStatus2StatusLst($player_id, True, 10);
                 break;
             case 11:
+                $sql = "UPDATE playing_card SET card_info = 'field' WHERE disabled = FALSE";
                 $this->endEffect("activeplayerEffect");
                 return;
                 break;

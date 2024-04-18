@@ -245,6 +245,18 @@ function (dojo, declare) {
                 case 1:
                     this.playerdeck.setSelectionMode(1);
                     break;
+                case 11:
+                    this.playerdeck.setSelectionMode(0);
+                    for (let row = 1; row <= 2; row++) {
+                        for (let col = 1; col <= 5; col++) {
+                            var div_id = `playerOnPlaymat_me_${row}_${col}`; 
+                            if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                dojo.addClass(div_id, 'available');
+                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onSwapField_CardActiveEffect(row, col));
+                            }
+                        }
+                    }
+                    break;
                 case 56:
                     this.playerdeck.setSelectionMode(2);
                     break;
@@ -505,6 +517,7 @@ function (dojo, declare) {
                 for (let col = 1; col <= 5; col++) {
                     var div_id = `playerOnPlaymat_me_${row}_${col}`;
                     dojo.disconnect(this.onClickMethod['playerOnPlaymat'][`${row}_${col}`]);
+                    this.onClickMethod['playerOnPlaymat'] = {};
                 }
             }
             this.ajaxcallwrapper('playPlayerCard', {
@@ -602,6 +615,26 @@ function (dojo, declare) {
                 });
             }
         },
+        // ANCHOR onSwapField_CardActiveEffect
+        onSwapField_CardActiveEffect: function( row, col ) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('swapField_CardActiveEffect', {
+                "row": row,
+                "col": col
+            });
+        },
+
+        // ANCHOR onPickPlayerFromDiscardPile_CardActiveEffect
+        onPickPlayerFromDiscardPile_CardActiveEffect: function(evt) {
+            dojo.stopEvent(evt);
+            var items = this.tempstock.getSelectedItems();
+            if (items.length > 0) {
+                var selected_player = items[0];
+                this.ajaxcallwrapper('pickPlayerFromDiscardPile_CardActiveEffect', {
+                    "selected_player": JSON.stringify(selected_player)
+                });
+            }
+        },
         // ANCHOR onShoot_PlayerTurn
         onShoot_PlayerTurn: function(evt) {
             dojo.stopEvent(evt);
@@ -679,8 +712,12 @@ function (dojo, declare) {
             dojo.subscribe('showCardsOnTempStock', this, "notif_showCardsOnTempStock");
             dojo.subscribe('terminateTempStock', this, "notif_terminateTempStock");
             // broadcast notifications
+            dojo.subscribe('broadcast', this, "notif_broadcast");
         },  
-        
+        notif_broadcast: function(notif) {
+            console.log(`**** Notification: broadcast `)
+            console.log(notif);
+        },
         // from this point and below, you can write your game notifications handling methods
         // This Notification is called when the shooting is successful
         // SECTION ACTION NOTIFICATIONS
@@ -766,7 +803,6 @@ function (dojo, declare) {
         notif_cardDrawn: function( notif ) {
             console.log(`**** Notification: cardDrawn `)
             console.log(notif);
-            const player_id = notif.args.player_id;
             const cards = notif.args.cards;
             for (let i in cards) {
                 var card = cards[i];
@@ -808,14 +844,22 @@ function (dojo, declare) {
             const card_type_arg = notif.args.card_type_arg;
             var message;
             var button_text;
+            var selected_mode = 0;
             switch (card_type_arg) {
                 case 8:
                     message = 'Select the cards that you want to put on the top of your draw deck. other cards would be put on the bottom.';
                     button_text = 'Confirm';
+                    selected_mode = 2;
+                    break;
+                case 11:
+                    message = 'Select a card from your discard pile and put it in your hand.';
+                    button_text = 'Confirm';
+                    selected_mode = 1;
                     break;
                 case 57:
                     message = "Select 3 cards from your discard pile and put them in your hand."
                     button_text = 'Confirm';
+                    selected_mode = 2;
                 default:
                     break;
             }
@@ -823,7 +867,7 @@ function (dojo, declare) {
                 'message': message,
                 'buttonText': button_text
             }), 'tempstock-area');
-            this.tempstock = this.setNewCardStock('tempCardStock', 2, 'onPlayerHandSelectionChanged');
+            this.tempstock = this.setNewCardStock('tempCardStock', selected_mode, 'onPlayerHandSelectionChanged');
             dojo.addClass('tempstock-area', 'whiteblock');
             for (let i in cards) {
                 var card = cards[i];
@@ -833,6 +877,9 @@ function (dojo, declare) {
             switch (card_type_arg) {
                 case 8:
                     dojo.connect($('tempStockButton'), 'onclick', this, 'onEightEffect_CardActiveEffect');
+                    break;
+                case 11:
+                    dojo.connect($('tempStockButton'), 'onclick', this, 'onPickPlayerFromDiscardPile_CardActiveEffect');
                     break;
                 case 57:
                     dojo.connect($('tempStockButton'), 'onclick', this, 'onGetCard_CardActiveEffect');

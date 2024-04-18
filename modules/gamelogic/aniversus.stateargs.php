@@ -57,7 +57,9 @@ trait AniversusStateArgs {
                 break;
             case 8:
                 $message = "would look at the top 5 card from the draw deck, then put them back in any order either on top of or at the bottom of the draw deck.";
-                $button_list[] = 2;
+                break;
+            case 11:
+                $message = "select 1 player from the field to exchange with a player from the discard pile";
                 break;
             case 56:
                 $message = "must discard 2 cards from the hand";
@@ -65,7 +67,6 @@ trait AniversusStateArgs {
                 break;
             case 57:
                 $message = "would search the discard pile for 3 cards and put them in the hand";
-                $button_list[] = 2;
                 break;
             default:
                 $card_effect = "You can play a card from your hand to the playmat";

@@ -252,16 +252,16 @@ trait AniversusUtils {
         $total_oppoproductivity = 0;
         foreach ($player_playmatInfo as $card_position => $card) {
             if ($card_position <= 5) {
-                $total_mypower += $card['power'];
+                $total_mypower += max(0, $card['power']);
             } else {
-                $total_myproductivity += $card['productivity'];
+                $total_myproductivity += max(0, $card['productivity']);
             }
         }
         foreach ($opponent_playmatInfo as $card_position => $card) {
             if ($card_position <= 5) {
-                $total_oppopower += $card['power'];
+                $total_oppopower += max(0, $card['power']);
             } else {
-                $total_oppoproductivity += $card['productivity'];
+                $total_oppoproductivity += max(0, $card['productivity']);
             }
         }
         $sql = "UPDATE player SET player_power = $total_mypower, player_productivity_limit = $total_myproductivity WHERE player_id = $player_id";

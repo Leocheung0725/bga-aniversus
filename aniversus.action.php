@@ -84,15 +84,26 @@
         $this->game->eightEffect_CardActiveEffect( $top_items, $bottom_items );
         self::ajaxResponse();
     }
-
+    public function swapField_CardActiveEffect() {
+        self::setAjaxMode();
+        $row = self::getArg( "row", AT_posint, true );
+        $col = self::getArg( "col", AT_posint, true );
+        $this->game->swapField_CardActiveEffect( $row, $col );
+        self::ajaxResponse();
+    }
+    public function pickPlayerFromDiscardPile_CardActiveEffect() {
+        self::setAjaxMode();
+        $selected_player = self::getArg( "selected_player", AT_json, true );
+        $this->game->validateJSonAlphaNum($selected_player, 'selected_player');
+        $this->game->pickPlayerFromDiscardPile_CardActiveEffect( $selected_player );
+        self::ajaxResponse();
+    }
     public function intercept_counterattack()
     {
         self::setAjaxMode();
         $this->game->intercept_counterattack();
         self::ajaxResponse();
     }
-
-
 
     public function pass_counterattack()
     {

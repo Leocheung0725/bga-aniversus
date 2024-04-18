@@ -476,4 +476,62 @@ trait AniversusPlayerActions {
             $this->endEffect('normal'); // end the effect
         }
     }
+
+    public function swapField_CardActiveEffect( $row, $col ) {
+        // ANCHOR - swapField_CardActiveEffect
+        self::checkAction( 'swapField_CardActiveEffect' );
+        // stage : field
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $db_position = $this->encodePlayerLocation($row, $col);
+        $player_card = $player_deck->getCardInLocation('playmat', $db_position);
+        if (empty($player_card)) {
+            throw new BgaUserException( self::_("There is no player in this position") );
+        } else {
+            foreach ($player_card as $card) {
+                $this->playFunctionCard2Discard($player_id, $card['id']);
+                self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} swaps the player' ), array(
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                    'card_id' => $card['id'],
+                    'card_type' => $card['type_arg'],
+                ) );
+            }
+        }
+        // update the playing_card status
+        $sql = "UPDATE playing_card SET card_info = 'discard' WHERE disabled = FALSE";
+        self::DbQuery( $sql );
+        // notify player
+        // stage : discard pile
+        $all_discard_cards = $player_deck->getCardsInLocation('discard');
+        $onlyPlayercard = array_filter($all_discard_cards, function($card) {
+            return $card['type'] == 'Player';
+        });
+        self::notifyPlayer( $player_id, "showCardsOnTempStock", "", array(
+            'cards' => $onlyPlayercard,
+            'card_type_arg' => 11,
+        ) );
+    }
+
+    public function pickPlayerFromDiscardPile_CardActiveEffect( $selected_player ) {
+        // ANCHOR - pickPlayerFromDiscardPile_CardActiveEffect
+        self::checkAction( 'pickPlayerFromDiscardPile_CardActiveEffect' );
+        $player_id = self::getActivePlayerId();
+        // check whether the selected player is in the discard pile
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $all_discard_cards = $player_deck->getCardsInLocation('discard');
+        $selected_player_card = array_filter($all_discard_cards, function($card) use ($selected_player) {
+            return $card['type_arg'] == $selected_player;
+        });
+        if (empty($selected_player_card)) {
+            throw new BgaUserException( self::_("The selected player is not in the discard pile") );
+        }
+        $selected_player_card = array_shift($selected_player_card);
+        $player_deck->moveCard($selected_player_card['id'], 'hand', $player_id);
+        $selected_player_card_name = self::getCardinfoFromCardsInfo($selected_player_card['type_arg'])['name'];
+        self::notifyPlayer( $player_id, "cardDrawn", 'You get the player ${card_name} from your discard pile.', array(
+            'cards' => array($selected_player_card),
+            'card_name' => $selected_player_card_name,
+        ) );
+    }
 }
