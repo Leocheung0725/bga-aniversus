@@ -263,6 +263,9 @@ function (dojo, declare) {
                 case 8:
                     this.playerdeck.setSelectionMode(0);
                     break;
+                case 112:
+                    this.playerdeck.setSelectionMode(1);
+                    break;
                 default:
                     console.log('The card type is other');
                     break;

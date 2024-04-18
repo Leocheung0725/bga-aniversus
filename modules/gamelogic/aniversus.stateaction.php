@@ -191,6 +191,7 @@ trait AniversusStateActions {
                 break;
             case 11:
                 $sql = "UPDATE playing_card SET card_info = 'field' WHERE disabled = FALSE";
+                self::DbQuery( $sql );
                 $this->endEffect("activeplayerEffect");
                 return;
                 break;
@@ -247,6 +248,8 @@ trait AniversusStateActions {
                 return;
                 break;
             case 112:
+                $sql = "UPDATE playing_card SET card_info = 'discardHand' WHERE disabled = FALSE";
+                self::DbQuery( $sql );
                 $this->endEffect("activeplayerEffect");
                 return;
                 break;

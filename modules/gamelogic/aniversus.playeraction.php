@@ -407,6 +407,12 @@ trait AniversusPlayerActions {
                 $this->disablePlayingCard();
                 $this->throwCards($player_id, $card_ids);
                 break;
+            case 112:
+                if (count($card_ids) != 1) {
+                    throw new BgaUserException( self::_("Please ensure that you discard exactly 1 card from your hand; selecting more or fewer cards than required is not permitted.") );
+                }
+                $this->throwCards($player_id, $card_ids);
+                break;
             default:
                 $card_effect = "You can play a card from your hand to the playmat";
                 break;
@@ -533,5 +539,31 @@ trait AniversusPlayerActions {
             'cards' => array($selected_player_card),
             'card_name' => $selected_player_card_name,
         ) );
+        // end the effect
+        $this->endEffect('normal'); // end the effect
+    }
+
+    public function pickPlayerFromDrawDeck_CardActiveEffect( $selected_player ) {
+        // ANCHOR - pickPlayerFromDiscardPile_CardActiveEffect
+        self::checkAction( 'pickPlayerFromDrawDeck_CardActiveEffect' );
+        $player_id = self::getActivePlayerId();
+        // check whether the selected player is in the discard pile
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $all_discard_cards = $player_deck->getCardsInLocation('deck');
+        $selected_player_card = array_filter($all_discard_cards, function($card) use ($selected_player) {
+            return $card['type_arg'] == $selected_player;
+        });
+        if (empty($selected_player_card)) {
+            throw new BgaUserException( self::_("The selected player is not in your draw deck.") );
+        }
+        $selected_player_card = array_shift($selected_player_card);
+        $player_deck->moveCard($selected_player_card['id'], 'hand', $player_id);
+        $selected_player_card_name = self::getCardinfoFromCardsInfo($selected_player_card['type_arg'])['name'];
+        self::notifyPlayer( $player_id, "cardDrawn", 'You get the player ${card_name} from your draw deck.', array(
+            'cards' => array($selected_player_card),
+            'card_name' => $selected_player_card_name,
+        ) );
+        // end the effect
+        $this->endEffect('normal'); // end the effect
     }
 }

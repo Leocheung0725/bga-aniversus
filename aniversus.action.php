@@ -98,6 +98,14 @@
         $this->game->pickPlayerFromDiscardPile_CardActiveEffect( $selected_player );
         self::ajaxResponse();
     }
+
+    public function pickPlayerFromDrawDeck_CardActiveEffect() {
+        self::setAjaxMode();
+        $selected_player = self::getArg( "selected_player", AT_json, true );
+        $this->game->validateJSonAlphaNum($selected_player, 'selected_player');
+        $this->game->pickPlayerFromDrawDeck_CardActiveEffect( $selected_player );
+        self::ajaxResponse();
+    }
     public function intercept_counterattack()
     {
         self::setAjaxMode();
