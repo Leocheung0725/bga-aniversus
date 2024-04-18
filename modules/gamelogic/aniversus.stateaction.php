@@ -126,7 +126,10 @@ trait AniversusStateActions {
         // Draw a card from the deck
         $pick_cards = $active_player_team->pickCards( 2, 'deck', $player_id );
         // Notify the player about the card drawn
-        self::notifyPlayer($player_id, 'cardDrawn', '', $pick_cards);
+        self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw 2 cards' ), [
+            'cards' => $pick_cards,
+            'player_id' => $player_id,
+        ]);
         // switch to next state
         $this->gamestate->nextState( "playerTurn" );
     }
@@ -186,6 +189,10 @@ trait AniversusStateActions {
             case 10: // Opponent -2 energy next round.
                 $this->addStatus2StatusLst($player_id, True, 10);
                 break;
+            case 11:
+                $this->endEffect("activeplayerEffect");
+                return;
+                break;
             case 13: // Get extra 2 actions in your next round
                 $this->addStatus2StatusLst($player_id, False, 13);
                 break;
@@ -238,6 +245,10 @@ trait AniversusStateActions {
                 $this->endEffect("activeplayerEffect");
                 return;
                 break;
+            case 112:
+                $this->endEffect("activeplayerEffect");
+                return;
+                break;
             default:
                 break;
         }
@@ -256,7 +267,8 @@ trait AniversusStateActions {
         // determine what card active effect should be done / finished
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $card_active_effect_info = self::getNonEmptyObjectFromDB( $sql );
-        $player_deck = $this->getActivePlayerDeck($card_active_effect_info['player_id']); // this is the deck of the player who plays the card
+        $player_id = $card_active_effect_info['player_id'];
+        $player_deck = $this->getActivePlayerDeck($player_id); // this is the deck of the player who plays the card
         switch ( $card_active_effect_info['card_type_arg'] ) {
             case 8:
                 $all_draw_deck = $player_deck->getCardsInLocation('deck');
@@ -315,6 +327,7 @@ trait AniversusStateActions {
         $player_id = self::getActivePlayerId();
         $sql = "UPDATE player SET player_productivity = player_productivity_limit, player_action = player_action_limit WHERE player_id = $player_id";
         self::DbQuery( $sql );
+        $this->updatePlayerBoard($player_id);
         // handle player status
         $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );

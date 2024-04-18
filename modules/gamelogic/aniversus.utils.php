@@ -4,6 +4,14 @@
     /* In this space, you can put any utility methods useful for your game logic */
 //////////////////////////////////////////////////////////////////////////////
 trait AniversusUtils {
+    // ANCHOR test function
+    function test($card_id) {
+        var_export($this->getCardinfoFromCardsInfo($card_id));
+        var_dump("hihihihi");
+    }
+
+
+    
     // ANCHOR getActivePlayerDeck
     function getActivePlayerDeck($player_id) {
         // get the player team information and determine which deck would be used
@@ -38,6 +46,18 @@ trait AniversusUtils {
             return $card['id'] == $card_id;
         }));
     }
+
+    // ANCHOR find_elements_by_key_value
+    function find_elements_by_key_value($array, $searchKey, $searchValue) {
+        $results = array();
+        foreach ($array as $key => $value) {
+            if (isset($value[$searchKey]) && $value[$searchKey] == $searchValue) {
+                $results[$key] = $value;
+            }
+        }
+        return $results;
+    }
+
     // ANCHOR encodePlayerLocation
     function encodePlayerLocation($row, $column) {
         /*
@@ -192,14 +212,37 @@ trait AniversusUtils {
         $opponent_deck = $this->getNonActivePlayerDeck($player_id);
         $player_playmat = $player_deck->getCardsInLocation('playmat');
         $opponent_playmat = $opponent_deck->getCardsInLocation('playmat');
-        $temp_two_playmat = [$player_playmat, $opponent_playmat];
         $player_playmatInfo = [];
         $opponent_playmatInfo = [];
-        foreach ($player_playmat as $playercard) {
-            $player_playmatInfo[$playercard['location_arg']] = $this->getCardinfoFromCardsInfo($playercard['type_arg']);
+        foreach( $player_playmat as $playercardtemp1 ) {
+            if (isset($player_playmatInfo[$playercardtemp1['location_arg']])) {
+                $player_playmatInfo[$playercardtemp1['location_arg']] = [
+                    'power' => $player_playmatInfo[$playercardtemp1['location_arg']]['power'] + $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['power'],
+                    'productivity' => $player_playmatInfo[$playercardtemp1['location_arg']]['productivity'] + $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['productivity'],
+                    'active' => true
+                ];
+            } else {
+                $player_playmatInfo[$playercardtemp1['location_arg']] = [
+                    'power' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['power'],
+                    'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['productivity'],
+                    'active' => true
+                ];
+            }
         }
-        foreach ($opponent_playmat as $opponentcard) {
-            $opponent_playmatInfo[$opponentcard['location_arg']] = $this->getCardinfoFromCardsInfo($opponentcard['type_arg']);
+        foreach( $opponent_playmat as $playercardtemp2 ) {
+            if (isset($opponent_playmatInfo[$playercardtemp2['location_arg']])) {
+                $opponent_playmatInfo[$playercardtemp2['location_arg']] = [
+                    'power' => $opponent_playmatInfo[$playercardtemp2['location_arg']]['power'] + $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['power'],
+                    'productivity' => $opponent_playmatInfo[$playercardtemp2['location_arg']]['productivity'] + $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['productivity'],
+                    'active' => true
+                ];
+            } else {
+                $opponent_playmatInfo[$playercardtemp2['location_arg']] = [
+                    'power' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['power'],
+                    'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['productivity'],
+                    'active' => true
+                ];
+            }
         }
         $this->calculatePlayerAbility($player_playmat, $opponent_playmat, $player_playmatInfo, $opponent_playmatInfo);
         $this->calculatePlayerAbility($opponent_playmat, $player_playmat, $opponent_playmatInfo, $player_playmatInfo);
@@ -232,78 +275,55 @@ trait AniversusUtils {
     public function calculatePlayerAbility($player_playmat, $opponent_playmat, &$player_playmatInfo, &$opponent_playmatInfo) {
         $marco_bros = 0;
         foreach ($player_playmat as $playercard) {
+            $cardInfoInMaterial = $this->getCardinfoFromCardsInfo($playercard['type_arg']);
             $playercard_position = $playercard['location_arg'];
             switch ($playercard['type_arg']) {
                 case 58: // The player in the same position on the opponent's field -2 power. (for as long as Sergio is in play)
                     $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
-                    if ($opponent_thiscard_position != null) {
-                        $new_power = $player_playmatInfo[$playercard_position]['power'] - 2;
-                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
-                    }
+                    if ($opponent_thiscard_position != null) { $player_playmatInfo[$playercard_position]['power'] -= 2;}
                     break;
                 case 59: // *** The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field)
                     $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
-                    if ($opponent_thiscard_position != null ) {
-                        $new_productivity = 0;
-                        $opponent_playmatInfo[$playercard_position]['productivity'] = $new_productivity;
-                    }
+                    if ($opponent_thiscard_position != null ) { $opponent_playmatInfo[$playercard_position]['active'] = false;}
                     break;
                 case 60: // 3 squirrels, one squirrel = 1 power, two = 3 power and three = 6 power
                     $marco_bros++;
                     if ($marco_bros == 3) {
-                        $new_power = 6;
-                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
+                        $player_playmatInfo[$playercard_position]['power'] += 3;
                     } else if ($marco_bros == 2) {
-                        $new_power = 3;
-                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
-                    } else if ($marco_bros == 1) {
-                        $new_power = 1;
-                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
+                        $player_playmatInfo[$playercard_position]['power'] += 1;
                     }
                     break;
                 case 61: 
-                    foreach ($player_playmat as $playercard_searchAaron) {
-                        if ($playercard_searchAaron['type_arg'] == 62) {
+                    if (count(find_elements_by_key_value($player_playmat, 'type_arg', 62)) >= 1) {
                             $player_playmatInfo[$playercard_position]['power'] += 1;
                             break;
-                        }
                     }
                     break;
+                case 101:
+                    if ( $playercard['location_arg'] <= 5 ) {
+                        $player_playmatInfo[$playercard_position]['power'] += 1;
+                    } else {
+                        $player_playmatInfo[$playercard_position]['productivity'] += 1;
+                    }
                 case 103:
                     $count_opponent_forward_players = 0;
                     foreach ($opponent_playmat as $opponentcard) {
-                        if ( $opponentcard['location_arg'] <= 5 ) {
-                            $count_opponent_forward_players++;
-                        }
+                        if ( $opponentcard['location_arg'] <= 5 ) { $count_opponent_forward_players++; }
                     }
-                    $new_power = floor($count_opponent_forward_players / 2) + $player_playmatInfo[$playercard_position]['power'];
-                    $player_playmatInfo[$playercard_position]['power'] = $new_power;
+                    $player_playmatInfo[$playercard_position]['power'] += floor($count_opponent_forward_players / 2);
                     break;
                 case 110:
                     $count_forward_players = 0;
                     foreach ($player_playmat as $playercard) {
-                        if ( $playercard['location_arg'] <= 5 ) {
-                            $count_forward_players++;
-                        }
+                        if ( $playercard['location_arg'] <= 5 ) { $count_forward_players++; }
                     }
-                    $new_productivity = floor($count_forward_players / 2) + $player_playmatInfo[$playercard_position]['productivity'];
-                    $player_playmatInfo[$playercard_position]['productivity'] = $new_productivity;
-                    break;
-                case 110:
-                    $count_forward_players = 0;
-                    foreach ($player_playmat as $playercard) {
-                        if ( $playercard['location_arg'] <= 5 ) {
-                            $count_forward_players++;
-                        }
-                    }
-                    $new_productivity = floor($count_forward_players / 2) + $player_playmatInfo[$playercard_position]['productivity'];
-                    $player_playmatInfo[$playercard_position]['productivity'] = $new_productivity;
+                    $player_playmatInfo[$playercard_position]['productivity'] += floor($count_forward_players / 2);
                     break;
                 case 111: // The player in the same position on the opponent's field -1 power. (for as long as Lucia is in play)
                     $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
                     if ( $opponent_thiscard_position != null ) {
-                        $new_power = $player_playmatInfo[$playercard_position]['power'] - 1;
-                        $player_playmatInfo[$playercard_position]['power'] = $new_power;
+                        $player_playmatInfo[$playercard_position]['power'] -= 1;
                     }
                     break;
                 default:

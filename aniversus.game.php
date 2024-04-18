@@ -200,6 +200,18 @@ class Aniversus extends Table
                 $result['players'][$player_id]['playmat'][] = $card;
             }
         }
+
+        // check playing_card status
+        $sql = "SELECT * FROM playing_card";
+        $playing_card = self::getCollectionFromDb( $sql );
+        // let playing_card be the key of the player_id
+        $result['playing_card'] = [];
+        foreach ($playing_card as $card) {
+            $result['playing_card'][$card['player_id']] = $card;
+        }
+        // Get the current game state
+        $result['gamestate_name'] = $this->getStateName();
+        
         // Cards in the draw deck
         return $result;
     }

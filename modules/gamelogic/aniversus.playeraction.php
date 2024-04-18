@@ -116,11 +116,13 @@ trait AniversusPlayerActions {
         $card_info = $this->getCardinfoFromCardsInfo($card_type);
         $card_cost = $card_info['cost'];
         $card_team = $card_info['team'];
+        $card_category = $card_info['type'];
         $comsumed_action = 1;
         $player_deck = $this->getActivePlayerDeck($player_id);
+        $actplayer_playmat = $player_deck->getCardsInLocation('playmat');
+        $db_position = $this->encodePlayerLocation($row, $col);
         // check whether the user have this card in hand
         $card_deck_info = $player_deck->getCard($card_id);
-        var_export($card_deck_info);
         if ( $card_deck_info['location'] != 'hand' ) { throw new BgaUserException( self::_("This card is not in your hand") ); }
         // some special handling for some cards
         switch ($card_type) {
@@ -131,8 +133,7 @@ trait AniversusPlayerActions {
                 break;
             case 104:
                 $count_myself_forward_players = 0;
-                $myself_playmat = $player_deck->getCardsInLocation('playmat');
-                foreach ( $myself_playmat as $myselfcard ) {
+                foreach ( $actplayer_playmat as $myselfcard ) {
                     if ( $myselfcard['location_arg'] <= 5 ) {
                         $count_opponent_forward_players++;
                     }
@@ -143,8 +144,7 @@ trait AniversusPlayerActions {
                 break;
             case 106:
                 $count_myself_forward_players = 0;
-                $myself_playmat = $player_deck->getCardsInLocation('playmat');
-                foreach ( $myself_playmat as $myselfcard ) {
+                foreach ( $actplayer_playmat as $myselfcard ) {
                     if ( $myselfcard['location_arg'] <= 5 ) {
                         $count_myself_forward_players++;
                     }
@@ -165,6 +165,30 @@ trait AniversusPlayerActions {
         if ($player['player_action'] <= 0) {
             throw new BgaUserException( self::_("You do not have enough action to play this card") );
         }
+
+        // check whether is it empowerment card and the position is occupied by other player
+        if ($card_category == 'Player') {
+            foreach($actplayer_playmat as $card) {
+                if ($card['location_arg'] == $db_position) {
+                    $occupied_name = $this->getCardinfoFromCardsInfo($card['type_arg'])['name'];
+                    if ($card_type == 60) {
+                        $brosNumber = $player_deck->countCardInLocation( 'playmat', $db_position);
+                        if ($brosNumber >= 3) {
+                            throw new BgaUserException( self::_("This position only allows maximum 3 Marco bros here.") );
+                        }
+                    } else {
+                        throw new BgaUserException( self::_("This position is occupied by {$occupied_name}, you can not place another player here") );
+                    }
+                }
+            }
+        } else if ($card_category == 'Training') {
+            $allCardsInThisPosition = $this->find_elements_by_key_value($actplayer_playmat, 'location_arg', $db_position);
+            if ( count($allCardsInThisPosition) == 0 ) {
+                throw new BgaUserException( self::_("This position haven't any player here, the training card can't not be played.") );
+            }
+        }
+        
+
         // play the card
 
         // minus the action and productivity of player in this round
@@ -173,6 +197,7 @@ trait AniversusPlayerActions {
                 throw new BgaUserException( self::_("You do not have enough productivity to play this card") );
             }
             $card_power = $card_info['power'];
+            if ( $card_type == 101 ) { $card_power++; }
             $sql = "
             UPDATE player
             SET player_action = player_action - $comsumed_action, 
@@ -183,6 +208,7 @@ trait AniversusPlayerActions {
             self::DbQuery( $sql );
         } else if ( $row == "2" ) {
             $card_productivity = $card_info['productivity'];
+            if ( $card_type == 101 ) { $card_productivity++; }
             $sql = "
             UPDATE player
             SET player_action = player_action - $comsumed_action, 
@@ -193,7 +219,7 @@ trait AniversusPlayerActions {
             self::DbQuery( $sql );
         }
         // move the card from hand to playmat
-        $player_deck->moveCard($card_id, 'playmat', $this->encodePlayerLocation($row, $col));
+        $player_deck->moveCard($card_id, 'playmat', $db_position);
         self::notifyAllPlayers( "playPlayerCard", clienttranslate( '${player_name} plays ${card_name} : ${card_effect}' ), array(
             'player_id' => $player_id,
             'player_name' => self::getActivePlayerName(),
@@ -251,10 +277,11 @@ trait AniversusPlayerActions {
         foreach ($card_ids as $card_id) {
             $this->playFunctionCard2Discard($player_id, $card_id);
             $card = $player_deck->getCard($card_id);
+            $card_name = self::getCardinfoFromCardsInfo($card['type_arg'])['name'];
             self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} throws ${card_name}' ), array(
                 'player_id' => $player_id,
                 'player_name' => $player_name,
-                'card_name' => $this->cards_info[$card['type_arg'] - 1 ]['name'],
+                'card_name' => $card_name,
                 'card_id' => $card_id,
                 'card_type' => $card['type_arg'],
             ) );
@@ -390,15 +417,12 @@ trait AniversusPlayerActions {
         // ANCHOR - eightEffect_CardActiveEffect
         self::checkAction( 'eightEffect_CardActiveEffect' );
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
-        $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
-        $card_type_arg = $card_effect_info['card_type_arg'];
+        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        $card_type_arg = $playing_card_info['card_type_arg'];
         if ( $card_type_arg != 8 ) {
             throw new BgaUserException( self::_("This card does not have an effect that can be activated") );
         } else {
-            $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
-            $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
             $random_pick_cards = json_decode($playing_card_info['card_info'], true);
-
             foreach ($top_items as $top_item) {
                 // Filter $random_pick_cards to find all items with the matching type_arg
                 $matches = array_filter($random_pick_cards, function($card) use ($top_item) {

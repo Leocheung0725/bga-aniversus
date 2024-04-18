@@ -160,7 +160,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "action" => "stCardActiveEffect",
         "args" => "argCardActiveEffect",
-        "possibleactions" => array( "throwCard_CardActiveEffect", "throwCards" ),
+        "possibleactions" => array( "throwCard_CardActiveEffect", "throwCards", "eightEffect_CardActiveEffect" ),
         "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect )
     ),
     
