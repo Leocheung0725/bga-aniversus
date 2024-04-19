@@ -109,9 +109,14 @@ trait AniversusUtils {
             $this->gamestate->nextState( "cardActiveEffect" );
         }
     }
-    // ANCHOR playFunctionCard2Discard
-    function playFunctionCard2Discard($player_id, $card_id) {
+    // ANCHOR playCard2Discard
+    function playCard2Discard( $player_id, $card_id, $from = 'hand') {
         $player_deck = $this->getActivePlayerDeck($player_id);
+        // check whether the card is in the from location
+        $card = $player_deck->getCard($card_id);
+        if ($card['location'] != $from) {
+            throw new BgaUserException( self::_("The card is not in the {$from}") );
+        }
         // get discard pile cards list
         $discard_pile_cards = $player_deck->getCardsInLocation('discard');
         // find the next location_arg for the discard pile
@@ -195,12 +200,16 @@ trait AniversusUtils {
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
         $sql = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
+        // get the deck cards number 
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $player_handCardNumber = $player_deck->countCardInLocation('hand', $player_id);
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
             'player_id' => $player_id,
             'player_productivity' => $player['player_productivity'],
             'player_action' => $player['player_action'],
             'player_score' => $player['player_score'],
             'player_power' => $player['player_power'],
+            'player_handCardNumber' => $player_handCardNumber,
         ) );
     }
 
@@ -362,6 +371,31 @@ trait AniversusUtils {
     public function disablePlayingCard() {
         $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE";
         self::DbQuery( $sql );
+    }
+
+    // ANCHOR checkDoubleCard
+    public function checkDoubleCard($player_id) {
+        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+        $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+        if (in_array(3, $player_status)) {
+            $this->removeStatusFromStatusLst($player_id, 3);
+            $this->gamestate->nextState( "cardEffect" );
+        } else {
+            $this->disablePlayingCard();
+            $this->endEffect('normal');
+        }
+    }
+    // ANCHOR checkPlayingCard
+    public function checkPlayingCard() {
+        // check whether the playing card is disabled, if not, disable it
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        if ($playing_card_info != null) {
+            $this->disablePlayingCard();
+            $playing_card_info_type_arg = $playing_card_info['card_type_arg'];
+            throw new BgaUserException( self::_("The player card type arg: ${playing_card_info_type_arg} not yet disabled !!!!!! ") );
+        }
+
     }
 
 }

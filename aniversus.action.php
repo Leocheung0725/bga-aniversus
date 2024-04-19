@@ -91,6 +91,13 @@
         $this->game->swapField_CardActiveEffect( $row, $col );
         self::ajaxResponse();
     }
+    public function pickPlayerFromPlaymat2Hand_CardActiveEffect() {
+        self::setAjaxMode();
+        $row = self::getArg( "row", AT_posint, true );
+        $col = self::getArg( "col", AT_posint, true );
+        $this->game->pickPlayerFromPlaymat2Hand_CardActiveEffect( $row, $col );
+        self::ajaxResponse();
+    }
     public function pickPlayerFromDiscardPile_CardActiveEffect() {
         self::setAjaxMode();
         $selected_player = self::getArg( "selected_player", AT_json, true );

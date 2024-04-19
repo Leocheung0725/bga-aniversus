@@ -173,12 +173,17 @@ class Aniversus extends Table
         $result['id2card_type_arg'] = $this->id2card_type_arg;
         // Get information about current player
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
+        $opponent_player_id = $this->getNonActivePlayerId();
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
         $sql = "SELECT player_id id, player_score score, player_team team, player_power, player_productivity_limit, player_productivity, player_action_limit, player_action FROM player ";
         $result['players'] = self::getCollectionFromDb( $sql );
         $current_player = $result['players'][$current_player_id];
         $result['current_player'] = $current_player;
+        // get the player hand card number
+        $result['hand_card_number'][$current_player_id] = count($this->getActivePlayerDeck($current_player_id)->countCardInLocation( 'hand', $current_player_id ));
+        // get the opponent hand card number
+        $result['hand_card_number'][$opponent_player_id] = $this->getActivePlayerDeck($opponent_player_id)->countCardInLocation( 'hand', $opponent_player_id );
         // Gather all information about current game situation (visible by player $current_player_id).
         // Cards in player hand
         $result['hand'] = $this->getActivePlayerDeck($current_player_id)->getCardsInLocation( 'hand', $current_player_id );

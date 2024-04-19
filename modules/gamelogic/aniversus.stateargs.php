@@ -68,6 +68,17 @@ trait AniversusStateArgs {
             case 57:
                 $message = "would search the discard pile for 3 cards and put them in the hand";
                 break;
+            case 64:
+                $message = "must discard 1 card from the hand";
+                $button_list[] = 1;
+                break;
+            case 108:
+                $message = "pick 1 player from the field to your hand.";
+                break;
+            case 109:
+                $message = "discard 2 cards from your hand.";
+                $button_list[] = 1;
+                break;
             case 112:
                 $message = "discard 1 hand card to search for 1 card from the draw deck and put to the hand.";
                 $button_list[] = 1;

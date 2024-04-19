@@ -57,6 +57,7 @@ var jstpl_player_board =
         '<li class="li-item"><span>Remaining productivity <div class="productivity-inline-image"></div> : <div class="counter" id="player_productivity_${player_id}"></div></span></li>' +
         '<li class="li-item"><span>Power <div class="power-inline-image"></div> : <div class="counter" id="player_power_${player_id}"></div></span></li>' +
         '<li class="li-item"><span>Remaining Action: <div class="counter" id="player_action_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span>Draw Deck: <div class="counter" id="player_drawDeck_${player_id}"></div></span></li>' +
         '</ul>' + 
     '</div>' +
 '</div>';

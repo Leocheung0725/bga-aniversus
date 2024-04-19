@@ -118,6 +118,9 @@ function (dojo, declare) {
                 this.playerCounter[player_id]['power'] = new ebg.counter();
                 this.playerCounter[player_id]['power'].create( `player_power_${player_id}` );
                 this.playerCounter[player_id]['power'].setValue(player.player_power);
+                this.playerCounter[player_id]['handCardNumber'] = new ebg.counter();
+                this.playerCounter[player_id]['handCardNumber'].create( `player_drawDeck_${player_id}` );
+                this.playerCounter[player_id]['handCardNumber'].setValue(gamedatas.hand_card_number[player_id]);
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +248,9 @@ function (dojo, declare) {
                 case 1:
                     this.playerdeck.setSelectionMode(1);
                     break;
+                case 8:
+                    this.playerdeck.setSelectionMode(0);
+                    break;
                 case 11:
                     this.playerdeck.setSelectionMode(0);
                     for (let row = 1; row <= 2; row++) {
@@ -260,8 +266,23 @@ function (dojo, declare) {
                 case 56:
                     this.playerdeck.setSelectionMode(2);
                     break;
-                case 8:
+                case 64:
+                    this.playerdeck.setSelectionMode(1);
+                    break;
+                case 108:
                     this.playerdeck.setSelectionMode(0);
+                    for (let row = 1; row <= 2; row++) {
+                        for (let col = 1; col <= 5; col++) {
+                            var div_id = `playerOnPlaymat_me_${row}_${col}`; 
+                            if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                dojo.addClass(div_id, 'available');
+                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onSwapField_CardActiveEffect(row, col));
+                            }
+                        }
+                    }
+                    break;
+                case 109:
+                    this.playerdeck.setSelectionMode(2);
                     break;
                 case 112:
                     this.playerdeck.setSelectionMode(1);
@@ -626,6 +647,15 @@ function (dojo, declare) {
                 "col": col
             });
         },
+        // ANCHOR onPickPlayerFromPlaymat2Hand_CardActiveEffect
+        onPickPlayerFromPlaymat2Hand_CardActiveEffect: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('pickPlayerFromPlaymat2Hand_CardActiveEffect', {
+                "row": row,
+                "col": col
+            });
+        },
+                
 
         // ANCHOR onPickPlayerFromDiscardPile_CardActiveEffect
         onPickPlayerFromDiscardPile_CardActiveEffect: function(evt) {
@@ -714,6 +744,7 @@ function (dojo, declare) {
             this.notifqueue.setSynchronous('shoot_roll', 5000);
             dojo.subscribe('showCardsOnTempStock', this, "notif_showCardsOnTempStock");
             dojo.subscribe('terminateTempStock', this, "notif_terminateTempStock");
+            dojo.subscribe('movePlayerInPlaymat2Discard', this, "notif_movePlayerInPlaymat2Discard");
             // broadcast notifications
             dojo.subscribe('broadcast', this, "notif_broadcast");
         },  
@@ -733,11 +764,32 @@ function (dojo, declare) {
             const player_action = notif.args.player_action;
             const score = notif.args.player_score;
             const player_power = notif.args.player_power;
+            const player_handCardNumber = notif.args.player_handCardNumber;
             // Update all information in the player board
             this.playerCounter[player_id]['productivity'].toValue(player_productivity);
             this.playerCounter[player_id]['action'].toValue(player_action);
             this.scoreCtrl[player_id].toValue(score);
             this.playerCounter[player_id]['power'].toValue(player_power);
+            this.playerCounter[player_id]['handCardNumber'].toValue(player_handCardNumber);
+        },
+        // ANCHOR movePlayerInPlaymat2Discard
+        notif_movePlayerInPlaymat2Discard: function(notif) {
+            console.log(`**** Notification: movePlayerInPlaymat2Discard `)
+            console.log(notif);
+            const player_id = notif.args.player_id;
+            const card_id = notif.args.card_id;
+            const card_type = notif.args.card_type;
+            const row = notif.args.row;
+            const col = notif.args.col;
+            if (player_id == this.player_id) {
+                this.playerOnPlaymat['me'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, "discardPile_field_me");
+                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_me_${row}_${col}`, 'discardPile_field_me');
+                this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id), this.getTooltipHtml(Number(card_type)));
+            } else {
+                this.playerOnPlaymat['opponent'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, "discardPile_field_opponent");
+                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_opponent_${row}_${col}`, 'discardPile_field_opponent');
+                this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id), this.getTooltipHtml(Number(card_type)));
+            }
         },
         // ANCHOR playFunctionCard
         // This Notification is called when a function card is played
