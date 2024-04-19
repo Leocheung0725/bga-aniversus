@@ -39,6 +39,21 @@ trait AniversusPlayerActions {
                 $sql = "UPDATE player SET player_productivity = player_productivity + $card_cost WHERE player_id = $player_id";
                 $comsumed_action = 0;
                 break;
+            case 4:
+                $sql = "SELECT * FROM playing_card WHERE player_id = $player_id";
+                $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+                if ($playing_card_info['card_info'] == 'redcard') {
+                    $comsumed_action = 0;
+                }
+                $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+                $opponent_players = $opponent_deck->getCardsInLocation('playmat');
+                $opponent_forward_players = array_filter($opponent_players, function($player) {
+                    return $player['location_arg'] <= 5;
+                });
+                if ( count($opponent_forward_players) <= 0 ) {
+                    throw new BgaUserException( self::_("Your opponent does not have any forward player in playmat") );
+                }
+                break;
             case 5:
                 // handle the id:5 card (counter attack card)
                 throw new BgaUserException( self::_("This card is a counterattack card, it just can be used for reaction of opponent's function card. Please select other cards to play.") );
@@ -326,7 +341,16 @@ trait AniversusPlayerActions {
                 break;
         }
     }
-
+    public function redcard_redcard() {
+        // ANCHOR - redcard_redcard
+        self::checkAction( 'redcard_redcard' );
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $red_cards = $player_deck->getCardsOfTypeInLocation( 'Function' , 4 , 'hand' );
+        $redcard = array_shift($red_cards);
+        $sql = "UPDATE playing_card SET card_info = 'redcard' WHERE player_id = $player_id";
+        $this->playFunctionCard($player_id, $redcard['id'], $redcard['type_arg']);
+    }
 
     public function intercept_counterattack() {
         // ANCHOR - intercept_counterattack
@@ -364,7 +388,12 @@ trait AniversusPlayerActions {
             $this->gamestate->nextState("changeActivePlayer_counterattack");
         }
     }
-
+    public function pass_redcard() {
+        // ANCHOR - pass_redcard
+        self::checkAction( 'pass_redcard' );
+        $this->checkPlayingCard();
+        $this->gamestate->nextState( "changeActivePlayer_redcard" );
+    }
     public function pass_counterattack() {
         // ANCHOR - pass_counterattack
         self::checkAction( 'pass_counterattack' );
@@ -372,7 +401,14 @@ trait AniversusPlayerActions {
         self::DbQuery($sql);
         $this->gamestate->nextState( "changeActivePlayer_counterattack" );
     }
-
+    public function pass_CardActiveEffect() {
+        // ANCHOR - pass_CardActiveEffect
+        self::checkAction( 'pass_CardActiveEffect' );
+        $this->checkPlayingCard();
+        self::notifyPlayer( self::getActivePlayerId(), "terminateTempStock", "", array() );
+        $this->gamestate->nextState( "playerTurn" );
+    }
+    
     public function pass_playerTurn() {
         // ANCHOR - pass_playerTurn
         self::checkAction( 'pass_playerTurn' );
@@ -382,7 +418,18 @@ trait AniversusPlayerActions {
     public function shoot_playerTurn() {
         // ANCHOR - shoot_playerTurn
         self::checkAction( 'shoot_playerTurn' );
-        $this->gamestate->nextState( "shoot" );
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+        // check whether the opponent player have red card in hand or not (card id: 4 )
+        $red_card = $opponent_deck->getCardsOfTypeInLocation( 'Function' , 4 , 'hand' );
+        if (empty($red_card)) {
+            $this->gamestate->nextState( "shoot" );
+        } else {
+            $this->gamestate->nextState( "redcard" );
+        }
+        
+        
     }
 
     public function throwCard_throwCard( $player_id, $card_ids ) {
@@ -572,10 +619,11 @@ trait AniversusPlayerActions {
         } else {
             foreach ($player_card as $card) {
                 $player_deck->moveCard($card['id'], 'hand', $player_id);
-                self::notifyAllPlayers( "movePlayerInPlaymat2Hand", clienttranslate( '${player_name} picks the player' ), array(
+                self::notifyAllPlayers( "movePlayerInPlaymat2Hand", clienttranslate( '${player_name} picks the ${card_name} from the field to hand.' ), array(
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
                     'card_id' => $card['id'],
+                    'card_name' => self::getCardinfoFromCardsInfo($card['type_arg'])['name'],
                     'card_type' => $card['type_arg'],
                     'row' => $row,
                     'col' => $col,

@@ -55,6 +55,9 @@ trait AniversusStateArgs {
                 $message = "must discard a card from the hand";
                 $button_list[] = 1;
                 break;
+            case 4:
+                $message = "can eject 1 opponent forward player from the field";
+                break;
             case 8:
                 $message = "would look at the top 5 card from the draw deck, then put them back in any order either on top of or at the bottom of the draw deck.";
                 break;

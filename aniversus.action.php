@@ -163,6 +163,24 @@
         $this->game->throwCard_CardActiveEffect( $player_id, $card_ids );
         self::ajaxResponse();
     }
+
+    public function redCard_redcard() {
+        self::setAjaxMode();
+        $this->game->redCard_redcard();
+        self::ajaxResponse();
+    }
+
+    public function pass_redcard() {
+        self::setAjaxMode();
+        $this->game->pass_redcard();
+        self::ajaxResponse();
+    }
+
+    public function pass_CardActiveEffect() {
+        self::setAjaxMode();
+        $this->game->pass_CardActiveEffect();
+        self::ajaxResponse();
+    }
   }
   
 

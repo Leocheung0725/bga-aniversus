@@ -317,12 +317,22 @@ trait AniversusStateActions {
             $this->gamestate->changeActivePlayer( $playing_card_info['player_id'] );
             if ( $playing_card_info['card_launch'] ) {
                 $this->gamestate->nextState( "cardEffect" );
-            } else {
+            } else if ($playing_card_info['card_launch'] == false && $playing_card_info['card_info'] != 'redcard') {
                 $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE";
+                self::DbQuery( $sql );
                 $this->gamestate->nextState( "playerTurn" );
+            } else if ( $playing_card_info['card_launch'] == false && $playing_card_info['card_info'] == 'redcard' ) {
+                $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE";
+                self::DbQuery( $sql );
+                $this->gamestate->nextState( "shoot" );
             }
         }
+    }
 
+    function stChangeActivePlayer_redcard() {
+        // ANCHOR stChangeActivePlayer_redcard
+        $this->activeNextPlayer();
+        $this->gamestate->nextState( "redcard" );
     }
 
     function stPlayerEndTurn() {

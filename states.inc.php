@@ -57,6 +57,7 @@ if (!defined('stateEndGame')) { // ensure this block is only invoked once, since
     define("stateCardEffect", 31);
     define("stateCardActiveEffect", 32);
     define("stateChangeActivePlayer_counterattack", 33);
+    define("stateChangeActivePlayer_redcard", 34);
     define("stateShoot", 23);
     define("stateThrowCard", 24);
     define("statePlayerEndTurn", 25);
@@ -104,7 +105,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", "shoot_playerTurn" ),
         "transitions" => array( "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack , "launch" => stateCardEffect,
-        "shoot" => stateShoot, "throwCard" => stateThrowCard )
+        "shoot" => stateShoot, "throwCard" => stateThrowCard)
     ),
 
     23 => array(
@@ -162,7 +163,8 @@ $machinestates = array(
         "args" => "argCardActiveEffect",
         "possibleactions" => array( "throwCard_CardActiveEffect", "throwCards", 
         "eightEffect_CardActiveEffect", "swapField_CardActiveEffect", "pickPlayerFromDiscardPile_CardActiveEffect",
-        "pickPlayerFromDrawDeck_CardActiveEffect", "pickPlayerFromPlaymat2Hand_CardActiveEffect"),
+        "pickPlayerFromDrawDeck_CardActiveEffect", "pickPlayerFromPlaymat2Hand_CardActiveEffect",
+        "pass_CardActiveEffect"),
         "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect, "cardActiveEffect" => stateCardActiveEffect )
     ),
     
@@ -171,7 +173,26 @@ $machinestates = array(
         "description" => clienttranslate(''),
         "type" => "game",
         "action" => "stChangeActivePlayer",
+        "transitions" => array( "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, "playerTurn" => statePlayerTurn
+        , 'shoot' => stateShoot )
+    ),
+
+    34 => array(
+        "name" => "changeActivePlayer_redcard",
+        "description" => clienttranslate(''),
+        "type" => "game",
+        "action" => "stChangeActivePlayer_redcard",
         "transitions" => array( "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, "playerTurn" => statePlayerTurn )
+    ),
+
+    35 => array(
+        "name" => "redcard",
+        "description" => clienttranslate('${actplayer} must play the red card or pass'),
+        "descriptionmyturn" => clienttranslate('${you} must play the red card or pass'),
+        "type" => "activeplayer",
+        "possibleactions" => array( "redcard_redcard", "pass_redcard", "playFunctionCard" ),
+        "transitions" => array( "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard,
+        "launch" => stateCardEffect, "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack )
     ),
     // !SECTION playerTurn section 
 
