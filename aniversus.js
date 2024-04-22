@@ -119,8 +119,11 @@ function (dojo, declare) {
                 this.playerCounter[player_id]['power'].create( `player_power_${player_id}` );
                 this.playerCounter[player_id]['power'].setValue(player.player_power);
                 this.playerCounter[player_id]['handCardNumber'] = new ebg.counter();
-                this.playerCounter[player_id]['handCardNumber'].create( `player_drawDeck_${player_id}` );
+                this.playerCounter[player_id]['handCardNumber'].create( `player_hand_${player_id}` );
                 this.playerCounter[player_id]['handCardNumber'].setValue(gamedatas.hand_card_number[player_id]);
+                this.playerCounter[player_id]['deckCardNumber'] = new ebg.counter();
+                this.playerCounter[player_id]['deckCardNumber'].create( `player_deck_${player_id}` );
+                this.playerCounter[player_id]['deckCardNumber'].setValue(gamedatas.deck_card_number[player_id]);
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -255,7 +258,7 @@ function (dojo, declare) {
                             var div_id = `playerOnPlaymat_opponent_${row}_${col}`; 
                             if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
                                 dojo.addClass(div_id, 'available');
-                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCard_redcard());
+                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCard_CardActiveEffect(row, col));
                             }
                         }
                     }
@@ -398,6 +401,9 @@ function (dojo, declare) {
                 case 'redcard':
                     this.addActionButton( 'redcard_btn_redcard', _('Red Card'), 'onRedCard_redcard' );
                     this.addActionButton( 'redcard_btn_pass', _('Pass'), 'onPass_redcard' );
+                    if (args.redcardnumber <= 0) {
+                        dojo.addClass('redcard_btn_redcard', 'disabled');
+                    }
                     break;
                 case 'throwCard':
                     this.addActionButton( 'throwCard_btn_throw', _('Throw'), 'onThrowCard_throwCard' );
@@ -668,7 +674,6 @@ function (dojo, declare) {
         },
         // ANCHOR onSwapField_CardActiveEffect
         onSwapField_CardActiveEffect: function( row, col ) {
-            dojo.stopEvent(evt);
             this.ajaxcallwrapper('swapField_CardActiveEffect', {
                 "row": row,
                 "col": col
@@ -694,6 +699,13 @@ function (dojo, declare) {
                     "selected_player": JSON.stringify(selected_player)
                 });
             }
+        },
+
+        onRedCard_CardActiveEffect: function(row, col) {
+            this.ajaxcallwrapper('redCard_CardActiveEffect', {
+                "row": row,
+                "col": col
+            });
         },
         // ANCHOR onShoot_PlayerTurn
         onShoot_PlayerTurn: function(evt) {
@@ -799,17 +811,19 @@ function (dojo, declare) {
             console.log(`**** Notification: updatePlayerBoard `)
             console.log(notif);
             const player_id = notif.args.player_id;
-            const player_productivity = notif.args.player_productivity;
-            const player_action = notif.args.player_action;
-            const score = notif.args.player_score;
-            const player_power = notif.args.player_power;
-            const player_handCardNumber = notif.args.player_handCardNumber;
+            const player_productivity = Number(notif.args.player_productivity);
+            const player_action = Number(notif.args.player_action);
+            const player_score = Number(notif.args.player_score);
+            const player_power = Number(notif.args.player_power);
+            const player_handCardNumber = Number(notif.args.player_handCardNumber);
+            const player_deckCardNumber = Number(notif.args.player_deckCardNumber);
             // Update all information in the player board
             this.playerCounter[player_id]['productivity'].toValue(player_productivity);
             this.playerCounter[player_id]['action'].toValue(player_action);
-            this.scoreCtrl[player_id].toValue(score);
+            this.scoreCtrl[player_id].setValue(player_score);
             this.playerCounter[player_id]['power'].toValue(player_power);
             this.playerCounter[player_id]['handCardNumber'].toValue(player_handCardNumber);
+            this.playerCounter[player_id]['deckCardNumber'].toValue(player_deckCardNumber);
         },
         // ANCHOR movePlayerInPlaymat2Discard
         notif_movePlayerInPlaymat2Discard: function(notif) {
@@ -1009,13 +1023,21 @@ function (dojo, declare) {
             this.tempstock = null;
             dojo.destroy('tempStock');
             dojo.removeClass('tempstock-area', 'whiteblock');
+            this.notif_removePlaymatClickAvailable({});
+        },
+
+        // ANCHOR removePlaymatClickAvailable
+        notif_removePlaymatClickAvailable: function( notif ) {
+            console.log(`**** Notification: removePlaymatClickAvailable `)
             for (let row = 1; row <= 2; row++) {
                 for (let col = 1; col <= 5; col++) {
-                    var div_id = `playerOnPlaymat_me_${row}_${col}`;
+                    const me_div_id = `playerOnPlaymat_me_${row}_${col}`;
+                    const opponent_div_id = `playerOnPlaymat_opponent_${row}_${col}`;
                     if ( this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] ?? null != null) {
                         dojo.disconnect(this.onClickMethod['playerOnPlaymat'][`${row}_${col}`]);
                     }
-                    dojo.removeClass(div_id, 'available');
+                    dojo.removeClass(me_div_id, 'available');
+                    dojo.removeClass(opponent_div_id, 'available');
                     this.onClickMethod['playerOnPlaymat'] = {};
                 }
             }

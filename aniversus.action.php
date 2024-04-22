@@ -166,7 +166,7 @@
 
     public function redCard_redcard() {
         self::setAjaxMode();
-        $this->game->redCard_redcard();
+        $this->game->redcard_redcard();
         self::ajaxResponse();
     }
 
@@ -179,6 +179,14 @@
     public function pass_CardActiveEffect() {
         self::setAjaxMode();
         $this->game->pass_CardActiveEffect();
+        self::ajaxResponse();
+    }
+
+    public function redCard_CardActiveEffect() {
+        self::setAjaxMode();
+        $row = self::getArg( "row", AT_posint, true );
+        $col = self::getArg( "col", AT_posint, true );
+        $this->game->redCard_CardActiveEffect($row, $col);
         self::ajaxResponse();
     }
   }

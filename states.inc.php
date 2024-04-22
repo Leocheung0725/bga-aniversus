@@ -58,6 +58,7 @@ if (!defined('stateEndGame')) { // ensure this block is only invoked once, since
     define("stateCardActiveEffect", 32);
     define("stateChangeActivePlayer_counterattack", 33);
     define("stateChangeActivePlayer_redcard", 34);
+    define("stateRedcard", 35);
     define("stateShoot", 23);
     define("stateThrowCard", 24);
     define("statePlayerEndTurn", 25);
@@ -105,7 +106,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", "shoot_playerTurn" ),
         "transitions" => array( "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack , "launch" => stateCardEffect,
-        "shoot" => stateShoot, "throwCard" => stateThrowCard)
+        "shoot" => stateShoot, "throwCard" => stateThrowCard, "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard)
     ),
 
     23 => array(
@@ -182,7 +183,8 @@ $machinestates = array(
         "description" => clienttranslate(''),
         "type" => "game",
         "action" => "stChangeActivePlayer_redcard",
-        "transitions" => array( "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, "playerTurn" => statePlayerTurn )
+        "transitions" => array( "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, 
+        "playerTurn" => statePlayerTurn, "shoot" => stateShoot, "throwCard" => stateThrowCard, "redcard" => stateRedcard)
     ),
 
     35 => array(
@@ -190,6 +192,7 @@ $machinestates = array(
         "description" => clienttranslate('${actplayer} must play the red card or pass'),
         "descriptionmyturn" => clienttranslate('${you} must play the red card or pass'),
         "type" => "activeplayer",
+        "args" => "argRedCard",
         "possibleactions" => array( "redcard_redcard", "pass_redcard", "playFunctionCard" ),
         "transitions" => array( "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard,
         "launch" => stateCardEffect, "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack )

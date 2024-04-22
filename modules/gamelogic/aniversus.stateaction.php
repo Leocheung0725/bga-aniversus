@@ -164,6 +164,8 @@ trait AniversusStateActions {
                 $this->addStatus2StatusLst($player_id, False, 3);
                 break;
             case 4: // Dismiss 1 opponent's forward player. (This card can be played during opponent's SHOOTING phase, which DOES NOT count as an action)
+                $this->endEffect("activeplayerEffect");
+                return;
                 break;
             case 6: // Choose 1 card, at random, from your opponent's hand and discard it.
                 $opponent_playerId = $this->getNonActivePlayerId(); 
@@ -182,6 +184,7 @@ trait AniversusStateActions {
                 $sql = "UPDATE player SET player_productivity =  player_productivity + 2 WHERE player_id = $player_id";
                 self::DbQuery( $sql );
                 $this->updatePlayerBoard($player_id);
+                break;
             case 8: // Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.
                 $this->endEffect("activeplayerEffect");
                 return;
@@ -256,14 +259,7 @@ trait AniversusStateActions {
             default:
                 break;
         }
-        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
-        $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
-        if (in_array(3, $player_status)) {
-            $this->removeStatusFromStatusLst($player_id, 3);
-            $this->gamestate->nextState( "cardEffect" );
-        } else {
-            $this->endEffect("normal");
-        }
+        $this->checkDoubleCard($player_id);
     }
 
     function stCardActiveEffect() {
@@ -311,9 +307,11 @@ trait AniversusStateActions {
         $sql = "SELECT * from playing_card WHERE disabled = FALSE";
         $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
         if ( $playing_card_info['card_status'] == "validating" ) {
+            // continue to counterattack state
             $this->activeNextPlayer();
             $this->gamestate->nextState( "counterattack" );
         } else if ( $playing_card_info['card_status'] == "validated" ) {
+            // end the validating state
             $this->gamestate->changeActivePlayer( $playing_card_info['player_id'] );
             if ( $playing_card_info['card_launch'] ) {
                 $this->gamestate->nextState( "cardEffect" );
@@ -322,8 +320,9 @@ trait AniversusStateActions {
                 self::DbQuery( $sql );
                 $this->gamestate->nextState( "playerTurn" );
             } else if ( $playing_card_info['card_launch'] == false && $playing_card_info['card_info'] == 'redcard' ) {
-                $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE";
+                $sql = "UPDATE playing_card SET disabled = TRUE, card_info = ' ' WHERE disabled = FALSE";
                 self::DbQuery( $sql );
+                $this->gamestate->changeActivePlayer( $this->getNonActivePlayerId() );
                 $this->gamestate->nextState( "shoot" );
             }
         }
@@ -331,8 +330,29 @@ trait AniversusStateActions {
 
     function stChangeActivePlayer_redcard() {
         // ANCHOR stChangeActivePlayer_redcard
-        $this->activeNextPlayer();
-        $this->gamestate->nextState( "redcard" );
+        $player_id = self::getActivePlayerId();
+        $sql = "SELECT card_info from playing_card WHERE player_id = $player_id";
+        $card_info = self::getUniqueValueFromDB( $sql );
+        if ($card_info == 'preredcard') {
+            $this->activeNextPlayer();
+            $sql = "UPDATE playing_card SET card_info = 'prelaunch_redcard' WHERE player_id != $player_id";
+            self::DbQuery( $sql );
+            $this->gamestate->nextState( "redcard" );
+        } else if ($card_info == 'passredcard') {
+            $this->activeNextPlayer();
+            $sql = "UPDATE playing_card SET card_info = ' ' WHERE player_id != $player_id";
+            self::DbQuery( $sql );
+            $this->gamestate->nextState( "shoot" );
+        } else if ( $card_info == 'redcard' ) {
+            $this->activeNextPlayer();
+            $sql = "SELECT player_power FROM player WHERE player_id != $player_id";
+            $player_power = self::getUniqueValueFromDB( $sql );
+            if ($player_power < 10) {
+                $this->gamestate->nextState( "throwCard" );
+            } else {
+                $this->gamestate->nextState( "shoot" );
+            }
+        }
     }
 
     function stPlayerEndTurn() {

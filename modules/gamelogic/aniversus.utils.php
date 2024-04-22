@@ -4,11 +4,22 @@
     /* In this space, you can put any utility methods useful for your game logic */
 //////////////////////////////////////////////////////////////////////////////
 trait AniversusUtils {
-    // ANCHOR test function
-    function test($card_id) {
-        var_export($this->getCardinfoFromCardsInfo($card_id));
-        var_dump("hihihihi");
+    // SECTION DEBUG function
+    function pickCard2Hand($card_type, $player_id) {
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $typeofCard = $this->getCardinfoFromCardsInfo($card_type)['type'];
+        $cards = $player_deck->getCardsOfTypeInLocation($typeofCard, $card_type, 'deck');
+        if (empty($cards)) {
+            throw new BgaUserException( self::_("There is no this type card in the deck") );
+        }
+        $card = array_shift($cards);
+        $player_deck->moveCard($card['id'], 'hand');
+        self::notifyPlayer( $player_id, 'cardDrawn', '', array(
+            'cards' => array($card),
+        ) );
     }
+
+    // !SECTION DEBUG function
 
 
     
@@ -203,6 +214,7 @@ trait AniversusUtils {
         // get the deck cards number 
         $player_deck = $this->getActivePlayerDeck($player_id);
         $player_handCardNumber = $player_deck->countCardInLocation('hand', $player_id);
+        $player_deckCardNumber = $player_deck->countCardInLocation('deck');
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
             'player_id' => $player_id,
             'player_productivity' => $player['player_productivity'],
@@ -210,6 +222,7 @@ trait AniversusUtils {
             'player_score' => $player['player_score'],
             'player_power' => $player['player_power'],
             'player_handCardNumber' => $player_handCardNumber,
+            'player_deckCardNumber' => $player_deckCardNumber,
         ) );
     }
 
@@ -379,9 +392,10 @@ trait AniversusUtils {
         $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
         if (in_array(3, $player_status)) {
             $this->removeStatusFromStatusLst($player_id, 3);
+            $player_id = self::getActivePlayerId();
+            $sql = "UPDATE playing_card SET disabled = FALSE WHERE player_id = $player_id";
             $this->gamestate->nextState( "cardEffect" );
         } else {
-            $this->disablePlayingCard();
             $this->endEffect('normal');
         }
     }
@@ -389,7 +403,7 @@ trait AniversusUtils {
     public function checkPlayingCard() {
         // check whether the playing card is disabled, if not, disable it
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
-        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        $playing_card_info = self::getObjectFromDB( $sql );
         if ($playing_card_info != null) {
             $this->disablePlayingCard();
             $playing_card_info_type_arg = $playing_card_info['card_type_arg'];

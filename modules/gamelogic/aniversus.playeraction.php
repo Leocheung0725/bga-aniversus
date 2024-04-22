@@ -117,15 +117,7 @@ trait AniversusPlayerActions {
             'card_effect' => $card_info['function'],
         ) );
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-        $sql = "select player_score, player_action, player_productivity, player_power from player where player_id = $player_id";
-        $player = self::getNonEmptyObjectFromDB( $sql );
-        self::notifyAllPlayers( "updatePlayerBoard", "", array(
-            'player_id' => $player_id,
-            'player_productivity' => $player['player_productivity'],
-            'player_action' => $player['player_action'],
-            'player_score' => $player['player_score'],
-            'player_power' => $player['player_power'],
-        ) );
+        $this->updatePlayerBoard($player_id);
         // update database that what card the active player has played
         // REVIEW - debug : checkPlayingCard
         $this->checkPlayingCard();
@@ -392,6 +384,9 @@ trait AniversusPlayerActions {
         // ANCHOR - pass_redcard
         self::checkAction( 'pass_redcard' );
         $this->checkPlayingCard();
+        $player_id = self::getActivePlayerId();
+        $sql  = "UPDATE playing_card SET card_info = 'passredcard' WHERE player_id = $player_id";
+        self::DbQuery( $sql );
         $this->gamestate->nextState( "changeActivePlayer_redcard" );
     }
     public function pass_counterattack() {
@@ -419,17 +414,20 @@ trait AniversusPlayerActions {
         // ANCHOR - shoot_playerTurn
         self::checkAction( 'shoot_playerTurn' );
         $player_id = self::getActivePlayerId();
-        $player_deck = $this->getActivePlayerDeck($player_id);
-        $opponent_deck = $this->getNonActivePlayerDeck($player_id);
-        // check whether the opponent player have red card in hand or not (card id: 4 )
-        $red_card = $opponent_deck->getCardsOfTypeInLocation( 'Function' , 4 , 'hand' );
-        if (empty($red_card)) {
-            $this->gamestate->nextState( "shoot" );
-        } else {
-            $this->gamestate->nextState( "redcard" );
+        $sql = "SELECT player_power, player_productivity FROM player WHERE player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        $player_power = $player['player_power'];
+        $player_productivity = $player['player_productivity'];
+        if ($player_power < 10) {
+            throw new BgaUserException( self::_("You do not have enough power to shoot (Please ensure you have at least 10 power for shooting.") );
         }
-        
-        
+        if ($player_productivity < 2) {
+            throw new BgaUserException( self::_("You do not have enough energy to shoot (Please ensure you have at least 2 energy for shooting.") );
+        }
+        // for add shooting infomation to the database
+        $sql = "UPDATE playing_card SET card_info = 'preredcard' WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        $this->gamestate->nextState( "changeActivePlayer_redcard" );
     }
 
     public function throwCard_throwCard( $player_id, $card_ids ) {
@@ -564,8 +562,7 @@ trait AniversusPlayerActions {
             self::notifyPlayer( $playing_card_info['player_id'], "terminateTempStock", "", array(
                 'player_id' => $playing_card_info['player_id'],
             ) );
-
-            $this->endEffect('normal'); // end the effect
+            $this->checkDoubleCard($player_id);
         }
     }
 
@@ -630,6 +627,7 @@ trait AniversusPlayerActions {
                 ) );
             }
         }
+        $this->checkDoubleCard($player_id);
     }
 
     public function pickPlayerFromDiscardPile_CardActiveEffect( $selected_player ) {
@@ -654,7 +652,6 @@ trait AniversusPlayerActions {
         ) );
         // end the effect
         self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
-        $this->disablePlayingCard();
         $this->checkDoubleCard($player_id);
     }
 
@@ -680,7 +677,47 @@ trait AniversusPlayerActions {
         ) );
         // end the effect
         self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
-        $this->disablePlayingCard();
         $this->checkDoubleCard($player_id);
+    }
+
+    public function redCard_CardActiveEffect( $row, $col ) {
+        // ANCHOR - redCard_CardActiveEffect
+        self::checkAction( 'redCard_CardActiveEffect' );
+        $player_id = self::getActivePlayerId();
+        $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+        $db_position = $this->encodePlayerLocation($row, $col);
+        $opponent_position_cards = $opponent_deck->getCardInLocation('playmat', $db_position);
+        if (empty($player_card)) {
+            throw new BgaUserException( self::_("There is no player in this position") );
+        } else {
+            if ( count(find_elements_by_key_value($opponent_position_cards, "type_arg", 12)) >= 1 ) {
+                throw new BgaUserException( self::_("You can not red card the player who has the Resillence effect.") );
+            }
+            foreach ($opponent_position_cards as $card) {
+                $this->playCard2Discard($player_id, $card['id'], 'playmat');
+                self::notifyAllPlayers( "movePlayerInPlaymat2Discard", clienttranslate( '${player_name} give the red cards to eject the player' ), array(
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                    'card_id' => $card['id'],
+                    'card_type' => $card['type_arg'],
+                    'row' => $row,
+                    'col' => $col,
+                ) );
+            }
+        }
+
+        $opponent_id = $this->getNonActivePlayerId($player_id);
+        $this->updatePlayerAbility($opponent_id);
+        // update the playing_card status
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        if ( $playing_card_info['card_info'] == 'redcard' ) {
+            $sql = "SELECT * FROM player WHERE player_id = $opponent_id";
+            $opponent_playerInfo = self::getNonEmptyObjectFromDB( $sql );
+            $this->gamestate->nextState( "changeActivePlayer_redcard" );
+        } else {
+            $this->checkDoubleCard($player_id);
+        }
+        
     }
 }

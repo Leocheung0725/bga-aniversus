@@ -85,8 +85,9 @@ trait AniversusStateArgs {
             case 112:
                 $message = "discard 1 hand card to search for 1 card from the draw deck and put to the hand.";
                 $button_list[] = 1;
+                break;
             default:
-                $card_effect = "You can play a card from your hand to the playmat";
+                $message = "No message set yet for this card type arg";
         }
         $button_list = json_encode($button_list);
         return array(
@@ -115,6 +116,19 @@ trait AniversusStateArgs {
         return array(
             "message" => $message,
             "thrownumber" => $throwNumber,  
+        );
+    }
+    // ANCHOR argRedCard
+    function argRedCard()
+    {
+        // it must return the array
+        $player_id = self::getActivePlayerId();
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        // check whether the opponent player have red card in hand or not (card id: 4 )
+        $red_card = $player_deck->getCardsOfTypeInLocation( 'Function' , 4 , 'hand' );
+        $redCardNumber = count($red_card);
+        return array(
+            "redcardnumber" => $redCardNumber,
         );
     }
 }
