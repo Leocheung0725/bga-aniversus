@@ -164,7 +164,7 @@
         self::ajaxResponse();
     }
 
-    public function redCard_redcard() {
+    public function redcard_redcard() {
         self::setAjaxMode();
         $this->game->redcard_redcard();
         self::ajaxResponse();

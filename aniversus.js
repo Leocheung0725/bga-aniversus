@@ -193,8 +193,23 @@ function (dojo, declare) {
             const gamestate = this.gamedatas.gamestate_name;
             switch (gamestate) {
                 case 'cardActiveEffect':
-                    if (this.gamedatas.playing_card[this.player_id]['disabled'] == 0 && this.gamedatas.playing_card[this.player_id]['card_type_arg'] == 8) {
-                        this.notif_showCardsOnTempStock({args: {'card_type_arg': 8, 'cards': JSON.parse(this.gamedatas.playing_card[this.player_id]['card_info'])}});
+                    switch (this.gamedatas.playing_card[this.player_id]['card_type_arg']) {
+                        case 4:
+                            for (let row = 1; row <= 2; row++) {
+                                for (let col = 1; col <= 5; col++) {
+                                    var div_id = `playerOnPlaymat_opponent_${row}_${col}`; 
+                                    if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                        dojo.addClass(div_id, 'available');
+                                        this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCard_CardActiveEffect(row, col));
+                                    }
+                                }
+                            }
+                            break;
+                        case 8:
+                            this.notif_showCardsOnTempStock({args: {'card_type_arg': 8, 'cards': JSON.parse(this.gamedatas.playing_card[this.player_id]['card_info'])}});
+                            break;
+                        default:
+                            break;
                     }
                     break;
                 default:
@@ -622,6 +637,7 @@ function (dojo, declare) {
                     for (var col = 1; col <= 5; col++) {
                         var div_id = `playerOnPlaymat_me_${row}_${col}`;
                         dojo.removeClass(div_id, 'available');
+                        dojo.disconnect(this.onClickMethod['playerOnPlaymat'][`${row}_${col}`]);
                     }
                 }
                 
@@ -751,7 +767,7 @@ function (dojo, declare) {
         // ANCHOR onRedCard_redcard
         onRedCard_redcard: function(evt) {
             dojo.stopEvent(evt);
-            this.ajaxcallwrapper('redCard_redcard');
+            this.ajaxcallwrapper('redcard_redcard');
         },
         // ANCHOR onPass_redcard
         onPass_redcard: function(evt) {

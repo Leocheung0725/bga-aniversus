@@ -165,6 +165,7 @@ trait AniversusPlayerActions {
                 if ($player_deck->countCardInLocation('hand') <= 1 ) {
                     throw new BgaUserException( self::_("You do not have enough cards in hand to play this card") );
                 }
+                break;
             case 102:
                 if ($player_deck->countCardInLocation('training') == 0) {
                     throw new BgaUserException( self::_("You do not have any training card in playmat") );
@@ -291,6 +292,9 @@ trait AniversusPlayerActions {
             case 63:
                 $this->gamestate->nextState( "launch" );
                 break;
+            case 64:
+                $this->gamestate->nextState( "launch" );
+                break;
             case 109:
                 $this->gamestate->nextState( "launch" );
                 break;
@@ -341,6 +345,7 @@ trait AniversusPlayerActions {
         $red_cards = $player_deck->getCardsOfTypeInLocation( 'Function' , 4 , 'hand' );
         $redcard = array_shift($red_cards);
         $sql = "UPDATE playing_card SET card_info = 'redcard' WHERE player_id = $player_id";
+        self::DbQuery( $sql );
         $this->playFunctionCard($player_id, $redcard['id'], $redcard['type_arg']);
     }
 

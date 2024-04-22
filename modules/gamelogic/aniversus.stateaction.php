@@ -415,15 +415,7 @@ trait AniversusStateActions {
                 self::DbQuery( $sql );
             }
             // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-            $sql = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $player_id";
-            $player = self::getNonEmptyObjectFromDB( $sql );
-            self::notifyAllPlayers( "updatePlayerBoard", "", array(
-                'player_id' => $player_id,
-                'player_productivity' => $player['player_productivity'],
-                'player_action' => $player['player_action'],
-                'player_score' => $player['player_score'],
-                'player_power' => $player['player_power'],
-            ) );
+            $this->updatePlayerBoard($player_id);
             self::notifyAllPlayers( "shoot_roll", clienttranslate( '${player_name} shoots the goal by hitting number ${diceTotal}' ), array(
                 'player_id' => $player_id,
                 'player_name' => self::getActivePlayerName(),
