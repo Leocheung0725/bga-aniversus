@@ -258,6 +258,7 @@ trait AniversusPlayerActions {
         }
         // move the card from hand to playmat
         $player_deck->moveCard($card_id, 'playmat', $db_position);
+        $allPlayerInThisPosition = $this->find_elements_by_key_value($player_deck->getCardsInLocation('playmat'), 'location_arg', $db_position);
         self::notifyAllPlayers( "playPlayerCard", clienttranslate( '${player_name} plays ${card_name} : ${card_effect}' ), array(
             'player_id' => $player_id,
             'player_name' => self::getActivePlayerName(),
@@ -267,6 +268,7 @@ trait AniversusPlayerActions {
             'card_effect' => $card_info['function'],
             'row' => $row,
             'col' => $col,
+            'allPlayerInThisPosition' => json_encode($this->getAllUniqueTypeArgsInCardLst($allPlayerInThisPosition)),
         ) );
         // update database that what card the active player has played
         // REVIEW - debug : checkPlayingCard
@@ -462,7 +464,7 @@ trait AniversusPlayerActions {
         $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
         // $card_id = $card_effect_info['card_id'];
         $card_type_arg = $card_effect_info['card_type_arg'];
-        // $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
+        $player_deck = $this->getActivePlayerDeck($player_id);
         switch ($card_type_arg) {
             case 1:
                 if (count($card_ids) != 1) {
@@ -497,14 +499,13 @@ trait AniversusPlayerActions {
                 }
                 $this->throwCards($player_id, $card_ids);
                 $allCardsInDrawDeck = $player_deck->getCardsInLocation('deck');
-                self:;notifyAllPlayers( "showCardsOnTempStock", "", array(
+                self::notifyAllPlayers( "showCardsOnTempStock", "", array(
                     'cards' => $allCardsInDrawDeck,
                     'card_type_arg' => 112,
                 ) );
                 break;
             default:
                 $card_effect = "You can play a card from your hand to the playmat";
-                break;
         }
     }
 

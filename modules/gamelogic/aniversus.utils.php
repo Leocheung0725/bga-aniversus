@@ -412,5 +412,37 @@ trait AniversusUtils {
 
     }
 
+    // ANCHOR getAllUniqueTypeArgsInCardLst
+    public function getAllUniqueTypeArgsInCardLst(array $cards) {
+        $typeArgs = array();
+        foreach ($cards as $key => $card) {
+            // Check if the type_arg of the current card matches the specific type_arg we're looking for
+            if (isset($card['type_arg'])) {
+                // Add the type_arg to the result array if it's not already in there
+                if (!in_array($card['type_arg'], $typeArgs)) {
+                    $typeArgs[] = $card['type_arg'];
+                }
+            }
+        }
+        return $typeArgs;
+    }
+    // ANCHOR groupAllSamePositionPlayerFromCardLst
+    public function groupAllSamePositionPlayerFromCardLst(array $cards) {
+        $outputLst = array();
+        foreach ($cards as $key => $value) {
+            if (!isset($outputLst[$value['location_arg']])) {
+                $outputLst[$value['location_arg']] = array();
+            }
+            $outputLst[$value['location_arg']][] = $value;
+        }
+        // Sorting each group with usort
+        foreach ($outputLst as &$group) {
+            usort($group, function ($a, $b) {
+                $typeOrder = array('Player' => 1, 'Training' => 2, 'Function' => 3);
+                return $typeOrder[$a['type']] <=> $typeOrder[$b['type']] ?: $a['id'] - $b['id'];
+            });
+        }
+        return $outputLst;
+    }
 }
 

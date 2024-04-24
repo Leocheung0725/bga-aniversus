@@ -403,7 +403,7 @@ ul.no-bullet {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .tempStockButtonClass {
