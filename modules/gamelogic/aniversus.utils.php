@@ -115,6 +115,7 @@ trait AniversusUtils {
         if ($end_type == 'normal') {
             $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE";
             self::DbQuery( $sql );
+            $this->updatePlayerBoard(self::getActivePlayerId());
             $this->gamestate->nextState( "playerTurn" );
         } else if ($end_type == 'activeplayerEffect') {
             $this->gamestate->nextState( "cardActiveEffect" );

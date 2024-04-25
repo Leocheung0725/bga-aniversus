@@ -86,6 +86,9 @@ trait AniversusStateArgs {
                 $message = "discard 1 hand card to search for 1 card from the draw deck and put to the hand.";
                 $button_list[] = 1;
                 break;
+            case 401:
+                $message = "can eject 2 player or training card from the opponent field";
+                break;
             default:
                 $message = "No message set yet for this card type arg";
         }

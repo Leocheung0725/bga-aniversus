@@ -162,6 +162,8 @@ trait AniversusStateActions {
                 break;
             case 3: // Double the effect of a function card. (Play this card first, then the function card)
                 $this->addStatus2StatusLst($player_id, False, 3);
+                $this->endEffect('normal');
+                return;
                 break;
             case 4: // Dismiss 1 opponent's forward player. (This card can be played during opponent's SHOOTING phase, which DOES NOT count as an action)
                 $this->endEffect("activeplayerEffect");
@@ -221,7 +223,7 @@ trait AniversusStateActions {
                 $picked_cards_list = $player_deck->pickCards( 2, 'deck', $player_id );
                 self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw ${card_num} cards' ), [
                     'cards' => $picked_cards_list,
-                    'card_num' => $card_num,
+                    'card_num' => 2,
                     'player_id' => $player_id,
                 ]);
                 $this->endEffect("activeplayerEffect");
@@ -331,8 +333,9 @@ trait AniversusStateActions {
     function stChangeActivePlayer_redcard() {
         // ANCHOR stChangeActivePlayer_redcard
         $player_id = self::getActivePlayerId();
-        $sql = "SELECT card_info from playing_card WHERE player_id = $player_id";
-        $card_info = self::getUniqueValueFromDB( $sql );
+        $sql = "SELECT * from playing_card WHERE player_id = $player_id";
+        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        $card_info = $playing_card_info['card_info'];
         if ($card_info == 'preredcard') {
             $this->activeNextPlayer();
             $sql = "UPDATE playing_card SET card_info = 'prelaunch_redcard' WHERE player_id != $player_id";
@@ -352,6 +355,13 @@ trait AniversusStateActions {
             } else {
                 $this->gamestate->nextState( "shoot" );
             }
+        } else if ( $card_info == '1' &&  $playing_card_info['card_type_arg'] == "401" ) {
+            $sql = "UPDATE playing_card SET 'disabled' = TRUE WHERE player_id = $player_id";
+            self::DbQuery( $sql );
+            $this->activeNextPlayer();
+            $this->gamestate->nextState( "throwCard" );
+        } else if ( $card_info == '2' &&  $playing_card_info['card_type_arg'] == "401" ) {
+            $this->gamestate->nextState( "cardActiveEffect" );
         }
     }
 
@@ -423,9 +433,21 @@ trait AniversusStateActions {
                 'diceTwo' => $diceTwo,
                 'diceTotal' => $diceTotal,
             ) );
-
             // change the game state to playerEndTurn
-            $this->gamestate->nextState( "throwCard" );
+            $this->activeNextPlayer();
+            // UPDATE: change the game state to cardActiveEffect and update the database to record special card (redcard)
+            $player_id = self::getActivePlayerId();
+            $sql = "UPDATE playing_card SET "
+            . "card_id = " . intval(401) . ", "
+            . "card_type = '" . addslashes("state") . "', "
+            . "card_type_arg = " . intval(401) . ", "
+            . "card_launch = TRUE, "
+            . "card_status = 'validated', "
+            . "card_info = '2',"
+            . "disabled = FALSE "
+            . "WHERE player_id = " . intval($player_id);
+            self::DbQuery( $sql );
+            $this->gamestate->nextState( "cardActiveEffect" );
         } else {
             // add one more shooting number to the shooting_number
             $new_shooting_number = $this->addShootingNumbersFromSmallestNumber($shooting_number);

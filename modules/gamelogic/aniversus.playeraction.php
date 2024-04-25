@@ -610,6 +610,62 @@ trait AniversusPlayerActions {
         ) );
     }
 
+    public function redCardAfterShoot_CardActiveEffect( $row, $col ) {
+        // ANCHOR - swapField_CardActiveEffect card_id : 11
+        self::checkAction( 'redCardAfterShoot_CardActiveEffect' );
+        // stage : field
+        $player_id = self::getActivePlayerId();
+
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $db_position = $this->encodePlayerLocation($row, $col);
+        $player_card = $player_deck->getCardInLocation('playmat', $db_position);
+        if (empty($player_card)) {
+            throw new BgaUserException( self::_("There is no player in this position") );
+        } else {
+            $training_cards = $player_deck->getCardsOfTypeInLocation( 'Training' , null, 'playmat', $db_position);
+            if (empty($training_cards)) {
+                $card = array_shift($player_card);
+                $this->playCard2Discard($player_id, $card['id'], 'playmat');
+                self::notifyAllPlayers( "movePlayerInPlaymat2Discard", clienttranslate( '${player_name} swaps the player' ), array(
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                    'card_id' => $card['id'],
+                    'card_type' => $card['type_arg'],
+                    'row' => $row,
+                    'col' => $col,
+                ) );
+            } else {
+                $training_card = array_shift($training_cards);
+                $this->playCard2Discard($player_id, $training_card['id'], 'playmat');
+                self::notifyAllPlayers( "movePlayerInPlaymat2Discard", clienttranslate( '${player_name} swaps the player' ), array(
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                    'card_id' => $training_card['id'],
+                    'card_type' => $training_card['type_arg'],
+                    'row' => $row,
+                    'col' => $col,
+                ) );
+                
+            }
+        }
+        // get the playing_card info
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        $effect_times = intval($playing_card_info['card_info']);
+        $opponent_id = self::getNonActivePlayerId();
+        if ( $effect_times <= 0) {
+            throw new BgaUserException( self::_("This card does not have an effect that can be activated") );
+        } else if ( $effect_times == 2 ) {
+            $sql = "UPDATE playing_card SET card_info = '1' WHERE player_id = $player_id";
+            self::DbQuery( $sql );
+        } else if ( $effect_times == 1 ) {
+            $this->updatePlayerBoard($opponent_id);
+        }
+
+        $this->updatePlayerBoard($opponent_id);
+        $this->gamestate->nextState( "changeActivePlayer_redcard" );
+    }
+
     public function pickPlayerFromPlaymat2Hand_CardActiveEffect( $row, $col ) {
         // ANCHOR - pickPlayerFromPlaymat2Hand_CardActiveEffect card_id : 108
         self::checkAction( 'pickPlayerFromPlaymat2Hand_CardActiveEffect' );

@@ -330,6 +330,19 @@ function (dojo, declare) {
                 case 112:
                     this.playerdeck.setSelectionMode(1);
                     break;
+                case 401:
+                    this.playerdeck.setSelectionMode(0);
+                    dojo.addClass('cardActiveEffect_btn_pass', 'disabled');
+                    for (let row = 1; row <= 2; row++) {
+                        for (let col = 1; col <= 5; col++) {
+                            var div_id = `playerOnPlaymat_opponent_${row}_${col}`; 
+                            if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                dojo.addClass(div_id, 'available');
+                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCardAfterShoot_CardActiveEffect(row, col));
+                            }
+                        }
+                    }
+                    break;
                 default:
                     console.log('The card type is other');
                     break;
@@ -355,12 +368,19 @@ function (dojo, declare) {
             console.log(args);
             this.placeJstplSection("rolldice-area", "roll-dice", this.other.rollDice_html_content);
         },
+        // ANCHOR shootThrowCard state
+        onEnteringState_shootThrowCard: function(args) {
+            console.log('shootThrowCard state: the enterfunction is called');
+            console.log(args);
+            this.playerdeck.setSelectionMode(0);
+        },
         // ANCHOR redcard state
         onEnteringState_redcard: function(args) {
             console.log('redcard state: the enterfunction is called');
             console.log(args);
             this.playerdeck.setSelectionMode(0);
         },
+        // ANCHOR shootThrowCard state
         // !SECTION onEnteringState
         // ------------------------------------- End of onEnteringState -------------------------------------------- //
 
@@ -561,7 +581,7 @@ function (dojo, declare) {
             newstock.create( this, $( div_id ), this.cardwidth, this.cardheight );
             // config stock object
             newstock.image_items_per_row = 10;
-            // newstock.centerItems = true; // Center items (actually i don't know what it does)
+            newstock.centerItems = true; // Center items (actually i don't know what it does)
             // this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
             newstock.setSelectionMode( selectionMode ); // Allow only one card to be selected
             newstock.setSelectionAppearance('class'); // Add a class to selected
@@ -569,7 +589,6 @@ function (dojo, declare) {
             newstock.autowidth = true;
             // Create cards types:
             // addItemType(type: number, weight: number, image: string, image_position: number )
-
             this.gamedatas.cards_info.forEach((key) => {
                 newstock.addItemType(Number(key.id), 1, 
                     "https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png", Number(key.css_position));
@@ -622,12 +641,26 @@ function (dojo, declare) {
             return [...typeArgs]; // Convert the set back to an array
         },
         ///////////////////////////////////////////////////
+        // ANCHOR decodePlayerLocation
         decodePlayerLocation: function(location_arg) {
             location_arg = Number(location_arg);
             const num_columns = 5;
             const row = Math.floor((location_arg - 1) / num_columns) + 1;
             const column = (location_arg - 1) % num_columns + 1;
             return { row: row, col: column };
+        },
+
+        // ANCHOR setupPlayerSelector
+        setupPlayerSelector: function(player_character, onClickFunction) {
+            for (let row = 1; row <= 2; row++) {
+                for (let col = 1; col <= 5; col++) {
+                    var div_id = `playerOnPlaymat_${player_character}_${row}_${col}`; 
+                    if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                        dojo.addClass(div_id, 'available');
+                        this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => onClickFunction(row, col));
+                    }
+                }
+            }
         },
         // !SECTION - Utility methods
 
@@ -761,6 +794,14 @@ function (dojo, declare) {
                 "col": col
             });
         },
+        // ANCHOR onRedCardAfterShoot_CardActiveEffect
+        onRedCardAfterShoot_CardActiveEffect: function( row, col ) {
+            this.ajaxcallwrapper('redCardAfterShoot_CardActiveEffect', {
+                "row": row,
+                "col": col
+            });
+        },
+
         // ANCHOR onPickPlayerFromPlaymat2Hand_CardActiveEffect
         onPickPlayerFromPlaymat2Hand_CardActiveEffect: function(evt) {
             dojo.stopEvent(evt);
@@ -959,6 +1000,7 @@ function (dojo, declare) {
                 this.getJstplCard(player_id, card_id, card_type, 'myhand_item_' + card_id, 'discardPile_field_me');
                 this.playerdeck.removeFromStockById(card_id);
                 if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
+                    const discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
                     this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
                 this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
@@ -967,6 +1009,7 @@ function (dojo, declare) {
             } else {
                 this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, 'discardPile_field_opponent');
                 if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
+                    const discard_pile_items = this.playerOnPlaymat['opponent']['discardpile'].getAllItems();
                     this.playerOnPlaymat['opponent']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
                 this.playerOnPlaymat['opponent']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );

@@ -62,6 +62,7 @@ if (!defined('stateEndGame')) { // ensure this block is only invoked once, since
     define("stateShoot", 23);
     define("stateThrowCard", 24);
     define("statePlayerEndTurn", 25);
+    define("stateShootThrowCard", 26);
     define("stateEndHand", 90);
     define("stateEndGame", 99);
  }
@@ -114,7 +115,8 @@ $machinestates = array(
         "description" => clienttranslate('Shoot'),
         "type" => "game",
         "action" => "stShoot",
-        "transitions" => array( "throwCard" => stateThrowCard, "endHand" => stateEndHand )
+        "transitions" => array( "throwCard" => stateThrowCard, "endHand" => stateEndHand, 
+        "shootThrowCard" => stateShootThrowCard, "cardActiveEffect" => stateCardActiveEffect )
     ),
 
     24 => array(
@@ -134,6 +136,15 @@ $machinestates = array(
         "action" => "stPlayerEndTurn",
         "transitions" => array( "cardDrawing" => stateCardDrawing, "endHand" => stateEndHand )
     ),
+
+    // 26 => array(
+    //     "name" => "shootThrowCard",
+    //     "description" => clienttranslate('you can throw the opponents player card after you shoot successfully'),
+    //     "descriptionmyturn" => clienttranslate('${you} can throw the opponents player card after your opponent shoots successfully'),
+    //     "type" => "activeplayer",
+    //     "possibleactions" => array( "throwCard_shootThrowCard", "pass_shootThrow"),
+    //     "transitions" => array( "throwCard" => stateThrowCard )
+    // ),
     // !SECTION normal process section
 
 
@@ -165,8 +176,9 @@ $machinestates = array(
         "possibleactions" => array( "throwCard_CardActiveEffect", "throwCards", 
         "eightEffect_CardActiveEffect", "swapField_CardActiveEffect", "pickPlayerFromDiscardPile_CardActiveEffect",
         "pickPlayerFromDrawDeck_CardActiveEffect", "pickPlayerFromPlaymat2Hand_CardActiveEffect",
-        "pass_CardActiveEffect", "redCard_CardActiveEffect"),
-        "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect, "cardActiveEffect" => stateCardActiveEffect )
+        "pass_CardActiveEffect", "redCard_CardActiveEffect", "redCardAfterShoot_CardActiveEffect"),
+        "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect, "cardActiveEffect" => stateCardActiveEffect,
+        "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard )
     ),
     
     33 => array(
