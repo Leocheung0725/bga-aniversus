@@ -18,6 +18,7 @@ trait AniversusUtils {
             'cards' => array($card),
         ) );
     }
+    
 
     // !SECTION DEBUG function
 
@@ -122,8 +123,8 @@ trait AniversusUtils {
         }
     }
     // ANCHOR playCard2Discard
-    function playCard2Discard( $player_id, $card_id, $from = 'hand') {
-        $player_deck = $this->getActivePlayerDeck($player_id);
+    function playCard2Discard( $player_id, $card_id, $from = 'hand', $opponent = false) {
+        $player_deck = !($opponent) ? $this->getActivePlayerDeck($player_id) : $this->getNonActivePlayerDeck($player_id);
         // check whether the card is in the from location
         $card = $player_deck->getCard($card_id);
         if ($card['location'] != $from) {
@@ -225,6 +226,21 @@ trait AniversusUtils {
             'player_handCardNumber' => $player_handCardNumber,
             'player_deckCardNumber' => $player_deckCardNumber,
         ) );
+        $opponent_id = $this->getNonActivePlayerId();
+        $sql2 = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $opponent_id";
+        $opponent = self::getNonEmptyObjectFromDB( $sql2 );
+        $opponent_deck = $this->getActivePlayerDeck($opponent_id);
+        $opponent_handCardNumber = $opponent_deck->countCardInLocation('hand', $opponent_id);
+        $opponent_deckCardNumber = $opponent_deck->countCardInLocation('deck');
+        self::notifyAllPlayers( "updatePlayerBoard", "", array(
+            'player_id' => $opponent_id,
+            'player_productivity' => $opponent['player_productivity'],
+            'player_action' => $opponent['player_action'],
+            'player_score' => $opponent['player_score'],
+            'player_power' => $opponent['player_power'],
+            'player_handCardNumber' => $opponent_handCardNumber,
+            'player_deckCardNumber' => $opponent_deckCardNumber,
+        ) );
     }
 
     // SECTION updatePlayerAbility
@@ -274,16 +290,16 @@ trait AniversusUtils {
         $total_oppopower = 0;
         $total_oppoproductivity = 0;
         foreach ($player_playmatInfo as $card_position => $card) {
-            if ($card_position <= 5) {
+            if ($card_position <= 5 && $card['active']) {
                 $total_mypower += max(0, $card['power']);
-            } else {
+            } else if ($card_position > 5 && $card['active']) {
                 $total_myproductivity += max(0, $card['productivity']);
             }
         }
         foreach ($opponent_playmatInfo as $card_position => $card) {
-            if ($card_position <= 5) {
+            if ($card_position <= 5 && $card['active']) {
                 $total_oppopower += max(0, $card['power']);
-            } else {
+            } else if ($card_position > 5 && $card['active']) {
                 $total_oppoproductivity += max(0, $card['productivity']);
             }
         }
@@ -292,7 +308,6 @@ trait AniversusUtils {
         $sql = "UPDATE player SET player_power = $total_oppopower, player_productivity_limit = $total_oppoproductivity WHERE player_id != $player_id";
         self::DbQuery( $sql );
         $this->updatePlayerBoard($player_id);
-        $this->updatePlayerBoard($this->getNonActivePlayerId());
     }
     // ANCHOR calculatePlayerAbility
     public function calculatePlayerAbility($player_playmat, $opponent_playmat, &$player_playmatInfo, &$opponent_playmatInfo) {
@@ -318,9 +333,8 @@ trait AniversusUtils {
                     }
                     break;
                 case 61: 
-                    if (count(find_elements_by_key_value($player_playmat, 'type_arg', 62)) >= 1) {
+                    if (count($this->find_elements_by_key_value($player_playmat, 'type_arg', 62)) >= 1) {
                             $player_playmatInfo[$playercard_position]['power'] += 1;
-                            break;
                     }
                     break;
                 case 101:
@@ -444,6 +458,11 @@ trait AniversusUtils {
             });
         }
         return $outputLst;
+    }
+
+    // ANCHOR noti_unselectAll
+    public function noti_unselectAll($player_id) {
+        self::notifyPlayer( $player_id, 'unselectAll', '', array() );
     }
 }
 

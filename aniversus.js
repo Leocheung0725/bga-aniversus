@@ -309,6 +309,9 @@ function (dojo, declare) {
                 case 56:
                     this.playerdeck.setSelectionMode(2);
                     break;
+                case 57:
+                    this.playerdeck.setSelectionMode(0);
+                    break;
                 case 64:
                     this.playerdeck.setSelectionMode(1);
                     break;
@@ -801,7 +804,7 @@ function (dojo, declare) {
                 "col": col
             });
         },
-
+        
         // ANCHOR onPickPlayerFromPlaymat2Hand_CardActiveEffect
         onPickPlayerFromPlaymat2Hand_CardActiveEffect: function(evt) {
             dojo.stopEvent(evt);
@@ -912,6 +915,7 @@ function (dojo, declare) {
             dojo.subscribe('updatePlayerBoard', this, "notif_updatePlayerBoard");
             dojo.subscribe('playPlayerCard', this, "notif_playPlayerCard");
             dojo.subscribe('cardDrawn', this, "notif_cardDrawn");
+            this.notifqueue.setSynchronous('cardDrawn', 500);
             dojo.subscribe('cardThrown', this, "notif_cardThrown");
             dojo.subscribe('shoot_roll', this, "notif_shoot_roll");
             this.notifqueue.setSynchronous('shoot_roll', 5000);
@@ -919,6 +923,7 @@ function (dojo, declare) {
             dojo.subscribe('terminateTempStock', this, "notif_terminateTempStock");
             dojo.subscribe('movePlayerInPlaymat2Discard', this, "notif_movePlayerInPlaymat2Discard");
             dojo.subscribe('movePlayerInPlaymat2Hand', this, "notif_movePlayerInPlaymat2Hand");
+            dojo.subscribe('unselectAll', this, "notif_unselectAll");
             // broadcast notifications
             dojo.subscribe('broadcast', this, "notif_broadcast");
         },  
@@ -1174,6 +1179,12 @@ function (dojo, declare) {
                     dojo.removeClass(opponent_div_id, 'available');
                 }
             }
+        },
+
+        // ANCHOR unselectAll
+        notif_unselectAll: function( notif ) {
+            console.log(`**** Notification: unselectAll `)
+            this.playerdeck.unselectAll();
         },
         // !SECTION ACTION NOTIFICATIONS
         // ------------------------------------- End of ACTION Notifications -------------------------------------------- //

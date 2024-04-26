@@ -110,7 +110,6 @@ class Aniversus extends Table
         {
             // Retrieve and remove the first color from the default colors array.
             $color = array_shift($default_colors);
-
             // Retrieve and remove the first team from the player team array.
             $team = array_shift($player_team);
             // Get the shooting number JSON string for the team
@@ -130,16 +129,17 @@ class Aniversus extends Table
                 '{$playerAvatarEscaped}',
                 '$team',
                 0,
-                100,
                 0,
-                100,
-                10,
+                3,
+                0,
+                0,
                 '{$shootingNumberJson}',
                 '{$player_status}'
-            )";
+            )";            
         }
         $sql .= implode( ',' , $values );
         self::DbQuery( $sql );
+
         // Initialize the playing_card
         $sql = "INSERT INTO playing_card (player_id) VALUES ";
         $values = array();

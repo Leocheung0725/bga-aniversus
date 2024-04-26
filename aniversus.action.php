@@ -84,6 +84,13 @@
         $this->game->eightEffect_CardActiveEffect( $top_items, $bottom_items );
         self::ajaxResponse();
     }
+    public function getCard_CardActiveEffect() {
+        self::setAjaxMode();
+        $card_ids = self::getArg( "card_ids", AT_json, true );
+        $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
+        $this->game->getCard_CardActiveEffect( $card_ids );
+        self::ajaxResponse();
+    }
     public function swapField_CardActiveEffect() {
         self::setAjaxMode();
         $row = self::getArg( "row", AT_posint, true );
