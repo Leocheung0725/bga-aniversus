@@ -67,7 +67,7 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 62,Player,4,0,4,All Pauls on the field gain +1 power.,Aaron,1,squirrel,24
 63,Player,0,2,0,"When Jude is placed, the productivity player in the same position on opponent's side must leave the field to discard pile.",Jude,2,squirrel,25
 64,Player,0,2,2,"When Ceci is placed, discard 1 card from your hand.",Ceci,3,squirrel,26
-101,Training,2,1,1,"If put it on a productivity player, Productivity +1. If put it on a forward player,  Power +1.(The cost applies wherever it is placed)",Empowerment,4,cat,27
+101,Training,2,0,0,"If put it on a productivity player, Productivity +1. If put it on a forward player,  Power +1.(The cost applies wherever it is placed)",Empowerment,4,cat,27
 102,Player,2,2,4,Anthony can only be placed if there is a TRAINING CARD on the field already.,Anthony,2,cat,28
 103,Player,3,0,1,"For every 2 forward players on the opponent's team, your team gains +1 power.",Sandra,2,cat,29
 104,Player,6,0,6,You can only have 2 other players in your forward row when Timo is in play.,Timo,1,cat,30

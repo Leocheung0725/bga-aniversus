@@ -120,10 +120,10 @@ function (dojo, declare) {
                 this.playerCounter[player_id]['power'].setValue(player.player_power);
                 this.playerCounter[player_id]['handCardNumber'] = new ebg.counter();
                 this.playerCounter[player_id]['handCardNumber'].create( `player_hand_${player_id}` );
-                this.playerCounter[player_id]['handCardNumber'].setValue(gamedatas.hand_card_number[player_id]);
+                this.playerCounter[player_id]['handCardNumber'].setValue(gamedatas['hand_card_number'][player_id]);
                 this.playerCounter[player_id]['deckCardNumber'] = new ebg.counter();
                 this.playerCounter[player_id]['deckCardNumber'].create( `player_deck_${player_id}` );
-                this.playerCounter[player_id]['deckCardNumber'].setValue(gamedatas.deck_card_number[player_id]);
+                this.playerCounter[player_id]['deckCardNumber'].setValue(gamedatas['deck_card_number'][player_id]);
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -198,6 +198,32 @@ function (dojo, declare) {
                     });
                 }
             }
+            // player Ability setup
+            for (let [PlaymatInfoId, PlaymatInfoValue] of Object.entries(this.gamedatas['playerAbility'])) {
+                if (PlaymatInfoId == this.player_id) {
+                    for (let [key, value] of Object.entries(PlaymatInfoValue['playmatInfo'])) {
+                        if (value['active'] == false) {
+                            let position = this.decodePlayerLocation(key);
+                            let unactive_cards = dojo.query(`#playerOnPlaymat_me_${position.row}_${position.col} .js-cardsontable`);
+                            unactive_cards.forEach((card) => {
+                                dojo.addClass(card, 'ineffective');
+                            });
+                        }
+                    }
+                } else {
+                    for (let [key, value] of Object.entries(PlaymatInfoValue['playmatInfo'])) {
+                        if (value['active'] == false) {
+                            let position = this.decodePlayerLocation(key);
+                            let unactive_cards = dojo.query(`#playerOnPlaymat_opponent_${position.row}_${position.col} .js-cardsontable`);
+                            unactive_cards.forEach((card) => {
+                                dojo.addClass(card, 'ineffective');
+                            });
+                        }
+                    }
+                
+                }
+            }
+            $opplaymat = this.gamedatas['playerAbility'][this.player_id]['playmatInfo'];
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // special case setup
             const gamestate = this.gamedatas.gamestate_name;
@@ -220,6 +246,8 @@ function (dojo, declare) {
                             case 8:
                                 this.notif_showCardsOnTempStock({args: {'card_type_arg': 8, 'cards': JSON.parse(this.gamedatas.playing_card[this.player_id]['card_info'])}});
                                 break;
+                            case 11:
+                                notif_showCardsOnTempStock({args: {'card_type_arg': 11, 'cards': JSON.parse(this.gamedatas.playing_card[this.player_id]['card_info'])}});
                             default:
                                 break;
                         }
@@ -281,7 +309,8 @@ function (dojo, declare) {
                     break;
                 case 4:
                     this.playerdeck.setSelectionMode(0);
-                    for (let row = 1; row <= 2; row++) {
+                    const row = 1;
+                    if (args.player_id == this.player_id) {
                         for (let col = 1; col <= 5; col++) {
                             var div_id = `playerOnPlaymat_opponent_${row}_${col}`; 
                             if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
@@ -289,19 +318,21 @@ function (dojo, declare) {
                                 this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCard_CardActiveEffect(row, col));
                             }
                         }
-                    }
+                    }   
                     break;
                 case 8:
                     this.playerdeck.setSelectionMode(0);
                     break;
                 case 11:
                     this.playerdeck.setSelectionMode(0);
-                    for (let row = 1; row <= 2; row++) {
-                        for (let col = 1; col <= 5; col++) {
-                            var div_id = `playerOnPlaymat_me_${row}_${col}`; 
-                            if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
-                                dojo.addClass(div_id, 'available');
-                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onSwapField_CardActiveEffect(row, col));
+                    if (args.player_id == this.player_id) {
+                        for (let row = 1; row <= 2; row++) {
+                            for (let col = 1; col <= 5; col++) {
+                                var div_id = `playerOnPlaymat_me_${row}_${col}`; 
+                                if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                    dojo.addClass(div_id, 'available');
+                                    this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onSwapField_CardActiveEffect(row, col));
+                                }
                             }
                         }
                     }
@@ -317,12 +348,14 @@ function (dojo, declare) {
                     break;
                 case 108:
                     this.playerdeck.setSelectionMode(0);
-                    for (let row = 1; row <= 2; row++) {
-                        for (let col = 1; col <= 5; col++) {
-                            var div_id = `playerOnPlaymat_me_${row}_${col}`; 
-                            if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
-                                dojo.addClass(div_id, 'available');
-                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onSwapField_CardActiveEffect(row, col));
+                    if (args.player_id == this.player_id) {
+                        for (let row = 1; row <= 2; row++) {
+                            for (let col = 1; col <= 5; col++) {
+                                var div_id = `playerOnPlaymat_me_${row}_${col}`; 
+                                if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                    dojo.addClass(div_id, 'available');
+                                    this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onPickPlayerFromPlaymat2Hand_CardActiveEffect(row, col));
+                                }
                             }
                         }
                     }
@@ -336,12 +369,29 @@ function (dojo, declare) {
                 case 401:
                     this.playerdeck.setSelectionMode(0);
                     dojo.addClass('cardActiveEffect_btn_pass', 'disabled');
-                    for (let row = 1; row <= 2; row++) {
-                        for (let col = 1; col <= 5; col++) {
-                            var div_id = `playerOnPlaymat_opponent_${row}_${col}`; 
-                            if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
-                                dojo.addClass(div_id, 'available');
-                                this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCardAfterShoot_CardActiveEffect(row, col));
+                    if (args.player_id == this.player_id) {
+                        for (let row = 1; row <= 2; row++) {
+                            for (let col = 1; col <= 5; col++) {
+                                var div_id = `playerOnPlaymat_opponent_${row}_${col}`; 
+                                if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                    dojo.addClass(div_id, 'available');
+                                    this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCardAfterShoot_CardActiveEffect(row, col));
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 402:
+                    this.playerdeck.setSelectionMode(0);
+                    dojo.addClass('cardActiveEffect_btn_pass', 'disabled');
+                    if (args.player_id == this.player_id) {
+                        for (let row = 1; row <= 2; row++) {
+                            for (let col = 1; col <= 5; col++) {
+                                var div_id = `playerOnPlaymat_me_${row}_${col}`; 
+                                if ( dojo.query(`.js-cardsontable`, div_id).length != 0) {
+                                    dojo.addClass(div_id, 'available');
+                                    this.onClickMethod['playerOnPlaymat'][`${row}_${col}`] = dojo.connect($(div_id), 'onclick', this, () => this.onRedCardAfterShoot_CardActiveEffect(row, col));
+                                }
                             }
                         }
                     }
@@ -438,8 +488,10 @@ function (dojo, declare) {
                     this.addActionButton( 'playerTurn_btn_play', _('Play'), 'onPlayCard_PlayerTurn' );
                     this.addActionButton( 'playerTurn_btn_pass', _('Pass'), 'onPass_PlayerTurn' );
                     this.addActionButton( 'playerTurn_btn_shoot', _('Shoot'), 'onShoot_PlayerTurn' );
+                    this.addActionButton( 'playerTurn_btn_throwPlayer', _('Remove Player'), 'onThrowPlayer_PlayerTurn' );
                     if (this.playerCounter[this.player_id]['action'].getValue() == 0) {
                         dojo.addClass('playerTurn_btn_play', 'disabled');
+                        dojo.addClass('playerTurn_btn_throwPlayer', 'disabled');
                     }
                     if (this.playerCounter[this.player_id]['power'].getValue() < 10) {
                         dojo.addClass('playerTurn_btn_shoot', 'disabled');
@@ -687,6 +739,7 @@ function (dojo, declare) {
                 for (let col = 1; col <= 5; col++) {
                     var div_id = `playerOnPlaymat_me_${row}_${col}`;
                     dojo.disconnect(this.onClickMethod['playerOnPlaymat'][`${row}_${col}`]);
+                    this.playerdeck.unselectAll();
                 }
             }
             this.ajaxcallwrapper('playPlayerCard', {
@@ -799,6 +852,13 @@ function (dojo, declare) {
         },
         // ANCHOR onRedCardAfterShoot_CardActiveEffect
         onRedCardAfterShoot_CardActiveEffect: function( row, col ) {
+            for (let row = 1; row <= 2; row++) {
+                for (let col = 1; col <= 5; col++) {
+                    var div_id = `playerOnPlaymat_opponent_${row}_${col}`;
+                    dojo.removeClass(div_id, 'available');
+                    dojo.disconnect(this.onClickMethod['playerOnPlaymat'][`${row}_${col}`]);
+                }
+            }
             this.ajaxcallwrapper('redCardAfterShoot_CardActiveEffect', {
                 "row": row,
                 "col": col
@@ -826,7 +886,18 @@ function (dojo, declare) {
                 });
             }
         },
-
+        // ANCHOR onPickCardFromDeck2Hand_CardActiveEffect
+        onPickCardFromDeck2Hand_CardActiveEffect: function(evt) {
+            dojo.stopEvent(evt);
+            var items = this.tempstock.getSelectedItems();
+            if (items.length > 0) {
+                var items_ids = items.map((item) => Number(item.id));
+                this.ajaxcallwrapper('pickCardFromDeck2Hand_CardActiveEffect', {
+                    "card_ids": JSON.stringify(items_ids)
+                });
+            }
+        },
+        // ANCHOR onRedCard_CardActiveEffect
         onRedCard_CardActiveEffect: function(row, col) {
             this.ajaxcallwrapper('redCard_CardActiveEffect', {
                 "row": row,
@@ -843,6 +914,12 @@ function (dojo, declare) {
             dojo.stopEvent(evt);
             this.ajaxcallwrapper('pass_playerTurn');
         },
+        // ANCHOR onThrowPlayer_PlayerTurn
+        onThrowPlayer_PlayerTurn: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('throwPlayer_playerTurn');
+        },
+
         // ANCHOR onIntercept_counterattack
         onIntercept_counterattack: function(evt) {
             dojo.stopEvent(evt);
@@ -877,6 +954,13 @@ function (dojo, declare) {
         // ANCHOR onRedCard_redcard
         onRedCard_redcard: function(evt) {
             dojo.stopEvent(evt);
+            for (let row = 1; row <= 2; row++) {
+                for (let col = 1; col <= 5; col++) {
+                    var div_id = `playerOnPlaymat_opponent_${row}_${col}`;
+                    dojo.removeClass(div_id, 'available');
+                    dojo.disconnect(this.onClickMethod['playerOnPlaymat'][`${row}_${col}`]);
+                }
+            }
             this.ajaxcallwrapper('redcard_redcard');
         },
         // ANCHOR onPass_redcard
@@ -918,19 +1002,20 @@ function (dojo, declare) {
             this.notifqueue.setSynchronous('cardDrawn', 500);
             dojo.subscribe('cardThrown', this, "notif_cardThrown");
             dojo.subscribe('shoot_roll', this, "notif_shoot_roll");
-            this.notifqueue.setSynchronous('shoot_roll', 5000);
+            this.notifqueue.setSynchronous('shoot_roll', 10000);
             dojo.subscribe('showCardsOnTempStock', this, "notif_showCardsOnTempStock");
             dojo.subscribe('terminateTempStock', this, "notif_terminateTempStock");
             dojo.subscribe('movePlayerInPlaymat2Discard', this, "notif_movePlayerInPlaymat2Discard");
             dojo.subscribe('movePlayerInPlaymat2Hand', this, "notif_movePlayerInPlaymat2Hand");
             dojo.subscribe('unselectAll', this, "notif_unselectAll");
+            dojo.subscribe('removePlaymatClickAvailable', this, "notif_removePlaymatClickAvailable");
+            dojo.subscribe('addIneffectiveCard', this, "notif_addIneffectiveCard");
+            dojo.subscribe('removeIneffectiveCard', this, "notif_removeIneffectiveCard");
+            dojo.subscribe('enableShootBtnPlayerTurn', this, "notif_enableShootBtnPlayerTurn")
             // broadcast notifications
             dojo.subscribe('broadcast', this, "notif_broadcast");
         },  
-        notif_broadcast: function(notif) {
-            console.log(`**** Notification: broadcast `)
-            console.log(notif);
-        },
+
         // from this point and below, you can write your game notifications handling methods
         // This Notification is called when the shooting is successful
         // SECTION ACTION NOTIFICATIONS
@@ -938,7 +1023,7 @@ function (dojo, declare) {
         notif_updatePlayerBoard: function( notif ) {
             console.log(`**** Notification: updatePlayerBoard `)
             console.log(notif);
-            const player_id = notif.args.player_id;
+            const player_id = String(notif.args.player_id);
             const player_productivity = Number(notif.args.player_productivity);
             const player_action = Number(notif.args.player_action);
             const player_score = Number(notif.args.player_score);
@@ -963,12 +1048,27 @@ function (dojo, declare) {
             const row = notif.args.row;
             const col = notif.args.col;
             if (player_id == this.player_id) {
-                this.playerOnPlaymat['me'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, "discardPile_field_me");
-                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_me_${row}_${col}`, 'discardPile_field_me');
-                this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id), this.getTooltipHtml(Number(card_type)));
+                // this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_me');
+                this.playerOnPlaymat['me'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, 'discardPile_field_me');
+                dojo.destroy(`#playerOnPlaymat_me_${row}_${col} .js-cardsontable`);
+                dojo.style(`playerOnPlaymat_me_${row}_${col}`, 'height', 'auto');
+                if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
+                    const discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
+                    this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
+                }
+                this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
+                this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id ), this.getTooltipHtml(Number(card_type)));
+
             } else {
-                this.playerOnPlaymat['opponent'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, "discardPile_field_opponent");
-                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_opponent_${row}_${col}`, 'discardPile_field_opponent');
+                // this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_opponent');
+                this.playerOnPlaymat['opponent'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, 'discardPile_field_opponent');
+                dojo.destroy(`#playerOnPlaymat_opponent_${row}_${col} .js-cardsontable`);
+                dojo.style(`playerOnPlaymat_opponent_${row}_${col}`, 'height', 'auto')
+                if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
+                    const discard_pile_items = this.playerOnPlaymat['opponent']['discardpile'].getAllItems();
+                    this.playerOnPlaymat['opponent']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
+                }
+                this.playerOnPlaymat['opponent']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
                 this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id), this.getTooltipHtml(Number(card_type)));
             }
         },
@@ -1010,7 +1110,6 @@ function (dojo, declare) {
                 }
                 this.playerOnPlaymat['me']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
                 this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id ), this.getTooltipHtml(Number(card_type)));
-
             } else {
                 this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, 'discardPile_field_opponent');
                 if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
@@ -1119,10 +1218,12 @@ function (dojo, declare) {
                     message = "Select 3 cards from your discard pile and put them in your hand."
                     button_text = 'Confirm';
                     selected_mode = 2;
+                    break;
                 case 112:
                     message = "Select a card from your draw deck and this card will be put your hand."
                     button_text = 'Confirm';
                     selected_mode = 1;
+                    dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
                     break;
                 default:
                     message = "Please define the message for this card type."
@@ -1149,6 +1250,9 @@ function (dojo, declare) {
                     break;
                 case 57:
                     dojo.connect($('tempStockButton'), 'onclick', this, 'onGetCard_CardActiveEffect');
+                    break;
+                case 112:
+                    dojo.connect($('tempStockButton'), 'onclick', this, 'onPickCardFromDeck2Hand_CardActiveEffect');
                     break;
                 default:
                     break;
@@ -1186,12 +1290,68 @@ function (dojo, declare) {
             console.log(`**** Notification: unselectAll `)
             this.playerdeck.unselectAll();
         },
+
+        // ANCHOR addIneffectiveCard
+        notif_addIneffectiveCard: function( notif ) {
+            console.log(`**** Notification: addIneffectiveCard `)
+            console.log(notif);
+            const row = notif.args.row;
+            const col = notif.args.col;
+            const player_id = notif.args.player_id;
+            if ( player_id == this.player_id ) {
+                const allCardsInThisPosition = dojo.query(`#playerOnPlaymat_me_${row}_${col} .js-cardsontable`);
+                for (let i = 0; i < allCardsInThisPosition.length; i++) {
+                    dojo.addClass(allCardsInThisPosition[i], 'ineffective');
+                }
+            } else {
+                const allCardsInThisPosition = dojo.query(`#playerOnPlaymat_opponent_${row}_${col} .js-cardsontable`);
+                for (let i = 0; i < allCardsInThisPosition.length; i++) {
+                    dojo.addClass(allCardsInThisPosition[i], 'ineffective');
+                }
+            }
+        },
+
+        // ANCHOR removeIneffectiveCard
+        notif_removeIneffectiveCard: function( notif ) {
+            console.log(`**** Notification: removeIneffectiveCard `)
+            console.log(notif);
+            const row = notif.args.row;
+            const col = notif.args.col;
+            const player_id = notif.args.player_id;
+            if ( player_id == this.player_id ) {
+                const allCardsInThisPosition = dojo.query(`#playerOnPlaymat_me_${row}_${col} .js-cardsontable`);
+                if (allCardsInThisPosition.length > 0) {
+                    for (let i = 0; i < allCardsInThisPosition.length; i++) {
+                        dojo.removeClass(allCardsInThisPosition[i], 'ineffective');
+                    }
+                }
+            } else {
+                const allCardsInThisPosition = dojo.query(`#playerOnPlaymat_opponent_${row}_${col} .js-cardsontable`);
+                if (allCardsInThisPosition.length > 0) {
+                    for (let i = 0; i < allCardsInThisPosition.length; i++) {
+                        dojo.removeClass(allCardsInThisPosition[i], 'ineffective');
+                    }
+                }
+            }
+        },
+        // ANCHOR enableShootBtnPlayerTurn
+        notif_enableShootBtnPlayerTurn: function( notif ) {
+            console.log(`**** Notification: enableShootBtnPlayerTurn `)
+            console.log(notif);
+            dojo.removeClass('playerTurn_btn_shoot', 'disabled');
+        },
         // !SECTION ACTION NOTIFICATIONS
         // ------------------------------------- End of ACTION Notifications -------------------------------------------- //
         // SECTION BROADCAST NOTIFICATIONS
-
-
-
+        //ANCHOR broadcast
+        notif_broadcast: function(notif) {
+            console.log(`**** Notification: broadcast `)
+            console.log(notif);
+            const message = notif.args.message;
+            const type = notif.args.type;
+            this.showMessage(message, type);
+        },
+        
         // !SECTION BROADCAST NOTIFICATIONS
         // !SECTION Notifications
    });             

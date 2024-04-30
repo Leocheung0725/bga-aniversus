@@ -31,7 +31,7 @@
 
 var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
 
-var jstpl_tempCardStock = '<div class="tempStockClass" id="tempStock"><div class="tempCardMessageClass" id="tempCardMessage">${message}</div><div id="tempCardStock"></div><button class="tempStockButtonClass" id="tempStockButton">${buttonText}</button></div>';
+var jstpl_tempCardStock = '<div class="tempStockClass" id="tempStock"><div class="tempCardMessageClass" id="tempCardMessage">${message}</div><div class="tempCardStockClass" id="tempCardStock"></div><div class="btn_div_class" id="btn_div"><button class="tempStockButtonClass" id="tempStockButton">${buttonText}</button></div></div>';
 
 var jstpl_cardToolTip = 
 '<div class=\'tooltip-main\'>' +

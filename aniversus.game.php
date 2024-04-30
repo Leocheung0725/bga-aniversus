@@ -173,8 +173,9 @@ class Aniversus extends Table
         $result['id2card_type_arg'] = $this->id2card_type_arg;
         // Get information about current player
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
+        $player_id = $this->getActivePlayerId();
         $opponent_player_id = $this->getNonActivePlayerId();
-        $actplayer_deck = $this->getActivePlayerDeck($current_player_id);
+        $actplayer_deck = $this->getActivePlayerDeck($player_id);
         $opponent_deck = $this->getActivePlayerDeck($opponent_player_id);
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
@@ -185,8 +186,8 @@ class Aniversus extends Table
         $result['hand_card_number'] = [];
         $result['deck_card_number'] = [];
         // get the player hand card number
-        $result['hand_card_number'][$current_player_id] = $actplayer_deck->countCardInLocation( 'hand', $current_player_id );
-        $result['deck_card_number'][$current_player_id] = $actplayer_deck->countCardInLocation( 'deck' );
+        $result['hand_card_number'][$player_id] = $actplayer_deck->countCardInLocation( 'hand', $player_id );
+        $result['deck_card_number'][$player_id] = $actplayer_deck->countCardInLocation( 'deck' );
         // get the opponent hand card number
         $result['hand_card_number'][$opponent_player_id] = $opponent_deck->countCardInLocation( 'hand', $opponent_player_id );
         $result['deck_card_number'][$opponent_player_id] = $opponent_deck->countCardInLocation( 'deck' );
@@ -222,7 +223,8 @@ class Aniversus extends Table
         }
         // Get the current game state
         $result['gamestate_name'] = $this->getStateName();
-        
+        // playerAbility
+        $result['playerAbility'] = $this->updatePlayerAbility($player_id);
         // Cards in the draw deck
         return $result;
     }

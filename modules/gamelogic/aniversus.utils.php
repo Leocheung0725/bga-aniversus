@@ -18,7 +18,7 @@ trait AniversusUtils {
             'cards' => array($card),
         ) );
     }
-    
+
 
     // !SECTION DEBUG function
 
@@ -89,6 +89,7 @@ trait AniversusUtils {
         To decode location_arg 8
         $position = decodeLocation(8); // returns ['row' => 2, 'column' => 3]
         */
+        $location_arg = intval($location_arg);
         $num_columns = 5;
         $row = intval(($location_arg - 1) / $num_columns) + 1;
         $column = ($location_arg - 1) % $num_columns + 1;
@@ -249,38 +250,60 @@ trait AniversusUtils {
         // get the player team player in playmat information 
         $player_deck = $this->getActivePlayerDeck($player_id);
         $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+        $sql = "SELECT player_id FROM player WHERE player_id != $player_id";
+        $opponent_id = self::getUniqueValueFromDB( $sql );
         $player_playmat = $player_deck->getCardsInLocation('playmat');
         $opponent_playmat = $opponent_deck->getCardsInLocation('playmat');
         $player_playmatInfo = [];
         $opponent_playmatInfo = [];
         foreach( $player_playmat as $playercardtemp1 ) {
             if (isset($player_playmatInfo[$playercardtemp1['location_arg']])) {
-                $player_playmatInfo[$playercardtemp1['location_arg']] = [
-                    'power' => $player_playmatInfo[$playercardtemp1['location_arg']]['power'] + $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['power'],
-                    'productivity' => $player_playmatInfo[$playercardtemp1['location_arg']]['productivity'] + $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['productivity'],
-                    'active' => true
-                ];
+                $player_playmatInfo[$playercardtemp1['location_arg']]['power'] += $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['power'];
+                $player_playmatInfo[$playercardtemp1['location_arg']]['productivity'] += $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['productivity'];
+                if ( $playercardtemp1['type_arg'] == 12 ) {
+                    $player_playmatInfo[$playercardtemp1['location_arg']]['protected'] = true;
+                }
             } else {
-                $player_playmatInfo[$playercardtemp1['location_arg']] = [
-                    'power' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['power'],
-                    'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['productivity'],
-                    'active' => true
-                ];
+                if ($playercardtemp1['type_arg'] == 12) {
+                    $player_playmatInfo[$playercardtemp1['location_arg']] = [
+                        'power' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['power'],
+                        'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['productivity'],
+                        'active' => true,
+                        'protected' => true
+                    ];
+                } else {
+                    $player_playmatInfo[$playercardtemp1['location_arg']] = [
+                        'power' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['power'],
+                        'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp1['type_arg'])['productivity'],
+                        'active' => true,
+                        'protected' => false
+                    ];
+                }
             }
         }
         foreach( $opponent_playmat as $playercardtemp2 ) {
             if (isset($opponent_playmatInfo[$playercardtemp2['location_arg']])) {
-                $opponent_playmatInfo[$playercardtemp2['location_arg']] = [
-                    'power' => $opponent_playmatInfo[$playercardtemp2['location_arg']]['power'] + $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['power'],
-                    'productivity' => $opponent_playmatInfo[$playercardtemp2['location_arg']]['productivity'] + $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['productivity'],
-                    'active' => true
-                ];
+                $opponent_playmatInfo[$playercardtemp2['location_arg']]['power'] += $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['power'];
+                $opponent_playmatInfo[$playercardtemp2['location_arg']]['productivity'] += $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['productivity'];
+                if ( $playercardtemp2['type_arg'] == 12 ) {
+                    $opponent_playmatInfo[$playercardtemp2['location_arg']]['protected'] = true;
+                }
             } else {
-                $opponent_playmatInfo[$playercardtemp2['location_arg']] = [
-                    'power' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['power'],
-                    'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['productivity'],
-                    'active' => true
-                ];
+                if ($playercardtemp2['type_arg'] == 12) {
+                    $opponent_playmatInfo[$playercardtemp2['location_arg']] = [
+                        'power' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['power'],
+                        'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['productivity'],
+                        'active' => true,
+                        'protected' => true
+                    ];
+                } else {
+                    $opponent_playmatInfo[$playercardtemp2['location_arg']] = [
+                        'power' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['power'],
+                        'productivity' => $this->getCardinfoFromCardsInfo($playercardtemp2['type_arg'])['productivity'],
+                        'active' => true,
+                        'protected' => false
+                    ];
+                }
             }
         }
         $this->calculatePlayerAbility($player_playmat, $opponent_playmat, $player_playmatInfo, $opponent_playmatInfo);
@@ -290,6 +313,12 @@ trait AniversusUtils {
         $total_oppopower = 0;
         $total_oppoproductivity = 0;
         foreach ($player_playmatInfo as $card_position => $card) {
+            $position = $this->decodePlayerLocation($card_position);
+            if ($card['active'] == false) {
+                $this->addIneffectiveCard($position['row'], $position['col'], $player_id);
+            } else {
+                $this->removeIneffectiveCard($position['row'], $position['col'], $player_id);
+            }
             if ($card_position <= 5 && $card['active']) {
                 $total_mypower += max(0, $card['power']);
             } else if ($card_position > 5 && $card['active']) {
@@ -297,17 +326,43 @@ trait AniversusUtils {
             }
         }
         foreach ($opponent_playmatInfo as $card_position => $card) {
+            $position = $this->decodePlayerLocation($card_position);
+            if ($card['active'] == false) {
+                $this->addIneffectiveCard($position['row'], $position['col'], $player_id);
+            } else {
+                $this->removeIneffectiveCard($position['row'], $position['col'], $player_id);
+            }
             if ($card_position <= 5 && $card['active']) {
                 $total_oppopower += max(0, $card['power']);
             } else if ($card_position > 5 && $card['active']) {
                 $total_oppoproductivity += max(0, $card['productivity']);
             }
         }
+        // speical card effect
+        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+        $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+        $powerup = $this->countStatusOccurrence($player_status, 54);
+        if ($powerup > 0) {
+            $total_mypower += $powerup * 2 ;
+        }
+        // end of speical card effect
         $sql = "UPDATE player SET player_power = $total_mypower, player_productivity_limit = $total_myproductivity WHERE player_id = $player_id";
         self::DbQuery( $sql );
         $sql = "UPDATE player SET player_power = $total_oppopower, player_productivity_limit = $total_oppoproductivity WHERE player_id != $player_id";
         self::DbQuery( $sql );
         $this->updatePlayerBoard($player_id);
+        return array(
+            strval($player_id) => array(
+                'power' => $total_mypower,
+                'productivity' => $total_myproductivity,
+                'playmatInfo' => $player_playmatInfo
+            ),
+            strval($opponent_id) => array(
+                'power' => $total_oppopower,
+                'productivity' => $total_oppoproductivity,
+                'playmatInfo' => $opponent_playmatInfo
+            )
+            );
     }
     // ANCHOR calculatePlayerAbility
     public function calculatePlayerAbility($player_playmat, $opponent_playmat, &$player_playmatInfo, &$opponent_playmatInfo) {
@@ -318,11 +373,17 @@ trait AniversusUtils {
             switch ($playercard['type_arg']) {
                 case 58: // The player in the same position on the opponent's field -2 power. (for as long as Sergio is in play)
                     $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
-                    if ($opponent_thiscard_position != null) { $player_playmatInfo[$playercard_position]['power'] -= 2;}
+                    if ($opponent_thiscard_position != null && 
+                    !($opponent_playmatInfo[$playercard_position]['protected']) ) { 
+                        $opponent_playmatInfo[$playercard_position]['power'] -= 2;
+                    }
                     break;
                 case 59: // *** The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field)
                     $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
-                    if ($opponent_thiscard_position != null ) { $opponent_playmatInfo[$playercard_position]['active'] = false;}
+                    if ($opponent_thiscard_position != null && 
+                    !($opponent_playmatInfo[$playercard_position]['protected']) ) { 
+                        $opponent_playmatInfo[$playercard_position]['active'] = false;
+                    }
                     break;
                 case 60: // 3 squirrels, one squirrel = 1 power, two = 3 power and three = 6 power
                     $marco_bros++;
@@ -343,24 +404,26 @@ trait AniversusUtils {
                     } else {
                         $player_playmatInfo[$playercard_position]['productivity'] += 1;
                     }
+                    break;
                 case 103:
                     $count_opponent_forward_players = 0;
-                    foreach ($opponent_playmat as $opponentcard) {
-                        if ( $opponentcard['location_arg'] <= 5 ) { $count_opponent_forward_players++; }
+                    foreach ($opponent_playmatInfo as $position_index => $opponentcard) {
+                        if ( intval($position_index) <= 5 ) { $count_opponent_forward_players++; }
                     }
                     $player_playmatInfo[$playercard_position]['power'] += floor($count_opponent_forward_players / 2);
                     break;
                 case 110:
                     $count_forward_players = 0;
-                    foreach ($player_playmat as $playercard) {
-                        if ( $playercard['location_arg'] <= 5 ) { $count_forward_players++; }
+                    foreach ($player_playmatInfo as $position_index => $playercard) {
+                        if ( intval($position_index) <= 5 ) { $count_forward_players++; }
                     }
                     $player_playmatInfo[$playercard_position]['productivity'] += floor($count_forward_players / 2);
                     break;
                 case 111: // The player in the same position on the opponent's field -1 power. (for as long as Lucia is in play)
                     $opponent_thiscard_position = $opponent_playmatInfo[$playercard_position] ?? null;
-                    if ( $opponent_thiscard_position != null ) {
-                        $player_playmatInfo[$playercard_position]['power'] -= 1;
+                    if ($opponent_thiscard_position != null && 
+                    !($opponent_playmatInfo[$playercard_position]['protected']) ) {
+                        $opponent_playmatInfo[$playercard_position]['power'] -= 1;
                     }
                     break;
                 default:
@@ -387,14 +450,31 @@ trait AniversusUtils {
     }
 
     // ANCHOR removeStatusFromStatusLst
-    public function removeStatusFromStatusLst($player_id, $status) {
+    public function removeStatusFromStatusLst($player_id, $status, $all = true) {
+        
         $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
         $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
-        $player_status = array_diff($player_status, array($status));
+        if ($all) {
+            $player_status = array_diff($player_status, array($status));
+        } else {
+            // Find the key of the first occurrence of $status and remove it
+            $key = array_search($status, $player_status);
+            if ($key !== false) {
+                unset($player_status[$key]);
+            }
+            
+            // Re-index the array since unset() might leave a hole in the numeric array keys
+            $player_status = array_values($player_status);
+        }
         $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id = $player_id";
         self::DbQuery( $sql );
     }
-
+    // ANCHOR countStatusOccurrence
+    function countStatusOccurrence($array, $value) {
+        $counts = array_count_values($array);
+        return isset($counts[$value]) ? $counts[$value] : 0;
+    }
+    
     // ANCHOR disablePlayingCard
     public function disablePlayingCard() {
         $sql = "UPDATE playing_card SET disabled = TRUE WHERE disabled = FALSE";
@@ -463,6 +543,24 @@ trait AniversusUtils {
     // ANCHOR noti_unselectAll
     public function noti_unselectAll($player_id) {
         self::notifyPlayer( $player_id, 'unselectAll', '', array() );
+    }
+
+    // ANCHOR addIneffectiveCard
+    public function addIneffectiveCard($row, $col, $player_id) {
+        self::notifyAllPlayers( "addIneffectiveCard", "", array(
+            'row' => $row,
+            'col' => $col,
+            'player_id' => $player_id,
+        ) );
+        
+    }
+    // ANCHOR removeIneffectiveCard
+    public function removeIneffectiveCard($row, $col, $player_id) {
+        self::notifyAllPlayers( "removeIneffectiveCard", "", array(
+            'row' => $row,
+            'col' => $col,
+            'player_id' => $player_id,
+        ) );
     }
 }
 

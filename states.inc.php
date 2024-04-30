@@ -94,7 +94,7 @@ $machinestates = array(
     // SECTION normal process section
     21 => array(
         "name" => "cardDrawing",
-        "description" => clienttranslate('${actplayer} is Drawing cards.'),
+        "description" => clienttranslate('Drawing cards'),
         "type" => "game",
         "action" => "stCardDrawing",
         "transitions" => array( "playerTurn" => statePlayerTurn, "playerEndTurn" => statePlayerEndTurn )
@@ -106,9 +106,10 @@ $machinestates = array(
         "descriptionmyturn" => clienttranslate('${you} must play a card or shoot or pass'),
         "type" => "activeplayer",
         "action" => "stPlayerTurn",
-        "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", "shoot_playerTurn" ),
+        "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", "shoot_playerTurn", "throwPlayer_PlayerTurn" ),
         "transitions" => array( "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack , "launch" => stateCardEffect,
-        "shoot" => stateShoot, "throwCard" => stateThrowCard, "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard)
+        "shoot" => stateShoot, "throwCard" => stateThrowCard, "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard, 
+        "cardActiveEffect" => stateCardActiveEffect)
     ),
 
     23 => array(
@@ -138,14 +139,6 @@ $machinestates = array(
         "transitions" => array( "cardDrawing" => stateCardDrawing, "endHand" => stateEndHand )
     ),
 
-    // 26 => array(
-    //     "name" => "shootThrowCard",
-    //     "description" => clienttranslate('you can throw the opponents player card after you shoot successfully'),
-    //     "descriptionmyturn" => clienttranslate('${you} can throw the opponents player card after your opponent shoots successfully'),
-    //     "type" => "activeplayer",
-    //     "possibleactions" => array( "throwCard_shootThrowCard", "pass_shootThrow"),
-    //     "transitions" => array( "throwCard" => stateThrowCard )
-    // ),
     // !SECTION normal process section
 
 
@@ -177,7 +170,8 @@ $machinestates = array(
         "possibleactions" => array( "throwCard_CardActiveEffect", "throwCards", 
         "eightEffect_CardActiveEffect", "swapField_CardActiveEffect", "pickPlayerFromDiscardPile_CardActiveEffect",
         "pickPlayerFromDrawDeck_CardActiveEffect", "pickPlayerFromPlaymat2Hand_CardActiveEffect",
-        "pass_CardActiveEffect", "redCard_CardActiveEffect", "redCardAfterShoot_CardActiveEffect"),
+        "pass_CardActiveEffect", "redCard_CardActiveEffect", "redCardAfterShoot_CardActiveEffect", 
+        "pickCardFromDeck2Hand_CardActiveEffect", "getCard_CardActiveEffect", "throwPlayer_PlayerTurn"),
         "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect, "cardActiveEffect" => stateCardActiveEffect,
         "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard )
     ),

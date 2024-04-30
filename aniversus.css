@@ -151,6 +151,16 @@
   cursor: pointer;
 }
 
+.js-cardsontable.ineffective::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Gray color with 50% transparency */
+}
+
 /* ---------------------- Tooltip CSS ----------------------- */
 
 .tooltip-main {
@@ -399,11 +409,22 @@ ul.no-bullet {
   margin: 10px 0;
 }
 
-.tempStockClass{
+.tempStockClass {
+  display: flex;
+  flex-direction: column;
+}
+
+.tempCardStockClass {
+  position: relative; 
+  height: 187px; 
+  width: 261px;
+  display: block;
+}
+.btn_div_class {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
+  
 }
 
 .tempStockButtonClass {
@@ -412,6 +433,7 @@ ul.no-bullet {
   color: white; /* White text color */
   border: none; /* No border */
   border-radius: 5px; /* Rounded corners */
+  width: 200px;
   cursor: pointer; /* Cursor changes to pointer to indicate interactivity */
   font-size: 16px; /* Font size */
   font-weight: bold; /* Font weight */

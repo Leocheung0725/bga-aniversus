@@ -127,6 +127,13 @@
         $this->game->pickPlayerFromDrawDeck_CardActiveEffect( $selected_player );
         self::ajaxResponse();
     }
+    public function pickCardFromDeck2Hand_CardActiveEffect() {
+        self::setAjaxMode();
+        $card_ids = self::getArg( "card_ids", AT_json, true );
+        $this->game->validateJSonAlphaNum($card_ids, 'card_ids');
+        $this->game->pickCardFromDeck2Hand_CardActiveEffect( $card_ids );
+        self::ajaxResponse();
+    }
     public function intercept_counterattack()
     {
         self::setAjaxMode();
@@ -201,6 +208,11 @@
         $row = self::getArg( "row", AT_posint, true );
         $col = self::getArg( "col", AT_posint, true );
         $this->game->redCard_CardActiveEffect($row, $col);
+        self::ajaxResponse();
+    }
+    public function throwPlayer_PlayerTurn() {
+        self::setAjaxMode();
+        $this->game->throwPlayer_PlayerTurn();
         self::ajaxResponse();
     }
   }
