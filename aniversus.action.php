@@ -98,6 +98,13 @@
         $this->game->swapField_CardActiveEffect( $row, $col );
         self::ajaxResponse();
     }
+    public function throwPlayer_CardActiveEffect() {
+        self::setAjaxMode();
+        $row = self::getArg( "row", AT_posint, true );
+        $col = self::getArg( "col", AT_posint, true );
+        $this->game->throwPlayer_CardActiveEffect( $row, $col );
+        self::ajaxResponse();
+    }
     public function redCardAfterShoot_CardActiveEffect() {
         self::setAjaxMode();
         $row = self::getArg( "row", AT_posint, true );

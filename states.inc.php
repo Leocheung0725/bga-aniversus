@@ -171,7 +171,8 @@ $machinestates = array(
         "eightEffect_CardActiveEffect", "swapField_CardActiveEffect", "pickPlayerFromDiscardPile_CardActiveEffect",
         "pickPlayerFromDrawDeck_CardActiveEffect", "pickPlayerFromPlaymat2Hand_CardActiveEffect",
         "pass_CardActiveEffect", "redCard_CardActiveEffect", "redCardAfterShoot_CardActiveEffect", 
-        "pickCardFromDeck2Hand_CardActiveEffect", "getCard_CardActiveEffect", "throwPlayer_PlayerTurn"),
+        "pickCardFromDeck2Hand_CardActiveEffect", "getCard_CardActiveEffect", "throwPlayer_PlayerTurn", 
+        "throwPlayer_CardActiveEffect"),
         "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect, "cardActiveEffect" => stateCardActiveEffect,
         "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard )
     ),
@@ -191,7 +192,8 @@ $machinestates = array(
         "type" => "game",
         "action" => "stChangeActivePlayer_redcard",
         "transitions" => array( "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, 
-        "playerTurn" => statePlayerTurn, "shoot" => stateShoot, "throwCard" => stateThrowCard, "redcard" => stateRedcard)
+        "playerTurn" => statePlayerTurn, "shoot" => stateShoot, "throwCard" => stateThrowCard, "redcard" => stateRedcard, 
+        "cardActiveEffect" => stateCardActiveEffect)
     ),
 
     35 => array(

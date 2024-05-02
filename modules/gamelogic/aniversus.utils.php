@@ -18,6 +18,19 @@ trait AniversusUtils {
             'cards' => array($card),
         ) );
     }
+    function pickCardFromDiscard2Hand($card_type, $player_id) {
+        $player_deck = $this->getActivePlayerDeck($player_id);
+        $typeofCard = $this->getCardinfoFromCardsInfo($card_type)['type'];
+        $cards = $player_deck->getCardsOfTypeInLocation($typeofCard, $card_type, 'discard');
+        if (empty($cards)) {
+            throw new BgaUserException( self::_("There is no this type card in the deck") );
+        }
+        $card = array_shift($cards);
+        $player_deck->moveCard($card['id'], 'hand');
+        self::notifyPlayer( $player_id, 'cardDrawn', '', array(
+            'cards' => array($card),
+        ) );
+    }
 
 
     // !SECTION DEBUG function
@@ -328,9 +341,9 @@ trait AniversusUtils {
         foreach ($opponent_playmatInfo as $card_position => $card) {
             $position = $this->decodePlayerLocation($card_position);
             if ($card['active'] == false) {
-                $this->addIneffectiveCard($position['row'], $position['col'], $player_id);
+                $this->addIneffectiveCard($position['row'], $position['col'], $opponent_id);
             } else {
-                $this->removeIneffectiveCard($position['row'], $position['col'], $player_id);
+                $this->removeIneffectiveCard($position['row'], $position['col'], $opponent_id);
             }
             if ($card_position <= 5 && $card['active']) {
                 $total_oppopower += max(0, $card['power']);

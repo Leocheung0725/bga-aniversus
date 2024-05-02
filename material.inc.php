@@ -48,7 +48,7 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 6,Function,2,0,0,"Choose 1 card, at random, from your opponent's hand and discard it.",Disruption,3,basic,5
 7,Function,0,0,0,Gain 2 energy in this round.,energy up,2,basic,6
 8,Function,1,0,0,"Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.",Tactical Reshuffle,2,basic,7
-9,Function,0,0,0,UNPLAYABLE until one of your cards isdismissed or discarded by opponent. Gain 2 energy and draw 2 cards next round. (DOES NOT count as an action),Comeback,2,basic,8
+9,Function,0,0,0,UNPLAYABLE until one of your cards is dismissed or discarded by opponent. Gain 2 energy and draw 2 cards next round. (DOES NOT count as an action),Comeback,2,basic,8
 10,Function,1,0,0,Opponent -2 energy next round.,Energy drain,1,basic,9
 11,Function,1,0,0,Select 1 player from the field and exchange them with a player from your discard pile.,Player swap,1,basic,10
 12,Training,0,0,0,Play Resilience onto a player to protect them from any negative effects from your opponent's cards.,Resilience,2,basic,11
