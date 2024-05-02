@@ -31,6 +31,13 @@ trait AniversusUtils {
             'cards' => array($card),
         ) );
     }
+    function actionup() {
+        $player_id = self::getActivePlayerId();
+        $sql = "UPDATE player SET player_action = player_action + 1 WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        $this->updatePlayerBoard($player_id);
+
+    }
 
 
     // !SECTION DEBUG function
@@ -188,7 +195,7 @@ trait AniversusUtils {
     // ANCHOR addShootingNumbersFromSmallestNumber
     function addShootingNumbersFromSmallestNumber($shooting_numbers) {
         // Find the smallest number not already in the array
-        for ($i = 1; $i <= 12; $i++) {
+        for ($i = 2; $i <= 12; $i++) {
             if (!in_array($i, $shooting_numbers)) {
                 // Add the smallest number to the array
                 $shooting_numbers[] = $i;
@@ -196,6 +203,30 @@ trait AniversusUtils {
             }
         }
         return json_encode($shooting_numbers);
+    }
+
+    // ANCHOR findDiceRollsForSum
+    function findDiceRollsForSum($sum) {
+        // Check if the sum is within the valid range for two dice rolls.
+        if ($sum < 2 || $sum > 12) {
+            throw new InvalidArgumentException("Sum must be between 2 and 12.");
+        }
+    
+        // Start with the smallest possible roll (1) for the first die.
+        $firstDie = 1;
+        // Calculate what the second die needs to be to reach the sum.
+        $secondDie = $sum - $firstDie;
+    
+        // Adjust the dice rolls until both are within the range [1, 6].
+        while ($secondDie > 6) {
+            $firstDie++;
+            $secondDie--;
+        }
+    
+        return array(
+            'first' => $firstDie, 
+            'second' => $secondDie
+        );
     }
     // ANCHOR getStateName
     public function getStateName() {
@@ -449,13 +480,13 @@ trait AniversusUtils {
     public function addStatus2StatusLst($player_id, $IsOpponent, $status) {
         if ($IsOpponent) {
             $sql = "SELECT player_status FROM player WHERE player_id != $player_id";
-            $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+            $player_status = json_decode(self::getUniqueValueFromDB( $sql ), true);
             $player_status[] = $status;
             $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id != $player_id";
             self::DbQuery( $sql );
         } else {
             $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
-            $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
+            $player_status = json_decode(self::getUniqueValueFromDB( $sql ), true);
             $player_status[] = $status;
             $sql = "UPDATE player SET player_status =  '".json_encode($player_status)."' WHERE player_id = $player_id";
             self::DbQuery( $sql );
@@ -469,13 +500,14 @@ trait AniversusUtils {
         $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
         if ($all) {
             $player_status = array_diff($player_status, array($status));
+            // Re-index the array to ensure a sequential array
+            $player_status = array_values($player_status);
         } else {
             // Find the key of the first occurrence of $status and remove it
             $key = array_search($status, $player_status);
             if ($key !== false) {
                 unset($player_status[$key]);
             }
-            
             // Re-index the array since unset() might leave a hole in the numeric array keys
             $player_status = array_values($player_status);
         }
@@ -499,7 +531,7 @@ trait AniversusUtils {
         $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
         $player_status = json_decode(self::getUniqueValueFromDB( $sql ));
         if (in_array(3, $player_status)) {
-            $this->removeStatusFromStatusLst($player_id, 3);
+            $this->removeStatusFromStatusLst($player_id, 3, false);
             $player_id = self::getActivePlayerId();
             $sql = "UPDATE playing_card SET disabled = FALSE WHERE player_id = $player_id";
             $this->gamestate->nextState( "cardEffect" );
@@ -574,6 +606,40 @@ trait AniversusUtils {
             'col' => $col,
             'player_id' => $player_id,
         ) );
+    }
+
+    // ANCHOR endGameAfterEmptyDeck
+    public function endGameAfterEmptyDeck() {
+        $sql = "SELECT player_score, player_id FROM player";
+        $players = self::getCollectionFromDb( $sql );
+        // find whether the player has the highest score
+        // winning condition 
+        // 1. if one of the player's deck is empty, the player with the highest score wins
+        // 2. if two players' score are the same, the player who plays the last card lost
+        $player_id = self::getActivePlayerId();
+        $active_player_score = $players[$player_id]['player_score'];
+        $non_active_player_id = $this->getNonActivePlayerId();
+        $non_active_player_score = $players[$non_active_player_id]['player_score'];
+        $active_player_deck = $this->getActivePlayerDeck($player_id);
+        $non_active_player_deck = $this->getNonActivePlayerDeck($player_id);
+        $active_player_deckCardNumber = $active_player_deck->countCardInLocation('deck');
+        $non_active_player_deckCardNumber = $non_active_player_deck->countCardInLocation('deck');
+        if ($active_player_score == $non_active_player_score) {
+            // 2. if two players' score are the same, the player who plays the last card lost
+            if ($active_player_deckCardNumber < $non_active_player_deckCardNumber) {
+                $sql = "UPDATE player SET player_score = player_score + 1 WHERE player_id = $non_active_player_id";
+                self::DbQuery( $sql );
+                $this->updatePlayerBoard($player_id);
+                $this->gamestate->nextState( "endGame" );
+            } else {
+                $sql = "UPDATE player SET player_score = player_score + 1 WHERE player_id = $player_id";
+                self::DbQuery( $sql );
+                $this->updatePlayerBoard($player_id);
+                $this->gamestate->nextState( "endGame" );
+            }
+        } else {
+            $this->gamestate->nextState( "endGame" );
+        }
     }
 }
 

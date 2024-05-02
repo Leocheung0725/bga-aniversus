@@ -217,9 +217,9 @@
         $this->game->redCard_CardActiveEffect($row, $col);
         self::ajaxResponse();
     }
-    public function throwPlayer_PlayerTurn() {
+    public function throwPlayer_playerTurn() {
         self::setAjaxMode();
-        $this->game->throwPlayer_PlayerTurn();
+        $this->game->throwPlayer_playerTurn();
         self::ajaxResponse();
     }
   }

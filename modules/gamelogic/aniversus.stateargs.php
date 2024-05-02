@@ -90,7 +90,7 @@ trait AniversusStateArgs {
                 $message = "can eject 2 player or training card from the opponent field";
                 break;
             case 402:
-                $message = "should throw a player from your field";
+                $message = "should throw a player from the field";
                 break;
             default:
                 $message = "No message set yet for this card type arg";

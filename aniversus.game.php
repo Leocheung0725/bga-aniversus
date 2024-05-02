@@ -50,10 +50,14 @@ class Aniversus extends Table
         // Initialize the Deck component for Cat deck
         $this->catDeck = self::getNew("module.common.deck"); // this is related to the deck of cards
         $this->catDeck->init("cat_deck"); // this is related to the sql table name (用返一開始CREATED DATABASE 個名 係DBMODEL.SQL)
+        $this->catDeck->autoreshuffle = true;
+        $this->catDeck->autoreshuffle_trigger = array('obj' => $this, 'method' => 'endGameAfterEmptyDeck');
 
         // Initialize the Deck component for Squirrel deck
         $this->squirrelDeck = self::getNew("module.common.deck");
         $this->squirrelDeck->init("squirrel_deck");
+        $this->squirrelDeck->autoreshuffle = true;
+        $this->squirrelDeck->autoreshuffle_trigger = array('obj' => $this, 'method' => 'endGameAfterEmptyDeck');
     }
 	
     protected function getGameName( )

@@ -114,7 +114,7 @@ trait AniversusStateActions {
         $productivitydown = $this->countStatusOccurrence($player_status, 10);
         if ($productivitydown > 0) {
             $downnum = 2 * $productivitydown;
-            $sql = "UPDATE player SET player_productivity = player_productivity - $downnum WHERE player_id = $player_id";
+            $sql = "UPDATE player SET player_productivity = GREATEST(0, player_productivity - $downnum) WHERE player_id = $player_id";
             self::DbQuery( $sql );
             $this->updatePlayerBoard($player_id);
             $this->removeStatusFromStatusLst($player_id, 10);
@@ -138,7 +138,6 @@ trait AniversusStateActions {
                 'player_id' => $player_id,
             ]);
         }
-        
 
         // Draw a card from the deck
         $pick_cards = $player_deck->pickCards( 2, 'deck', $player_id );
@@ -161,6 +160,17 @@ trait AniversusStateActions {
         $player_id = $card_effect_info['player_id'];
         $card_type_arg = $card_effect_info['card_type_arg'];
         $player_deck = $this->getActivePlayerDeck($card_effect_info['player_id']);
+        $sql = "SELECT player_team FROM player WHERE player_id = $player_id";
+        $player_team = self::getUniqueValueFromDB( $sql );
+        // squirrel skill
+        if ( $card_type_arg != 5 && $player_team == "squirrel" ) {
+            $additional_card = $player_deck->pickCard( 'deck' , $player_id );
+            self::notifyPlayer( $player_id, "cardDrawn", "Squirrel can draw 1 extra card after playing a function card.", 
+            array(
+                'cards' => array($additional_card)
+            ));
+        }
+        // end of squirrel skill
         switch ($card_type_arg) {
             case 1: // Function : Draw 3 cards, then discard 1 card from your hand. (seems ok)
                 $picked_cards_list = $player_deck->pickCards( 3, 'deck', $player_id );
@@ -249,7 +259,7 @@ trait AniversusStateActions {
                 $picked_cards_list = $player_deck->pickCards( 3, 'deck', $player_id );
                 self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw ${card_num} cards' ), [
                     'cards' => $picked_cards_list,
-                    'card_num' => $card_num,
+                    'card_num' => 3,
                     'player_id' => $player_id,
                 ]);
                 break;
@@ -282,9 +292,9 @@ trait AniversusStateActions {
                 $opponent_deck = $this->getActivePlayerDeck($opponent_id);
                 $opponent_position_cards = $opponent_deck->getCardsInLocation('playmat', $db_position);
                 $position = $this->decodePlayerLocation($db_position);
-                if ( count($this->find_elements_by_key_value($opponent_position_cards, "type_arg", 12)) >= 1 ) {
+                if ( count($this->find_elements_by_key_value($opponent_position_cards, "type_arg", 12)) >= 1 || $db_position <= 5 ) {
                     self::notifyAllPlayers( "broadcast", clienttranslate( 'Jude can not dismisses the opponent\'s player' ), array(
-                        "message" => "The player have Resillience, so Jude can not dismiss the player",
+                        "message" => "Jude can not dismiss the player",
                         'type' => 'info',
                     ) );
                 } else {
@@ -368,12 +378,12 @@ trait AniversusStateActions {
         }
     }
 
-    function stEndHand() {
-        // ANCHOR stEndHand 
+    function stEndGame() {
+        // ANCHOR stEndGame
         // End the game and do some scoring here
 
         // ... code the function
-        $this->gamestate->nextState( "endGame" );
+        $this->gamestate->nextState( "gameEnd" );
     }
 
     function stChangeActivePlayer() {
@@ -483,13 +493,31 @@ trait AniversusStateActions {
             throw new BgaUserException( self::_("You do not have enough power to shoot") );
         }
         // roll the dice, get the two dice number
-        $diceOne = mt_rand(1, 6);
-        $diceTwo = mt_rand(1, 6);
-        $diceTotal = $diceOne + $diceTwo;
+        $diceTotal = mt_rand(2, 12);
+        $twoDice = self::findDiceRollsForSum($diceTotal);
+        $diceOne = $twoDice['first'];
+        $diceTwo = $twoDice['second'];
+        
         // get the player's shooting_number
         $sql = "SELECT shooting_number FROM player WHERE player_id = $player_id";
         $shooting_number_text = self::getUniqueValueFromDB( $sql );
         $shooting_number = json_decode($shooting_number_text);
+        // cat skill
+        if (in_array(100, $shooting_number)) {
+            $player_deck = $this->getActivePlayerDeck($player_id);
+            $player_playmat = $player_deck->getCardsOfTypeInLocation('Player', null, 'playmat');
+            $forward_player_num = 0;
+            foreach ($player_playmat as $player_card) {
+                if ($player_card['location_arg'] <= 5 ) {
+                    $forward_player_num += 1;
+                }
+            }
+            if ( $forward_player_num >= 4 ) {
+                $shooting_number[] = 12;
+            }
+        } 
+        // end of cat skill
+        $player_name = self::getActivePlayerName();
         // check whether the diceTotal is in the shooting_number
         if (in_array($diceTotal, $shooting_number)) {
             // the player has shot the goal
@@ -511,8 +539,22 @@ trait AniversusStateActions {
                 'diceTwo' => $diceTwo,
                 'diceTotal' => $diceTotal,
             ) );
+            $message = clienttranslate( "{$player_name} shoots the goal by hitting number {$diceTotal}" );
+            self::notifyAllPlayers( "broadcast", '', array(
+                'type' => 'info',
+                'message' => $message,
+            ) );
+
+            // Determine whether the game is over
+            $sql = "SELECT player_score FROM player WHERE player_id = $player_id";
+            $player_score = self::getUniqueValueFromDB( $sql );
+            if ($player_score >= 2) {
+                $this->gamestate->nextState( "endGame" );
+                return;
+            }
             // change the game state to playerEndTurn
             $this->activeNextPlayer();
+
             // UPDATE: change the game state to cardActiveEffect and update the database to record special card (redcard)
             $player_id = self::getActivePlayerId();
             $sql = "UPDATE playing_card SET "
@@ -537,6 +579,11 @@ trait AniversusStateActions {
                 'diceOne' => $diceOne,
                 'diceTwo' => $diceTwo,
                 'diceTotal' => $diceTotal,
+            ) );
+            $message = clienttranslate( "{$player_name} misses the goal by hitting number {$diceTotal}" );
+            self::notifyAllPlayers( "broadcast", '', array(
+                'type' => 'info',
+                'message' => $message,
             ) );
             // change the game state to playerEndTurn
             $this->gamestate->nextState( "throwCard" );
