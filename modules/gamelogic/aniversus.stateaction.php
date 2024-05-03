@@ -354,25 +354,52 @@ trait AniversusStateActions {
         $player_deck = $this->getActivePlayerDeck($player_id); // this is the deck of the player who plays the card
         switch ( $card_active_effect_info['card_type_arg'] ) {
             case 8:
-                $all_draw_deck = $player_deck->getCardsInLocation('deck');
-                $top_five_cards = array_slice($all_draw_deck, 0, 5);
-                $top_five_cards_json = json_encode($top_five_cards);
-                $sql = "UPDATE playing_card SET card_info = '{$top_five_cards_json}' WHERE disabled = FALSE";
-                self::DbQuery( $sql );
-                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( 'You draw 5 cards and you need to rearrange them. (put on the top or the bottom)' ), [
-                    'cards' => $top_five_cards,
+                $card_id = $card_active_effect_info['card_id'];
+                if ( $card_id == 4058 ) { 
+                    $lookatNum = 4; 
+                    $opponent_deck = $this->getNonActivePlayerDeck($player_id);
+                    $all_draw_deck_opponent = $opponent_deck->getCardsInLocation('deck');
+                    usort($all_draw_deck_opponent, function($a, $b) {
+                        return -($a['location_arg'] <=> $b['location_arg']);
+                    });
+                    $top_cards_opponent = array_slice($all_draw_deck_opponent, 0, $lookatNum);
+                    $top_cards_opponent_json = json_encode($top_cards_opponent);
+                    $sql = "UPDATE playing_card SET card_info = '{$top_cards_opponent_json}' WHERE disabled = FALSE";
+                    self::DbQuery( $sql );
+                } else {
+                    $lookatNum = 5;
+                    $all_draw_deck = $player_deck->getCardsInLocation('deck');
+                    usort($all_draw_deck, function($a, $b) {
+                        return -($a['location_arg'] <=> $b['location_arg']);
+                    });
+                    $top_cards = array_slice($all_draw_deck, 0, $lookatNum);
+                    $top_cards_json = json_encode($top_cards);
+                    $sql = "UPDATE playing_card SET card_info = '{$top_cards_json}' WHERE disabled = FALSE";
+                    self::DbQuery( $sql );
+                }
+                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( "You look at {$lookatNum} cards and you need to rearrange them. (put on the top or the bottom)" ), [
+                    'cards' => $card_id == 4058 ? $top_cards_opponent : $top_cards,
                     'player_id' => $player_id,
                     'card_type_arg' => 8,
+                    'lookatNum' => $lookatNum,
+                    'card_id' => $card_id,
                 ]);
                 break;
             case 57:
                 $all_discard_cards = $player_deck->getCardsInLocation('discard');
-                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( 'You picks 3 cards from discard pile' ), [
+                $card_id = $card_active_effect_info['card_id'];
+                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( "You picks 3 cards from discard pile." ), [
                     'cards' => $all_discard_cards,
                     'player_id' => $player_id,
                     'card_type_arg' => 57,
                 ]);
                 break;
+            case 40512:
+                $allCardsInDrawDeck = $player_deck->getCardsInLocation('deck');
+                self::notifyPlayer( $player_id, "showCardsOnTempStock", "", array(
+                    'cards' => $allCardsInDrawDeck,
+                    'card_type_arg' => 40512,
+                ) );
             default:
                 break;
         }
@@ -477,6 +504,10 @@ trait AniversusStateActions {
             $this->removeStatusFromStatusLst($player_id, 105, false);
             $this->gamestate->nextState( "cardDrawing" );
             return;
+        }
+        $status4058 = $this->countStatusOccurrence($player_status, 4058);
+        if ($status4058 > 0) {
+            $this->removeStatusFromStatusLst($player_id, 4058);
         }
 
         $this->activeNextPlayer();

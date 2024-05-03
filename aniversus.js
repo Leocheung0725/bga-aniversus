@@ -66,7 +66,6 @@ function (dojo, declare) {
                     }
                 }
             });
-
             // OnClickMethod store
             this.onClickMethod = {};
             this.onClickMethod['playerOnPlaymat'] = {};
@@ -92,13 +91,6 @@ function (dojo, declare) {
         setup: function( gamedatas )
         {
             console.log( "Starting game setup" );
-            // add reload Css debug button ( for development ) //////////////////////////////////////////////////////////
-            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            var parent = document.querySelector('.debug_section');
-            if (parent) {
-                var butt = dojo.create('a', { class: 'bgabutton bgabutton_gray', innerHTML: "Reload CSS" }, parent);
-                dojo.connect(butt, 'onclick', () => reloadCss());
-            }
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // ANCHOR Setting up player boards
@@ -125,13 +117,17 @@ function (dojo, declare) {
                 this.playerCounter[player_id]['deckCardNumber'].create( `player_deck_${player_id}` );
                 this.playerCounter[player_id]['deckCardNumber'].setValue(gamedatas['deck_card_number'][player_id]);
             }
-
+            // ToolTip
+            this.addTooltip('playerboard_productivity_image', _('Productivity'), '');
+            this.addTooltip('playerboard_action_image', _('Action'), '');
+            this.addTooltip('playerboard_power_image', _('Power'), '');
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // ANCHOR Set up your game interface here, according to "gamedatas"
             // Player hand Setup
             // player hand
             this.playerdeck = this.setNewCardStock('myhand', 1, 'onPlayerHandSelectionChanged');
+            this.playerdeck.extraClasses='rounded';
             // show hand
             for ( let i in this.gamedatas.hand) {
                 var card = this.gamedatas.hand[i];
@@ -407,6 +403,9 @@ function (dojo, declare) {
                         }
                     }
                     break;
+                case 40512:
+                    this.playerdeck.setSelectionMode(0);
+                    break;
                 default:
                     console.log('The card type is other');
                     break;
@@ -438,6 +437,12 @@ function (dojo, declare) {
             console.log(args);
             this.playerdeck.setSelectionMode(0);
         },
+        // ANCHOR skill state
+        onEnteringState_skill: function(args) {
+            console.log('skill state: the enterfunction is called');
+            console.log(args);
+            this.playerdeck.setSelectionMode(0);
+        },
         // !SECTION onEnteringState
         // ------------------------------------- End of onEnteringState -------------------------------------------- //
 
@@ -458,7 +463,6 @@ function (dojo, declare) {
                 break;
            */
             case 'cardActiveEffect':
-
                 break;
             case 'shoot':
                 dojo.destroy('roll-dice');
@@ -490,9 +494,10 @@ function (dojo, declare) {
                     break;
                 case 'playerTurn':
                     this.addActionButton( 'playerTurn_btn_play', _('Play'), 'onPlayCard_PlayerTurn' );
-                    this.addActionButton( 'playerTurn_btn_pass', _('Pass'), 'onPass_PlayerTurn' );
+                    this.addActionButton( 'playerTurn_btn_throwPlayer', _('Remove'), 'onThrowPlayer_playerTurn' );
                     this.addActionButton( 'playerTurn_btn_shoot', _('Shoot'), 'onShoot_PlayerTurn' );
-                    this.addActionButton( 'playerTurn_btn_throwPlayer', _('Remove Player'), 'onThrowPlayer_playerTurn' );
+                    this.addActionButton( 'playerTurn_btn_pass', _('Pass'), 'onPass_PlayerTurn' );
+                    this.addActionButton( 'playerTurn_btn_skill', _('Skill'), 'onSkill_playerTurn', null, false, 'red' );
                     if (this.playerCounter[this.player_id]['action'].getValue() == 0) {
                         dojo.addClass('playerTurn_btn_play', 'disabled');
                         dojo.addClass('playerTurn_btn_throwPlayer', 'disabled');
@@ -521,6 +526,26 @@ function (dojo, declare) {
                         dojo.addClass('throwCard_btn_throw', 'disabled');
                     }
                     break;
+                case 'skill':
+                    const team = args.player_team;
+                    const used_skill = args.used_skill;
+                    if ( team == 'cat' ) {
+                        this.addActionButton( 'skill_btn_cat_power', _('Power Up'), 'onCatPowerUp_skill' );
+                        this.addActionButton( 'skill_btn_cat_productivity', _('Productivity Up'), 'onCatProductivityUp_skill' );
+                        if (used_skill == true) {
+                            dojo.addClass('skill_btn_cat_power', 'disabled');
+                            dojo.addClass('skill_btn_cat_productivity', 'disabled');
+                        
+                        }
+                    } else if ( team == 'squirrel' ) {
+                        this.addActionButton( 'skill_btn_squirrel_lookAt', _('Look'), 'onSquirrelLookAt_skill' );
+                        this.addActionButton( 'skill_btn_squirrel_search', _('Search'), 'onSquirrelSearch_skill' );
+                        if (used_skill == true) {
+                            dojo.addClass('skill_btn_squirrel_search', 'disabled');
+                        }
+                    
+                    }
+                    this.addActionButton( 'skill_btn_back', _('Back'), 'onBack_skill' );
                 }
             }
         },        
@@ -978,6 +1003,38 @@ function (dojo, declare) {
             dojo.stopEvent(evt);
             this.ajaxcallwrapper('pass_redcard');
         },
+
+        // ANCHOR onSkill_playerTurn
+        onSkill_playerTurn: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('skill_playerTurn');
+        },
+        // ANCHOR onCatPowerUp_skill
+        onCatPowerUp_skill: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('catPowerUp_skill');
+        },
+        // ANCHOR onCatProductivityUp_skill
+        onCatProductivityUp_skill: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('catProductivityUp_skill');
+        },
+        // ANCHOR onSquirrelLookAt_skill
+        onSquirrelLookAt_skill: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('squirrelLookAt_skill');
+        },
+        // ANCHOR onSquirrelSearch_skill
+        onSquirrelSearch_skill: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('squirrelSearch_skill');
+        },
+        // ANCHOR onBack_skill
+        onBack_skill: function(evt) {
+            dojo.stopEvent(evt);
+            this.ajaxcallwrapper('back_skill');
+        },
+
         // !SECTION Player's action
         
         ///////////////////////////////////////////////////
@@ -1212,7 +1269,12 @@ function (dojo, declare) {
             var selected_mode = 0;
             switch (card_type_arg) {
                 case 8:
-                    message = 'Select the cards that you want to put on the top of your draw deck. other cards would be put on the bottom.';
+                    const card_id = notif.args.card_id;
+                    if ( card_id == 4058 ) {
+                        message = "Select the cards that you want to put on the top of your opponent's draw deck. other cards would be put on the bottom."
+                    } else {
+                        message = 'Select the cards that you want to put on the top of your draw deck. other cards would be put on the bottom.';
+                    }
                     button_text = 'Confirm';
                     selected_mode = 2;
                     break;
@@ -1227,9 +1289,15 @@ function (dojo, declare) {
                     selected_mode = 2;
                     break;
                 case 112:
-                    message = "Select a card from your draw deck and this card will be put your hand."
+                    message = "Select a card from your draw deck and this card will be put on your hand."
                     button_text = 'Confirm';
                     selected_mode = 1;
+                    dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
+                    break;
+                case 40512:
+                    message = "Select 2 cards from your hand and put it on your hand."
+                    button_text = 'Confirm';
+                    selected_mode = 2;
                     dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
                     break;
                 default:
@@ -1242,6 +1310,7 @@ function (dojo, declare) {
                 'buttonText': button_text
             }), 'tempstock-area');
             this.tempstock = this.setNewCardStock('tempCardStock', selected_mode, 'onPlayerHandSelectionChanged');
+            this.tempstock.extraClasses='rounded';
             dojo.addClass('tempstock-area', 'whiteblock');
             for (let i in cards) {
                 var card = cards[i];
@@ -1259,6 +1328,9 @@ function (dojo, declare) {
                     dojo.connect($('tempStockButton'), 'onclick', this, 'onGetCard_CardActiveEffect');
                     break;
                 case 112:
+                    dojo.connect($('tempStockButton'), 'onclick', this, 'onPickCardFromDeck2Hand_CardActiveEffect');
+                    break;
+                case 40512:
                     dojo.connect($('tempStockButton'), 'onclick', this, 'onPickCardFromDeck2Hand_CardActiveEffect');
                     break;
                 default:

@@ -3,7 +3,7 @@
 
 <div id="gamefield">
     <div id="rolldice-area" class="rolldice-area-class"></div>
-	<div class="playmat_field whiteblock">
+	<div class="playmat_field">
         <div class="player_playmat reverse" id="player_playmat_opponent">
                 <!-- BEGIN playeronplaymat_opponent -->
             <div class="playerCardOnPlaymat playerOnPlaymat_row_{row} playerOnPlaymat_col_{col}" id="playerOnPlaymat_{role}_{row}_{col}"></div>
@@ -11,7 +11,7 @@
         </div>
         <div class="discardPile_field" id="discardPile_field_opponent"></div>
     </div>
-    <div class="playmat_field whiteblock">
+    <div class="playmat_field">
         <div class="player_playmat" id="player_playmat_me">
                 <!-- BEGIN playeronplaymat_me -->
                 <div class="playerCardOnPlaymat playerOnPlaymat_row_{row} playerOnPlaymat_col_{col}" id="playerOnPlaymat_{role}_{row}_{col}"></div>
@@ -21,7 +21,7 @@
     </div>
 </div>
 <div id="tempstock-area"></div>
-<div id="myhand_wrap" class="whiteblock">
+<div id="myhand_wrap" class="whiteblock orangeblock">
     <h3>{MY_HAND}</h3>
     <div id="myhand" class="playertablecard"></div>
 </div>
@@ -54,11 +54,11 @@ var jstpl_player_board =
 '<div class="playerboard-main">' +
     '<div>' +
         '<ul class="no-bullets">' +     
-        '<li class="li-item"><span>Productivity <div class="productivity-inline-image"></div> : <div class="counter" id="player_productivity_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span>Power <div class="power-inline-image"></div> : <div class="counter" id="player_power_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span>Action: <div class="counter" id="player_action_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span>Hand Card(s): <div class="counter" id="player_hand_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span>Deck Card(s): <div class="counter" id="player_deck_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span><div class="productivity-inline-image" id="playerboard_productivity_image"></div> : <div class="counter highlight-number" id="player_productivity_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span><div class="power-inline-image" id="playerboard_power_image"></div> : <div class="counter highlight-number" id="player_power_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span><div class="action-inline-image" id="playerboard_action_image"></div> : <div class="counter highlight-number" id="player_action_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span>Hand Card(s): <div class="counter highlight-number" id="player_hand_${player_id}"></div></span></li>' +
+        '<li class="li-item"><span>Draw Deck: <div class="counter highlight-number" id="player_deck_${player_id}"></div></span></li>' +
         '</ul>' + 
     '</div>' +
 '</div>';

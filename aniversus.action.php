@@ -222,6 +222,38 @@
         $this->game->throwPlayer_playerTurn();
         self::ajaxResponse();
     }
+    // SECTION skill
+    public function skill_playerTurn() {
+        self::setAjaxMode();
+        $this->game->skill_playerTurn();
+        self::ajaxResponse();
+    }
+    public function catPowerUp_skill() {
+        self::setAjaxMode();
+        $this->game->catPowerUp_skill();
+        self::ajaxResponse();
+    }
+    public function catProductivityUp_skill() {
+        self::setAjaxMode();
+        $this->game->catProductivityUp_skill();
+        self::ajaxResponse();
+    }
+    public function squirrelLookAt_skill() {
+        self::setAjaxMode();
+        $this->game->squirrelLookAt_skill();
+        self::ajaxResponse();
+    }
+    public function squirrelSearch_skill() {
+        self::setAjaxMode();
+        $this->game->squirrelSearch_skill();
+        self::ajaxResponse();
+    }
+    public function back_skill() {
+        self::setAjaxMode();
+        $this->game->back_skill();
+        self::ajaxResponse();
+    }
+    // !SECTION skill
   }
   
 

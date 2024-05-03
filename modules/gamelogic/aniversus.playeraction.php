@@ -623,11 +623,12 @@ trait AniversusPlayerActions {
     public function getCard_CardActiveEffect( $card_ids ) {
         // ANCHOR - getCard_CardActiveEffect
         self::checkAction( 'getCard_CardActiveEffect' );
+
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
         if (count($card_ids) != 3) {
             throw new BgaUserException( self::_("Please ensure that you select exactly 3 cards from your discard pile; selecting more or fewer cards than required is not permitted.") );
         }
-        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
-        $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
         $player_id = $card_effect_info['player_id'];
         $player_deck = $this->getActivePlayerDeck($player_id);
         $cards = [];
@@ -650,25 +651,45 @@ trait AniversusPlayerActions {
     public function pickCardFromDeck2Hand_CardActiveEffect( $card_ids ) {
         // ANCHOR - pickCardFromDeck2Hand_CardActiveEffect
         self::checkAction( 'pickCardFromDeck2Hand_CardActiveEffect' );
-        if (count($card_ids) != 1) {
-            throw new BgaUserException( self::_("Please ensure that you select exactly 1 card from the deck; selecting more or fewer cards than required is not permitted.") );
-        }
-        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
-        $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
         $player_id = $this->getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
-        $card = $player_deck->getCard($card_ids[0]);
-        if ( $card['location'] != 'deck' ) {
-            throw new BgaUserException( self::_("This card is not in your deck") );
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
+        if ( $card_effect_info['card_type_arg'] == 40512 ) {
+            if (count($card_ids) != 2) {
+                throw new BgaUserException( self::_("Please ensure that you select exactly 2 cards from the deck; selecting more or fewer cards than required is not permitted.") );
+            }
+            for ($i = 0; $i < count($card_ids); $i++) {
+                $card = $player_deck->getCard($card_ids[$i]);
+                if ( $card['location'] != 'deck' ) {
+                    throw new BgaUserException( self::_("This card is not in your deck") );
+                }
+                $player_deck->moveCard($card['id'], 'hand', $player_id);
+                self::notifyPlayer( $player_id, "cardDrawn", "", array(
+                    'cards' => array($card),
+                ) );
+            }
+            self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
+            $this->endEffect('normal');
+
+        } else if ( $card_effect_info['card_type_arg'] == 112 ) {
+            if (count($card_ids) != 1) {
+                throw new BgaUserException( self::_("Please ensure that you select exactly 1 card from the deck; selecting more or fewer cards than required is not permitted.") );
+            }
+            $card = $player_deck->getCard($card_ids[0]);
+            if ( $card['location'] != 'deck' ) {
+                throw new BgaUserException( self::_("This card is not in your deck") );
+            }
+            $player_deck->moveCard($card['id'], 'hand', $player_id);
+            self::notifyPlayer( $player_id, "cardDrawn", "", array(
+                'cards' => array($card),
+            ) );
+            // end the effect
+            self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
+            $this->checkDoubleCard($player_id);
         }
-        $player_deck->moveCard($card['id'], 'hand', $player_id);
-        self::notifyPlayer( $player_id, "cardDrawn", "", array(
-            'cards' => array($card),
-        ) );
-        // end the effect
-        self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
-        $this->checkDoubleCard($player_id);
     }
+
     public function eightEffect_CardActiveEffect( $top_items, $bottom_items) {
         // ANCHOR - eightEffect_CardActiveEffect
         self::checkAction( 'eightEffect_CardActiveEffect' );
@@ -696,7 +717,8 @@ trait AniversusPlayerActions {
                 $selected_card = $matches[$random_key];
                 
                 // Perform your operation with $selected_card here
-                $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
+                // $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
+                $player_deck = $playing_card_info['card_id'] == 4058 ? $this->getNonActivePlayerDeck($playing_card_info['player_id']) : $this->getActivePlayerDeck($playing_card_info['player_id']);
                 $player_deck->insertCardOnExtremePosition($selected_card['id'], 'deck', true);
                 // Now remove the selected item from $random_pick_cards
                 unset($random_pick_cards[$random_key]);
@@ -718,7 +740,8 @@ trait AniversusPlayerActions {
                 $selected_card = $matches[$random_key];
                 
                 // Perform your operation with $selected_card here
-                $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
+                // $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
+                $player_deck = $playing_card_info['card_id'] == 4058 ? $this->getNonActivePlayerDeck($playing_card_info['player_id']) : $this->getActivePlayerDeck($playing_card_info['player_id']);
                 $player_deck->insertCardOnExtremePosition($selected_card['id'], 'deck', false);
                 // Now remove the selected item from $random_pick_cards
                 unset($random_pick_cards[$random_key]);
@@ -728,7 +751,11 @@ trait AniversusPlayerActions {
                 'player_id' => $playing_card_info['player_id'],
             ) );
             $player_id = $playing_card_info['player_id'];
-            $this->checkDoubleCard($player_id);
+            if ( $playing_card_info['card_id'] == 4058 ) {
+                $this->endEffect('normal');
+            } else {
+                $this->checkDoubleCard($player_id);
+            }
         }
     }
     public function throwPlayer_CardActiveEffect( $row, $col ) {
@@ -1012,4 +1039,106 @@ trait AniversusPlayerActions {
         }
         
     }
+    // ANCHOR skill_playerTurn
+    public function skill_playerTurn() {
+        self::checkAction( 'skill_playerTurn' );
+        $player_id = self::getActivePlayerId();
+        $sql = "SELECT player_status, player_team, player_id from player WHERE player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        $player_status = json_decode($player['player_status'], true);
+        $player_team = $player['player_team'];
+        if (in_array(405, $player_status) && $player_team == 'cat') {
+            throw new BgaUserException( self::_("You have already used the skill") );
+        }
+        $this->gamestate->nextState( "skill" );
+    }
+    // SECTION - skill
+    // ANCHOR catPowerUp_skill
+    public function catPowerUp_skill() {
+        self::checkAction( 'catPowerUp_skill' );
+        $player_id = self::getActivePlayerId();
+        $sql = "UPDATE player SET player_power =  player_power + 2 WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        $this->addStatus2StatusLst($player_id, False, 54);
+        $this->addStatus2StatusLst($player_id, False, 405);
+        $this->updatePlayerBoard($player_id);
+        $this->gamestate->nextState( "playerTurn" );
+    }
+    // ANCHOR catProductivityUp_skill
+    public function catProductivityUp_skill() {
+        self::checkAction( 'catProductivityUp_skill' );
+        $player_id = self::getActivePlayerId();
+        $sql = "UPDATE player SET player_productivity =  player_productivity + 2 WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        $this->addStatus2StatusLst($player_id, False, 405);
+        $this->updatePlayerBoard($player_id);
+        $this->gamestate->nextState( "playerTurn" );
+    }
+    // ANCHOR squirrelLookAt_skill
+    public function squirrelLookAt_skill() {
+        $player_id = self::getActivePlayerId();
+        // Check whether the player has already used the skill this round 
+        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+        $player_status = self::getUniqueValueFromDB( $sql );
+        $player_status = json_decode($player_status, true);
+        if (in_array(4058, $player_status)) {
+            throw new BgaUserException( self::_("You have already used the skill") );
+        }
+        // Deduct productivity
+        $sql = "SELECT player_productivity FROM player WHERE player_id = $player_id";
+        $player_productivity = self::getUniqueValueFromDB( $sql );
+        if ($player_productivity < 2) {
+            throw new BgaUserException( self::_("You do not have enough energy to use this skill") );
+        }
+        $sql = "UPDATE player SET player_productivity = player_productivity - 2 WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        $this->updatePlayerBoard($player_id);
+        // playing_card updating
+        $sql = "UPDATE playing_card SET "
+        . "card_id = " . intval(4058) . ", "
+        . "card_type = '" . addslashes("Function") . "', "
+        . "card_type_arg = " . intval(8) . ", "
+        . "card_launch = TRUE, "
+        . "card_status = 'validated', "
+        . "disabled = FALSE "
+        . "WHERE player_id = " . intval($player_id);
+        self::DbQuery( $sql );
+        $this->addStatus2StatusLst($player_id, False, 4058);
+        // notify player
+        self::notifyAllPlayers('broadcast', clienttranslate('${player_name} uses the skill Squirrel Look At'), array(
+            'player_name' => self::getActivePlayerName(),
+            'message' => clienttranslate('The squirrel player uses the skill << Look At >> that it can look at the top 4 cards of the opponent\'s draw deck and rearrange them in any order.'),
+            'type' => 'info',
+        ) );
+        $this->gamestate->nextState( "cardActiveEffect" );
+    }
+    // ANCHOR squirrelSearch_skill
+    public function squirrelSearch_skill() {
+        $player_id = self::getActivePlayerId();
+        // Check whether the player has already used the skill this round 
+        $sql = "SELECT player_status FROM player WHERE player_id = $player_id";
+        $player_status = self::getUniqueValueFromDB( $sql );
+        $player_status = json_decode($player_status, true);
+        if (in_array(405, $player_status)) {
+            throw new BgaUserException( self::_("You have already used the skill") );
+        }
+        // playing_card updating
+        $sql = "UPDATE playing_card SET "
+        . "card_id = " . intval(40512) . ", "
+        . "card_type = '" . addslashes("Skill") . "', "
+        . "card_type_arg = " . intval(40512) . ", "
+        . "card_launch = TRUE, "
+        . "card_status = 'validated', "
+        . "disabled = FALSE "
+        . "WHERE player_id = " . intval($player_id);
+        self::DbQuery( $sql );
+        $this->addStatus2StatusLst($player_id, False, 405);
+
+        $this->gamestate->nextState( "cardActiveEffect" );
+    }
+    //ANCHOR - back_skill
+    public function back_skill() {
+        $this->gamestate->nextState( "playerTurn" );
+    }
+    // !SECTION - end of skill
 }

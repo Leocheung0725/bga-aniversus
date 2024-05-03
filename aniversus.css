@@ -17,6 +17,11 @@
 	width: auto;
 }
 
+.orangeblock {
+  background-color: #ff990063;
+
+}
+
 .myhand_wrap {
 	display: flex;
   flex-direction: row;
@@ -60,6 +65,8 @@
 	width: 724px;
 	height: 400px;
 	gap: 0.5px;
+  border-radius: 2px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2); /* A more pronounced shadow */
 }
 
 .player_playmat.reverse {
@@ -68,7 +75,7 @@
 
 .discardPile_field {
 	margin-left: 4rem;
-	width: 387px;
+	width: 388px;
 	height: 174px;
 	background-image: url("https://novbackstorage.blob.core.windows.net/boardgame/discardpilesfield4.png");
 }
@@ -140,6 +147,8 @@
 	height: var(--card-height);
 	width: var(--card-width);
 	background-image: url("https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png");
+  border-radius: 4px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* A more pronounced shadow */
 }
 
 .js-cardsontable.reverse {
@@ -203,7 +212,7 @@ ul.no-bullet {
   display: inline-block; /* or 'inline' depending on your layout needs */
   width: 20px; /* Width of the image */
   height: 20px; /* Height of the image */
-  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Costv2.png'); /* Path to your image */
+  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Cost-v3.png'); /* Path to your image */
   background-size: cover; /* This ensures the image covers the entire element */
   background-position: center; /* This centers the background image */
 }
@@ -212,7 +221,7 @@ ul.no-bullet {
   display: inline-block; /* or 'inline' depending on your layout needs */
   width: 20px; /* Width of the image */
   height: 20px; /* Height of the image */
-  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Productivityv2.png'); /* Path to your image */
+  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Productivity-v3.png'); /* Path to your image */
   background-size: cover; /* This ensures the image covers the entire element */
   background-position: center; /* This centers the background image */
 }
@@ -221,11 +230,18 @@ ul.no-bullet {
   display: inline-block; /* or 'inline' depending on your layout needs */
   width: 20px; /* Width of the image */
   height: 20px; /* Height of the image */
-  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Powerv2.png'); /* Path to your image */
+  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/Power-v3.png'); /* Path to your image */
   background-size: cover; /* This ensures the image covers the entire element */
   background-position: center; /* This centers the background image */
 }
-
+.action-inline-image {
+  display: inline-block; /* or 'inline' depending on your layout needs */
+  width: 20px; /* Width of the image */
+  height: 20px; /* Height of the image */
+  background-image: url('https://novbackstorage.blob.core.windows.net/boardgame/action-v3.png'); /* Path to your image */
+  background-size: cover; /* This ensures the image covers the entire element */
+  background-position: center; /* This centers the background image */
+}
 /* player_board CSS */
 .playerboard-main {
   justify-content: center;
@@ -238,6 +254,14 @@ ul.no-bullet {
   display: inline-block;
 }
 
+.highlight-number {
+  font-weight: bold;          /* Make the font bold */
+  padding: 3px 6px;           /* Add some padding around the number */
+  border-radius: 4px;         /* Round the corners of the highlight */
+  color: white;               /* White text for better contrast */
+  margin: 0 2px;              /* Add some margins to avoid sticking to other text */
+  text-shadow: 0 0 10px #990404, 0 0 20px #9c0707; /* Red glow effect */
+}
 
 /* ------------------- End of Tooltip CSS ------------------- */
 
@@ -262,6 +286,10 @@ ul.no-bullet {
   animation: pulse 2s infinite ease-in-out ! important;
 }
 
+.rounded {
+  border-radius: 4px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* A more pronounced shadow */
+}
 
 /* ------------------------------------------ Roll Dice CSS ------------------------------------------------------- */
 .rolldice-main {

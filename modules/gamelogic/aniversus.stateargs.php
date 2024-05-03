@@ -137,4 +137,19 @@ trait AniversusStateArgs {
             "redcardnumber" => $redCardNumber,
         );
     }
+    // ANCHOR argSkill
+    function argSkill()
+    {
+        // it must return the array
+        $player_id = self::getActivePlayerId();
+        $sql = "SELECT player_status, player_team, player_id from player WHERE player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        $player_status = json_decode($player['player_status'], true);
+        $used_skill = in_array(405, $player_status);
+        $player_team = $player['player_team'];
+        return array(
+            "player_team" => $player_team,
+            "used_skill" => $used_skill,
+        );
+    }
 }

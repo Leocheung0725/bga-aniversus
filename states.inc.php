@@ -62,7 +62,7 @@ if (!defined('stateEndGame')) { // ensure this block is only invoked once, since
     define("stateShoot", 23);
     define("stateThrowCard", 24);
     define("statePlayerEndTurn", 25);
-    define("stateShootThrowCard", 26);
+    define("stateSkill", 26);
     define("stateEndGame", 90);
     define("stateGameEnd", 99);
  }
@@ -102,14 +102,15 @@ $machinestates = array(
 
     22 => array(
         "name" => "playerTurn",
-        "description" => clienttranslate('${actplayer} must play a card or shoot or pass'),
-        "descriptionmyturn" => clienttranslate('${you} must play a card or shoot or pass'),
+        "description" => clienttranslate('${actplayer} must perform an action'),
+        "descriptionmyturn" => clienttranslate('${you} must perform an action'),
         "type" => "activeplayer",
         "action" => "stPlayerTurn",
-        "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", "shoot_playerTurn", "throwPlayer_playerTurn" ),
+        "possibleactions" => array( "playFunctionCard", "playPlayerCard", "pass_playerTurn", 
+        "shoot_playerTurn", "throwPlayer_playerTurn", "skill_playerTurn" ),
         "transitions" => array( "endGame" => stateEndGame, "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack , "launch" => stateCardEffect,
         "shoot" => stateShoot, "throwCard" => stateThrowCard, "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard, 
-        "cardActiveEffect" => stateCardActiveEffect)
+        "cardActiveEffect" => stateCardActiveEffect, "skill" => stateSkill)
     ),
 
     23 => array(
@@ -118,7 +119,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stShoot",
         "transitions" => array( "endGame" => stateEndGame, "throwCard" => stateThrowCard, "endGame" => stateEndGame, 
-        "shootThrowCard" => stateShootThrowCard, "cardActiveEffect" => stateCardActiveEffect )
+        "cardActiveEffect" => stateCardActiveEffect )
     ),
 
     24 => array(
@@ -137,6 +138,18 @@ $machinestates = array(
         "type" => "game",
         "action" => "stPlayerEndTurn",
         "transitions" => array( "endGame" => stateEndGame, "cardDrawing" => stateCardDrawing )
+    ),
+
+    26 => array(
+        "name" => "skill",
+        "description" => clienttranslate('${actplayer} should pick the skill to use'),
+        "descriptionmyturn" => clienttranslate('${you} should pick the skill to use'),
+        "type" => "activeplayer",
+        'args' => 'argSkill',
+        "possibleactions" => array( "catPowerUp_skill", "catProductivityUp_skill", 
+        "squirrelLookAt_skill", "squirrelSearch_skill", "back_skill"),
+        "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect
+        , "cardActiveEffect" => stateCardActiveEffect )
     ),
 
     // !SECTION normal process section
