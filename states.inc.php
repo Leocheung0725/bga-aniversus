@@ -192,7 +192,7 @@ $machinestates = array(
     
     33 => array(
         "name" => "changeActivePlayer_counterattack",
-        "description" => clienttranslate(''),
+        "description" => clienttranslate('Change player to counterattack or pass'),
         "type" => "game",
         "action" => "stChangeActivePlayer",
         "transitions" => array( "endGame" => stateEndGame, "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, "playerTurn" => statePlayerTurn
@@ -201,7 +201,7 @@ $machinestates = array(
 
     34 => array(
         "name" => "changeActivePlayer_redcard",
-        "description" => clienttranslate(''),
+        "description" => clienttranslate('Change player to play the red card or pass'),
         "type" => "game",
         "action" => "stChangeActivePlayer_redcard",
         "transitions" => array( "endGame" => stateEndGame, "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, 
