@@ -1,5 +1,5 @@
 <?php
-
+//  Aniversus implementation : © Leo Cheung <leocheung1718@gmail.com>
 function read_card_infos($csvData) {
     // Split the CSV data into lines
     $lines = explode("\n", trim($csvData)); // Trim to remove possible whitespace

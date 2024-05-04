@@ -16,7 +16,7 @@ $gameinfos = array(
 'game_name' => "Aniversus",
 
 // Game designer (or game designers, separated by commas)
-'designer' => 'Leo Cheung',    
+'designer' => 'Leo Cheung, Bochi',    
 
 // Game artist (or game artists, separated by commas)
 'artist' => 'Annie Wong',         

@@ -1,3 +1,4 @@
+//  Aniversus implementation : © Leo Cheung <leocheung1718@gmail.com>
 define([
     "dojo", "dojo/_base/declare"
 ], function( dojo, declare )
