@@ -21,7 +21,7 @@
     </div>
 </div>
 <div id="tempstock-area"></div>
-<div id="myhand_wrap" class="whiteblock orangeblock">
+<div id="myhand_wrap" class="whiteblock myhandblock">
     <h3 class="myhand_text">{MY_HAND}</h3>
     <div id="myhand" class="playertablecard"></div>
 </div>
@@ -57,13 +57,13 @@ var jstpl_cardToolTip =
 var jstpl_player_board =
 '<div class="playerboard-main">' +
     '<div>' +
-        '<ul class="no-bullets">' +     
-        '<li class="li-item"><span><div class="productivity-inline-image" id="playerboard_productivity_image"></div> : <div class="counter highlight-number" id="player_productivity_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span><div class="power-inline-image" id="playerboard_power_image"></div> : <div class="counter highlight-number" id="player_power_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span><div class="action-inline-image" id="playerboard_action_image"></div> : <div class="counter highlight-number" id="player_action_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span>Hand Card(s): <div class="counter highlight-number" id="player_hand_${player_id}"></div></span></li>' +
-        '<li class="li-item"><span>Draw Deck: <div class="counter highlight-number" id="player_deck_${player_id}"></div></span></li>' +
-        '</ul>' + 
+        '<div class="playerboard_icon">' +
+        '<div><div class="element_token element_productivity_token" id="playerboard_productivity_image"></div><div class="counter aniversus_counter" id="player_productivity_${player_id}"></div></div>' +
+        '<div><div class="element_token element_power_token" id="playerboard_power_image"></div><div class="counter aniversus_counter" id="player_power_${player_id}"></div></div>' +
+        '<div><div class="element_token element_action_token" id="playerboard_action_image"></div><div class="counter aniversus_counter" id="player_action_${player_id}"></div></div>' +
+        '</div>' +
+        '<div>Hand Card(s): <div class="counter highlight-number" id="player_hand_${player_id}"></div></div>' +
+        '<div>Draw Deck: <div class="counter highlight-number" id="player_deck_${player_id}"></div></div>' +
     '</div>' +
 '</div>';
 

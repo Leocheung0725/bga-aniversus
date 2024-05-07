@@ -126,7 +126,7 @@ function (dojo, declare) {
             // ANCHOR Set up your game interface here, according to "gamedatas"
             // Player hand Setup
             // player hand
-            this.playerdeck = this.setNewCardStock('myhand', 1, 'onPlayerHandSelectionChanged');
+            this.playerdeck = this.setNewCardStock('myhand', 1, 'onPlayerHandSelectionChanged', 5, false);
             this.playerdeck.extraClasses='rounded';
             // show hand
             for ( let i in this.gamedatas.hand) {
@@ -267,7 +267,9 @@ function (dojo, declare) {
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // ANCHOR Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
-
+            // CSS setup
+            dojo.addClass('page-title', 'page-title-css')
+            // end of css setup
             console.log( "Ending game setup" );
         },
         // !SECTION setup
@@ -497,7 +499,7 @@ function (dojo, declare) {
                     this.addActionButton( 'playerTurn_btn_throwPlayer', _('Remove'), 'onThrowPlayer_playerTurn' );
                     this.addActionButton( 'playerTurn_btn_shoot', _('Shoot'), 'onShoot_PlayerTurn' );
                     this.addActionButton( 'playerTurn_btn_pass', _('Pass'), 'onPass_PlayerTurn' );
-                    this.addActionButton( 'playerTurn_btn_skill', _('Skill'), 'onSkill_playerTurn', null, false, 'red' );
+                    this.addActionButton( 'playerTurn_btn_skill', _('Animal Skill'), 'onSkill_playerTurn', null, false, 'red' );
                     if (this.playerCounter[this.player_id]['action'].getValue() == 0) {
                         dojo.addClass('playerTurn_btn_play', 'disabled');
                         dojo.addClass('playerTurn_btn_throwPlayer', 'disabled');
@@ -672,7 +674,7 @@ function (dojo, declare) {
         // this.ajaxcallwrapper('playCard', {card: card_id}); // with args
 
         // ANCHOR setNewCardStock
-        setNewCardStock: function( div_id, selectionMode, onSelectionChangedMethod ) {
+        setNewCardStock: function( div_id, selectionMode, onSelectionChangedMethod, card_margin = 13, overlap = false ) {
             // Player hand Setup
             // player hand
             var newstock = new ebg.stock(); // new stock object for hand
@@ -683,13 +685,17 @@ function (dojo, declare) {
             // this.playerdeck.apparenceBorderWidth = '2px'; // Change border width when selected
             newstock.setSelectionMode( selectionMode ); // Allow only one card to be selected
             newstock.setSelectionAppearance('class'); // Add a class to selected
-            newstock.item_margin = 13; // Add margin between cards
+            newstock.item_margin = card_margin; // Add margin between cards
+            if (overlap) {
+                newstock.item_margin = 0;
+                newstock.horizontal_overlap = 95;
+            }
             newstock.autowidth = true;
             // Create cards types:
             // addItemType(type: number, weight: number, image: string, image_position: number )
             this.gamedatas.cards_info.forEach((key) => {
                 newstock.addItemType(Number(key.id), 1, 
-                    "https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/sprite_sheet.png", Number(key.css_position));
+                g_gamethemeurl + "img/sprite_sheet.png", Number(key.css_position));
                     
             });
             // setup connect
