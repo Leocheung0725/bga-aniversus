@@ -13,7 +13,7 @@ trait AniversusUtils {
             throw new BgaUserException( self::_("There is no this type card in the deck") );
         }
         $card = array_shift($cards);
-        $player_deck->moveCard($card['id'], 'hand');
+        $player_deck->moveCard($card['id'], 'hand', $player_id);
         self::notifyPlayer( $player_id, 'cardDrawn', '', array(
             'cards' => array($card),
         ) );
@@ -286,6 +286,21 @@ trait AniversusUtils {
             'player_handCardNumber' => $opponent_handCardNumber,
             'player_deckCardNumber' => $opponent_deckCardNumber,
         ) );
+    }
+    // ANCHOR getLogCardBackgroundPosition
+    function getLogCardBackgroundPosition($card_type) {
+        $type2css = $this->card_type_arg2css_position;
+        $position = $type2css[$card_type];
+        $card_width = 62; 
+        $card_height = 87;
+        $columns = 10;
+        $row = floor($position / $columns);
+        $column = $position % $columns;
+        $x = $column * $card_width;
+        $y = $row * $card_height;
+        return array(
+            'x' => -$x, 
+            'y' => -$y);
     }
 
     // SECTION updatePlayerAbility

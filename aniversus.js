@@ -116,11 +116,29 @@ function (dojo, declare) {
                 this.playerCounter[player_id]['deckCardNumber'] = new ebg.counter();
                 this.playerCounter[player_id]['deckCardNumber'].create( `player_deck_${player_id}` );
                 this.playerCounter[player_id]['deckCardNumber'].setValue(gamedatas['deck_card_number'][player_id]);
+                if (player_id == this.player_id) {
+                    this.playerCounter[player_id]['productivity_playmat'] = new ebg.counter();
+                    this.playerCounter[player_id]['productivity_playmat'].create( `playermat_productivity_me` );
+                    this.playerCounter[player_id]['productivity_playmat'].setValue(player.player_productivity);
+                    this.playerCounter[player_id]['power_playmat'] = new ebg.counter();
+                    this.playerCounter[player_id]['power_playmat'].create( `playermat_power_me` );
+                    this.playerCounter[player_id]['power_playmat'].setValue(player.player_power);
+                } else {
+                    this.playerCounter[player_id]['productivity_playmat'] = new ebg.counter();
+                    this.playerCounter[player_id]['productivity_playmat'].create( `playermat_productivity_opponent` );
+                    this.playerCounter[player_id]['productivity_playmat'].setValue(player.player_productivity);
+                    this.playerCounter[player_id]['power_playmat'] = new ebg.counter();
+                    this.playerCounter[player_id]['power_playmat'].create( `playermat_power_opponent` );
+                    this.playerCounter[player_id]['power_playmat'].setValue(player.player_power);
+                }
             }
             // ToolTip
-            this.addTooltip('playerboard_productivity_image', _('Productivity'), '');
-            this.addTooltip('playerboard_action_image', _('Action'), '');
-            this.addTooltip('playerboard_power_image', _('Power'), '');
+            this.addTooltipToClass('element_productivity_token', _('<b>Productivity</b>'), '');
+            this.addTooltipToClass('element_action_token', _('<b>Action</b>'), '');
+            this.addTooltipToClass('element_power_token', _('<b>Power</b>'), '');
+            this.addTooltipToClass('element_hand_token', _('<b>Hand Card Number(s)</b>'), '');
+            this.addTooltipToClass('element_draw_token', _('<b>Draw Deck Number(s)</b>'), '');
+
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // ANCHOR Set up your game interface here, according to "gamedatas"
@@ -631,9 +649,9 @@ function (dojo, declare) {
             var card_name = card.name;
             var card_type = card.type;
             var card_cost = card.cost;
-            var card_productivity = (card_type == "Function") ? "NA" : card.productivity;
-            var card_power = (card_type == "Function") ? "NA" : card.power;
-            var card_description = (card.function == "") ? "NA" : card.function;
+            var card_productivity = (card_type == "Function") ? "\u{FF3C}" : card.productivity;
+            var card_power = (card_type == "Function") ? "\u{FF3C}" : card.power;
+            var card_description = (card.function == "") ? "\u{FF3C}" : card.function;
             var position = this.getToolTipBackgroundPosition(card_id);
             return this.format_block('jstpl_cardToolTip', {
                 card_name: card_name,
@@ -1119,9 +1137,11 @@ function (dojo, declare) {
             const player_deckCardNumber = Number(notif.args.player_deckCardNumber);
             // Update all information in the player board
             this.playerCounter[player_id]['productivity'].toValue(player_productivity);
+            this.playerCounter[player_id]['productivity_playmat'].toValue(player_productivity);
             this.playerCounter[player_id]['action'].toValue(player_action);
             this.scoreCtrl[player_id].setValue(player_score);
             this.playerCounter[player_id]['power'].toValue(player_power);
+            this.playerCounter[player_id]['power_playmat'].toValue(player_power);
             this.playerCounter[player_id]['handCardNumber'].toValue(player_handCardNumber);
             this.playerCounter[player_id]['deckCardNumber'].toValue(player_deckCardNumber);
         },
@@ -1202,6 +1222,9 @@ function (dojo, declare) {
                 }
                 this.playerOnPlaymat['opponent']['discardpile'].placeInZone( 'cardsOnTable_' + player_id + '_' + card_id , 0 );
                 this.addTooltipHtml($('cardsOnTable_' + player_id + '_' + card_id ), this.getTooltipHtml(Number(card_type)));
+            }
+            if ( notif.args.time != null ) {
+                this.addTooltipHtml($('logcard_' + notif.args.time + '_' + card_type), this.getTooltipHtml(Number(card_type)));
             }
         },
         // ANCHOR playPlayerCard

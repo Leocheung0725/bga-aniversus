@@ -418,13 +418,24 @@ trait AniversusPlayerActions {
         foreach ($card_ids as $card_id) {
             $this->playCard2Discard($player_id, $card_id, 'hand');
             $card = $player_deck->getCard($card_id);
-            $card_name = self::getCardinfoFromCardsInfo($card['type_arg'])['name'];
-            self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} throws ${card_name}' ), array(
+            $card_type_arg = $card['type_arg'];
+            $position = self::getLogCardBackgroundPosition($card_type_arg);
+            $x = $position['x'];
+            $y = $position['y'];
+            $time = time();
+            $card_name = self::getCardinfoFromCardsInfo($card_type_arg)['name'];
+            self::notifyAllPlayers( "playFunctionCard", clienttranslate( 
+            "<div class='log_withcard_main'>
+                <div>${player_name} throws ${card_name}</div>
+                <div class='log_deck' id='logcard_{$time}_{$card_type_arg}' style='background-position:{$x}px {$y}px'></div>
+            </div>" 
+            ), array(
                 'player_id' => $player_id,
                 'player_name' => $player_name,
                 'card_name' => $card_name,
                 'card_id' => $card_id,
                 'card_type' => $card['type_arg'],
+                'time' => $time,
             ) );
         }
         $state_name = $this->getStateName();

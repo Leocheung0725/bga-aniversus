@@ -62,7 +62,7 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 57,Player,3,0,2,"When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.",Jeffrey,2,squirrel,19
 58,Player,5,0,3,The player in the same position on the opponent's field -2 power. (for as long as Sergio is in play),Sergio,3,squirrel,20
 59,Player,0,2,0,The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field),Antonio,2,squirrel,21
-60,Player,2,0,1,"Multiple Marco Bros cards can be played in the same player slot. Marco Bros x1 = 1 power ,Marco Bros x2 = 3 power, Marco Bros x3 = 6 power.",Marco Bros,4,squirrel,22
+60,Player,2,0,1,"Multiple Marco Bros cards can be played in the same player slot. <br><br>Marco Bros x1 = 1 power <br>Marco Bros x2 = 3 power <br>Marco Bros x3 = 6 power",Marco Bros,4,squirrel,22
 61,Player,1,0,1,Becomes stronger when working with Aaron.,Paul,2,squirrel,23
 62,Player,4,0,4,All Pauls on the field gain +1 power.,Aaron,1,squirrel,24
 63,Player,0,2,0,"When Jude is placed, the productivity player in the same position on opponent's side must leave the field to discard pile.",Jude,2,squirrel,25
