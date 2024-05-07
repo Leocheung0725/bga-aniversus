@@ -22,7 +22,7 @@
 </div>
 <div id="tempstock-area"></div>
 <div id="myhand_wrap" class="whiteblock orangeblock">
-    <h3>{MY_HAND}</h3>
+    <h3 class="myhand_text">{MY_HAND}</h3>
     <div id="myhand" class="playertablecard"></div>
 </div>
 
@@ -35,19 +35,23 @@ var jstpl_tempCardStock = '<div class="tempStockClass" id="tempStock"><div class
 
 var jstpl_cardToolTip = 
 '<div class=\'tooltip-main\'>' +
-'<div>' +
-    '<ul class=\'no-bullets\'>' +     
-    '<li class=\'li-item title\'><h1>${card_name}</h1></li>' +
-    '<hr>' +
-    '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
-    '<li class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></li>' +
-    '<li class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></li>' +
-    '<li class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></li>' +
-    '<hr>' +
-    '<li class=\'li-item\'><span>Description :</span></li>' +
-    '<li class=\'li-item description\'><p>${card_description}</p></li>' +
-    '</ul>' + 
-'</div>' +
+    '<div class="tooltip-container">' +
+        '<div class="tooltip-description">' +
+            '<ul class=\'no-bullets\'>' +     
+            '<li class=\'li-item title\'><h1>${card_name}</h1></li>' +
+            '<hr>' +
+            '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
+            '<li class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></li>' +
+            '<li class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></li>' +
+            '<li class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></li>' +
+            '<hr>' +
+            '<li class=\'li-item\'><span>Description :</span></li>' +
+            '<li class=\'li-item description\'><p>${card_description}</p></li>' +
+            '</ul>' + 
+        '</div>' +
+        '<div class="tooltip-image" style="background-position:${x}px ${y}px">' +
+        '</div>' +
+    '</div>' +
 '</div>';
 
 var jstpl_player_board =

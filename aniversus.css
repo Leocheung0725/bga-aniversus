@@ -3,6 +3,9 @@
 :root {
 	--card-height: 174px;
 	--card-width: 124px;
+  --tooltipimage-height: 321px;
+  --tooltipimage-width: 230px;
+  --tooltipurl: url('https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/tooltip.png');
 	--playmat-url: url('https://novbackstorage.blob.core.windows.net/bgs-game/playmat.png');
 
 }
@@ -25,6 +28,15 @@
 .myhand_wrap {
 	display: flex;
   flex-direction: row;
+}
+
+h3.myhand_text {
+  font-weight: bold;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: black;
+  margin: 0 2px;
+  text-shadow: 2px 2px 3px #ffffff; /* Adjusted shadow to the right bottom corner */
 }
 
 .playmat_field {
@@ -91,11 +103,25 @@
 	pointer-events: auto;
 	cursor: pointer;
 	background-color: rgba(255, 255, 0, 0.3);
-	box-shadow:0px 0px 0px 2px gray inset;
+	box-shadow:0px 0px 0px 2px rgb(238, 238, 238) inset;
+  height: 186px !important;
 }
+
+.playerCardOnPlaymat.pickplayer {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+
+.playerCardOnPlaymat.pickplayer:hover {
+  position: relative;
+  transform: scale(1.15);
+}
+
 
 .playerCardOnPlaymat.available:hover {
 	position: relative;
+  /* transform: scale(1.15); */
 }
 
 .playerCardOnPlaymat.available:hover::after {
@@ -151,6 +177,9 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* A more pronounced shadow */
 }
 
+
+
+
 .js-cardsontable.reverse {
   transform: rotate(180deg);
 }
@@ -173,12 +202,33 @@
 /* ---------------------- Tooltip CSS ----------------------- */
 
 .tooltip-main {
+  display: flex;
   justify-content: center;
   align-items: center;
   border-radius: 1rem;
   font-family: "Arial";
-  padding: 8px;
+  padding: 0.75rem;
   z-index: 1000;
+}
+
+.tooltip-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between; /* Adjust this as needed */
+  gap: 3rem; /* Adjust the gap between the image and description */
+}
+
+.tooltip-image {
+  flex: 0 0 var(--tooltipimage-width); /* Fixed width for the image div */
+  height: var(--tooltipimage-height);
+  width: var(--tooltipimage-width);
+  background-image: url("https://novbeestoragejp.blob.core.windows.net/bga-aniversus-img/tooltip.png");
+  border-radius: 4px;
+}
+
+.tooltip-description {
+  flex: 1; /* Take up remaining space */
+  min-height: var(--tooltipimage-height); /* The minimum height to match the image div if content is less */
 }
 
 ul.no-bullet {
@@ -281,7 +331,7 @@ ul.no-bullet {
 .stockitem_selected {
   border: 2px solid #6ea8fe !important;
   box-shadow: 0 0 15px #6ea8fe ! important;
-  transform: scale(1.05) ! important;
+  transform: scale(1.15) ! important;
   transition: transform 0.2s ease, box-shadow 0.2s ease ! important;
   animation: pulse 2s infinite ease-in-out ! important;
 }
@@ -289,6 +339,11 @@ ul.no-bullet {
 .rounded {
   border-radius: 4px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* A more pronounced shadow */
+  transition: transform 0.3s ease;
+}
+
+.rounded:hover {
+  transform: scale(1.15); /* This enlarges the card to 110% of its original size */
 }
 
 /* ------------------------------------------ Roll Dice CSS ------------------------------------------------------- */

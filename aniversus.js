@@ -486,7 +486,7 @@ function (dojo, declare) {
                 {
                 case 'cardActiveEffect':
                     this.addActionButton( 'cardActiveEffect_btn_throw', _('Throw'), 'onThrowCard_CardActiveEffect' );
-                    this.addActionButton( 'cardActiveEffect_btn_pass', _('Pass'), 'onPass_CardActiveEffect' );
+                    // this.addActionButton( 'cardActiveEffect_btn_pass', _('Pass'), 'onPass_CardActiveEffect' );
                     let button_list = JSON.parse(args.button_list);
                     if (!(button_list.includes(1))) {
                         dojo.addClass('cardActiveEffect_btn_throw', 'disabled');
@@ -591,6 +591,18 @@ function (dojo, declare) {
             return {x: -x, y: -y};
         },
 
+        getToolTipBackgroundPosition: function(card_type) {
+            const type2css = this.gamedatas['card_type_arg2css_position'];
+            const position = type2css[card_type];
+            const card_width = 230; const card_height = 321;
+            const columns = 10;
+            var row = Math.floor(position / columns);
+            var column = (position % columns);
+            var x = column * card_width;
+            var y = row * card_height;
+            return {x: -x, y: -y};
+        },
+
         // ANCHOR getCard2hand
         getCard2hand: function(card) {
             this.playerdeck.addToStockWithId(Number(card.type_arg), card.id);
@@ -620,13 +632,15 @@ function (dojo, declare) {
             var card_productivity = (card_type == "Function") ? "NA" : card.productivity;
             var card_power = (card_type == "Function") ? "NA" : card.power;
             var card_description = (card.function == "") ? "NA" : card.function;
+            var position = this.getToolTipBackgroundPosition(card_id);
             return this.format_block('jstpl_cardToolTip', {
                 card_name: card_name,
                 card_type: card_type,
                 card_cost: card_cost,
                 card_productivity: card_productivity,
                 card_power: card_power,
-                card_description: card_description
+                card_description: card_description,
+                ... position
             });
         },
         // ANCHOR joinTooltipHtml
