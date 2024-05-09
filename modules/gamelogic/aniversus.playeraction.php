@@ -125,13 +125,28 @@ trait AniversusPlayerActions {
             $this->removeStatusFromStatusLst($player_id, 2, false);
         }
         // Notify all players about the card played
-        self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} plays ${card_name} : ${card_effect}' ), array(
-            'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_info['name'],
-            'card_id' => $card_id,
-            'card_type' => $card_type,
-            'card_effect' => $card_info['function'],
+        $log_position = self::getLogCardBackgroundPosition($card_type);
+        $log_x = $log_position['x'];
+        $log_y = $log_position['y'];
+        $card_effect = $card_info['function'];
+        $card_name = $card_info['name'];
+        $player_name = self::getActivePlayerName();
+        $time = time();
+        $player_color = self::getPlayerColorById($player_id);
+        self::notifyAllPlayers( "playFunctionCard", 
+        clienttranslate( 
+            "<div class='log_withcard_main'>
+                <div><b style='color: #${player_color};'>${player_name}</b> plays ${card_name}: ${card_effect}</div>
+                <div class='log_deck cardsOnTable_type_${card_type}' id='logcard_{$time}_{$card_type}' style='background-position:{$log_x}px {$log_y}px'></div>
+            </div>" 
+            ), array(
+                'player_id' => $player_id,
+                'player_name' => $player_name,
+                'card_name' => $card_name,
+                'card_id' => $card_id,
+                'card_type' => $card_type,
+                'card_effect' => $card_effect,
+                'time' => $time,
         ) );
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
         $this->updatePlayerBoard($player_id);
@@ -204,7 +219,6 @@ trait AniversusPlayerActions {
             }
         }
         $card_team = $card_info['team'];
-
         $opponent_deck = $this->getNonActivePlayerDeck($player_id);
         $db_position = $this->encodePlayerLocation($row, $col);
         // check whether the user have this card in hand
@@ -231,7 +245,7 @@ trait AniversusPlayerActions {
                 break;
             case 102:
                 if (count($player_deck->getCardsOfTypeInLocation('Training', null, 'playmat', null)) < 1 ) {
-                    throw new BgaUserException( self::_("You do not have any training card in playmat") );
+                    throw new BgaUserException( self::_("You do not have any training cards on the playmat") );
                 }
                 break;
             case 104:
@@ -335,16 +349,29 @@ trait AniversusPlayerActions {
         // move the card from hand to playmat
         $player_deck->moveCard($card_id, 'playmat', $db_position);
         $allPlayerInThisPosition = $this->find_elements_by_key_value($player_deck->getCardsInLocation('playmat'), 'location_arg', $db_position);
-        self::notifyAllPlayers( "playPlayerCard", clienttranslate( '${player_name} plays ${card_name} : ${card_effect}' ), array(
+        $card_effect = $card_info['function'];
+        $card_name = $card_info['name'];
+        $time = time();
+        $player_name = self::getActivePlayerName();
+        $log_position = self::getLogCardBackgroundPosition($card_type);
+        $log_x = $log_position['x'];
+        $log_y = $log_position['y'];
+        $player_color = self::getPlayerColorById($player_id);
+        self::notifyAllPlayers( "playPlayerCard", clienttranslate( 
+            "<div class='log_withcard_main'>
+                <div><b style='color: #${player_color};'>${player_name}</b> plays ${card_name}: ${card_effect}</div>
+                <div class='log_deck cardsOnTable_type_${card_type}' id='logcard_${time}_${card_type}' style='background-position:${log_x}px ${log_y}px'></div>
+            </div>"
+            ), array(
             'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_info['name'],
+            'player_name' => $player_name,
+            'card_name' => $card_name,
             'card_id' => $card_id,
             'card_type' => $card_type,
-            'card_effect' => $card_info['function'],
             'row' => $row,
             'col' => $col,
             'allPlayerInThisPosition' => json_encode($this->getAllUniqueTypeArgsInCardLst($allPlayerInThisPosition)),
+            'time' => $time,
         ) );
         // remove card_free
         if (in_array(2, $player_status)) {
@@ -355,12 +382,11 @@ trait AniversusPlayerActions {
         // cat skill
         if ( $card_category == "Player" && $player['player_team'] == "cat" ) {
             $additional_card = $player_deck->pickCard( 'deck' , $player_id );
-            self::notifyPlayer( $player_id, "cardDrawn", clienttranslate( "For every cat player placed on the field, cat can draw 1 additional card."), 
+            self::notifyPlayer( $player_id, "cardDrawn", clienttranslate( "Your Animal Skill is activated: For every cat player placed on the field, you draw 1 additional card."), 
             array(
                 'cards' => array($additional_card) 
             ));
         }
-
 
         // end of cat skill
         // playing_card updating
@@ -424,10 +450,12 @@ trait AniversusPlayerActions {
             $y = $position['y'];
             $time = time();
             $card_name = self::getCardinfoFromCardsInfo($card_type_arg)['name'];
+            $position = self::getLogCardBackgroundPosition($card_type_arg);
+            $player_color = self::getPlayerColorById($player_id);
             self::notifyAllPlayers( "playFunctionCard", clienttranslate( 
             "<div class='log_withcard_main'>
-                <div>${player_name} throws ${card_name}</div>
-                <div class='log_deck' id='logcard_{$time}_{$card_type_arg}' style='background-position:{$x}px {$y}px'></div>
+                <div><b style='color: #${player_color};'>${player_name}</b> discards ${card_name}</div>
+                <div class='log_deck cardsOnTable_type_${card_type_arg}' id='logcard_${time}_${card_type_arg}' style='background-position:${x}px ${y}px'></div>
             </div>" 
             ), array(
                 'player_id' => $player_id,
@@ -621,6 +649,9 @@ trait AniversusPlayerActions {
                 }
                 $this->throwCards($player_id, $card_ids);
                 $allCardsInDrawDeck = $player_deck->getCardsInLocation('deck');
+                $allCardsInDrawDeck_json = json_encode($all_discard_cards);
+                $sql = "UPDATE playing_card SET card_info = '{$allCardsInDrawDeck_json}' WHERE disabled = FALSE";
+                self::DbQuery( $sql );
                 self::notifyPlayer( $player_id, "showCardsOnTempStock", "", array(
                     'cards' => $allCardsInDrawDeck,
                     'card_type_arg' => 112,
@@ -1005,14 +1036,14 @@ trait AniversusPlayerActions {
             throw new BgaUserException( self::_("There is no player in this position") );
         } else {
             if ( count($this->find_elements_by_key_value($opponent_position_cards, "type_arg", 12)) >= 1 ) {
-                throw new BgaUserException( self::_("You can not red card the player who has the Resillence effect.") );
+                throw new BgaUserException( self::_("You cannot remove the player who has the Resillence effect.") );
             }
             if (count($this->find_elements_by_key_value($opponent_position_cards, "type_arg", 107)) >= 1) {
-                throw new BgaUserException( self::_("You can not red card the player James, who cannot be targeted by any FUNCTION cards.") );
+                throw new BgaUserException( self::_("You cannot remove player James, who cannot be targeted by any FUNCTION cards.") );
             } 
             foreach ($opponent_position_cards as $card) {
                 $this->playCard2Discard($player_id, $card['id'], 'playmat', true);
-                self::notifyAllPlayers( "movePlayerInPlaymat2Discard", clienttranslate( '${player_name} give the red cards to eject the player' ), array(
+                self::notifyAllPlayers( "movePlayerInPlaymat2Discard", clienttranslate( '${player_name} play the Red Card to eject the player' ), array(
                     'player_id' => $opponent_id,
                     'player_name' => self::getActivePlayerName(),
                     'card_id' => $card['id'],
@@ -1116,9 +1147,9 @@ trait AniversusPlayerActions {
         self::DbQuery( $sql );
         $this->addStatus2StatusLst($player_id, False, 4058);
         // notify player
-        self::notifyAllPlayers('broadcast', clienttranslate('${player_name} uses the skill Squirrel Look At'), array(
+        self::notifyAllPlayers('broadcast', clienttranslate('${player_name} uses the skill Squirrel Deck Peek'), array(
             'player_name' => self::getActivePlayerName(),
-            'message' => clienttranslate('The squirrel player uses the skill << Look At >> that it can look at the top 4 cards of the opponent\'s draw deck and rearrange them in any order.'),
+            'message' => clienttranslate('The squirrel player uses the skill << Deck Peek >> that it can look at the top 4 cards of the opponent\'s draw deck and rearrange them in any order.'),
             'type' => 'info',
         ) );
         $this->gamestate->nextState( "cardActiveEffect" );

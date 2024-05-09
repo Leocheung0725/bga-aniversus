@@ -59,7 +59,11 @@ trait AniversusStateArgs {
                 $message = "can eject 1 opponent forward player from the field";
                 break;
             case 8:
-                $message = "would look at the top 5 card from the draw deck, then put them back in any order either on top of or at the bottom of the draw deck.";
+                $message = "may look at the top 5 cards from the draw deck, then put them back in any order either on top of or at the bottom of the draw deck.";
+                if ( $playing_card_info['card_id'] == 4058 )
+                {
+                    $message = "may look at the top 4 cards from the draw deck, then put them back in any order either on top of or at the bottom of the draw deck.";
+                }
                 break;
             case 11:
                 $message = "select 1 player from the field to exchange with a player from the discard pile";
@@ -69,7 +73,7 @@ trait AniversusStateArgs {
                 $button_list[] = 1;
                 break;
             case 57:
-                $message = "would search the discard pile for 3 cards and put them in the hand";
+                $message = "may search 3 cards from the discard pile and put them in hand";
                 break;
             case 64:
                 $message = "must discard 1 card from the hand";
@@ -90,7 +94,10 @@ trait AniversusStateArgs {
                 $message = "can eject 2 player or training card from the opponent field";
                 break;
             case 402:
-                $message = "should throw a player from the field";
+                $message = "may dismiss a player from the field";
+                break;
+            case 40512:
+                $message = "may search 2 cards from the draw deck";
                 break;
             default:
                 $message = "No message set yet for this card type arg";
@@ -115,9 +122,9 @@ trait AniversusStateArgs {
         $player_handCardNumber = $player_deck->countCardInLocation('hand', $player_id);
         $throwNumber = $player_handCardNumber - 5;
         if ($throwNumber <= 0) {
-            $message = "don't have to throw any card from hand";
+            $message = "don't have to discard any cards from hand";
         } else {
-            $message = "must throw {$throwNumber} card(s) from hand";
+            $message = "must discard {$throwNumber} card(s) from hand";
         }
         return array(
             "message" => $message,
@@ -150,6 +157,26 @@ trait AniversusStateArgs {
         return array(
             "player_team" => $player_team,
             "used_skill" => $used_skill,
+        );
+    }
+
+    function argCounterattack()
+    {
+        $player_id = self::getActivePlayerId();
+        $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
+        $playing_card_info = self::getNonEmptyObjectFromDB( $sql );
+        $playcard_player_id = $playing_card_info['player_id'];
+        $playcard_player_name = self::getPlayerNameById($playing_card_info['player_id']);
+        $card = self::getCardinfoFromCardsInfo($playing_card_info['card_type_arg']);
+        $card_name = $card['name'];
+        if ( $player_id == $playcard_player_id ) {
+            $card_name = "Intercept";
+            $opponent_id = $this->getNonActivePlayerId($player_id);
+            $playcard_player_name = self::getPlayerNameById($opponent_id);
+        }
+        return array(
+            "playcard_player" => $playcard_player_name,
+            "card_name" => $card_name,
         );
     }
 }

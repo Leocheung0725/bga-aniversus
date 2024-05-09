@@ -142,8 +142,8 @@ $machinestates = array(
 
     26 => array(
         "name" => "skill",
-        "description" => clienttranslate('${actplayer} should pick the skill to use'),
-        "descriptionmyturn" => clienttranslate('${you} should pick the skill to use'),
+        "description" => clienttranslate('${actplayer} may activate a skill'),
+        "descriptionmyturn" => clienttranslate('${you} may activate a skill'),
         "type" => "activeplayer",
         'args' => 'argSkill',
         "possibleactions" => array( "catPowerUp_skill", "catProductivityUp_skill", 
@@ -158,9 +158,10 @@ $machinestates = array(
     // SECTION playerTurn section 
     30 => array(
         "name" => "counterattack",
-        "description" => clienttranslate('${actplayer} must counterattack or pass'),
-        "descriptionmyturn" => clienttranslate('${you} must counterattack or pass'),
+        "description" => clienttranslate('${playcard_player} plays ${card_name}, ${actplayer} must counterattack or pass'),
+        "descriptionmyturn" => clienttranslate('${playcard_player} plays ${card_name}, ${you} must counterattack or pass'),
         "type" => "activeplayer",
+        "args" => "argCounterattack",
         "possibleactions" => array( "intercept_counterattack", "pass_counterattack" ),
         "transitions" => array( "endGame" => stateEndGame, "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack )
     ),
@@ -211,8 +212,8 @@ $machinestates = array(
 
     35 => array(
         "name" => "redcard",
-        "description" => clienttranslate('${actplayer} must play the red card or pass'),
-        "descriptionmyturn" => clienttranslate('${you} must play the red card or pass'),
+        "description" => clienttranslate('${actplayer} must play a Red Card or pass'),
+        "descriptionmyturn" => clienttranslate('${you} must play a Red Card or pass'),
         "type" => "activeplayer",
         "args" => "argRedCard",
         "possibleactions" => array( "redcard_redcard", "pass_redcard", "playFunctionCard" ),

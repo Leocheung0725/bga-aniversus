@@ -51,9 +51,30 @@
 
 var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
 
-var jstpl_tempCardStock = '<div class="tempStockClass" id="tempStock"><div class="tempCardMessageClass" id="tempCardMessage">${message}</div><div class="tempCardStockClass myhandblock" id="tempCardStock"></div><div class="btn_div_class" id="btn_div"><button class="tempStockButtonClass" id="tempStockButton">${buttonText}</button></div></div>';
+var jstpl_tempCardStock = '<div class="tempStockClass" id="tempStock"><div class="tempCardMessageClass" id="tempCardMessage">${message}</div><div class="tempCardStockClass" id="tempCardStock"></div><div class="btn_div_class" id="btn_div"><button class="tempStockButtonClass" id="tempStockButton">${buttonText}</button></div></div>';
 
 var jstpl_cardToolTip = 
+'<div class=\'tooltip-main\'>' +
+    '<div class="tooltip-container">' +
+        '<div class="tooltip-description">' +
+            '<ul class=\'no-bullets\'>' +     
+            '<li class=\'li-item title\'><h1>${card_name}</h1></li>' +
+            '<hr>' +
+            '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
+            '<li class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></li>' +
+            '<li class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></li>' +
+            '<li class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></li>' +
+            '<hr>' +
+            // '<li class=\'li-item\'><span>Description :</span></li>' +
+            '<li class=\'li-item description\'><p>${card_description}</p></li>' +
+            '</ul>' + 
+        '</div>' +
+        '<div class="tooltip-image" style="background-position:${x}px ${y}px">' +
+        '</div>' +
+    '</div>' +
+'</div>';
+
+var jstpl_cardToolTip_backup = 
 '<div class=\'tooltip-main\'>' +
     '<div class="tooltip-container">' +
         '<div class="tooltip-description">' +

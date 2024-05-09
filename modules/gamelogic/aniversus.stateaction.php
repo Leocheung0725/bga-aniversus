@@ -165,7 +165,7 @@ trait AniversusStateActions {
         // squirrel skill
         if ( $card_type_arg != 5 && $player_team == "squirrel" ) {
             $additional_card = $player_deck->pickCard( 'deck' , $player_id );
-            self::notifyPlayer( $player_id, "cardDrawn", "Squirrel can draw 1 extra card after playing a function card.", 
+            self::notifyPlayer( $player_id, "cardDrawn", "Your Animal Skill is activated: You draw 1 extra card after playing a function card.", 
             array(
                 'cards' => array($additional_card)
             ));
@@ -206,7 +206,7 @@ trait AniversusStateActions {
                 $this->playCard2Discard($opponent_id, $selected_thrown_card['id'], 'hand');
                 $card_name = self::getCardinfoFromCardsInfo($selected_thrown_card['type_arg'])['name'];
                 $player_name = self::getActivePlayerName();
-                self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} disrupts(throws) ${opponent_name}\'s ${card_name}' ), array(
+                self::notifyAllPlayers( "playFunctionCard", clienttranslate( '${player_name} dismisses ${opponent_name}\'s ${card_name}' ), array(
                     'player_id' => $opponent_id,
                     'player_name' => $player_name,
                     'opponent_name' => self::getPlayerNameById($opponent_id),
@@ -387,7 +387,9 @@ trait AniversusStateActions {
                 break;
             case 57:
                 $all_discard_cards = $player_deck->getCardsInLocation('discard');
-                $card_id = $card_active_effect_info['card_id'];
+                $all_discard_cards_json = json_encode($all_discard_cards);
+                $sql = "UPDATE playing_card SET card_info = '{$all_discard_cards_json}' WHERE disabled = FALSE";
+                self::DbQuery( $sql );
                 self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( "You picks 3 cards from discard pile." ), [
                     'cards' => $all_discard_cards,
                     'player_id' => $player_id,
@@ -396,6 +398,9 @@ trait AniversusStateActions {
                 break;
             case 40512:
                 $allCardsInDrawDeck = $player_deck->getCardsInLocation('deck');
+                $allCardsInDrawDeck_json = json_encode($allCardsInDrawDeck);
+                $sql = "UPDATE playing_card SET card_info = '{$allCardsInDrawDeck_json}' WHERE disabled = FALSE";
+                self::DbQuery( $sql );
                 self::notifyPlayer( $player_id, "showCardsOnTempStock", "", array(
                     'cards' => $allCardsInDrawDeck,
                     'card_type_arg' => 40512,

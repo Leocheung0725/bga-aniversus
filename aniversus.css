@@ -20,7 +20,7 @@
 }
 
 .none {
-  display: none;
+  display: none !important;
 }
 .spectatorMode #myhand_wrap {
   display: none;
@@ -98,6 +98,11 @@ html {
   background-position: calc(200px - (20px * 6)) 0;
   margin-top: 5px;
 }
+
+.log {
+  border-radius: 10px !important;
+}
+
 .secondrow {
   margin-right: 1rem;
 }
@@ -125,6 +130,12 @@ html {
   justify-content: center;
   align-items: center;
   margin-right: 30px;
+}
+
+@media screen and (max-width: 1024px) {
+  .playmat_counter_container {
+    display: none !important;
+  }
 }
 
 .playmat_counter_single {
@@ -536,6 +547,7 @@ ul.no-bullet {
   transform: scale(1.15) ! important;
   transition: transform 0.2s ease, box-shadow 0.2s ease ! important;
   animation: pulse 2s infinite ease-in-out ! important;
+  z-index: 50;
 }
 
 .rounded {
@@ -546,6 +558,7 @@ ul.no-bullet {
 
 .rounded:hover {
   transform: scale(1.15); /* This enlarges the card to 110% of its original size */
+  z-index: 50;
 }
 
 /* ------------------------------------------ Roll Dice CSS ------------------------------------------------------- */
@@ -554,7 +567,7 @@ ul.no-bullet {
   justify-content: center;
   align-items: center;
   height: 500px;
-  background-color: #b695b0;
+  background-color: #9b93d09b;
   border-radius: 20px;
 }
 
@@ -747,6 +760,7 @@ ul.no-bullet {
 .log_withcard_main {
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 
 .log_deck {
@@ -754,5 +768,11 @@ ul.no-bullet {
   width: var(--log-deck-card-width);
   background-image: var(--logdeck-url);
   border-radius: 4px;
+  box-shadow: 1px 2px 4px rgb(0, 0, 0);
+  margin: 3px;
 }
 
+.bgabutton_blackAndWheat {
+  background-color: wheat !important;
+  color: black !important;
+}
