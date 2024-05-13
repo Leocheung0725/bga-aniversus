@@ -76,7 +76,7 @@ class view_aniversus_aniversus extends game_view
 
 
         // this will make our My Hand text translatable
-        $this->tpl['MY_HAND'] = self::_("My hand");
+        $this->tpl['MY_HAND'] = self::_("My hand (5 cards max)");
 
         /*
         

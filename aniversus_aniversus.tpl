@@ -2,7 +2,6 @@
 
 
 <div id="gamefield">
-    <div id="rolldice-area" class="rolldice-area-class"></div>
 	<div class="playmat_field">
         <div class="playmat_counter_container">
             <div class="playmat_counter_single">
@@ -21,6 +20,7 @@
         </div>
         <div class="discardPile_field" id="discardPile_field_opponent"></div>
     </div>
+    <div id="rolldice-area" class="rolldice-area-class"></div>
     <div class="playmat_field">
         <div class="playmat_counter_container">
             <div class="playmat_counter_single">
@@ -42,14 +42,38 @@
 </div>
 <div id="tempstock-area"></div>
 <div id="myhand_wrap" class="whiteblock myhandblock">
-    <h3 class="myhand_text">{MY_HAND}</h3>
+    <div class="myhand_bar">
+        <div><h3 class="myhand_text">{MY_HAND}</h3></div>
+        <div class="status_bar">
+            <div id="cannotdraw_container">
+                <div class="status_token status_cannotdraw_token" id="status_cannotdraw_image"></div>
+                <div class="counter aniversus_counter" id="status_cannotdraw_counter"></div>
+            </div>
+            <div id="suspension_container">
+                <div class="status_token status_suspension_token" id="status_suspension_image"></div>
+                <div class="counter aniversus_counter" id="status_suspension_counter"></div>
+            </div>
+            <div id="actionup_container">
+                <div class="status_token status_actionup_token" id="status_actionup_image"></div>
+                <div class="counter aniversus_counter" id="status_actionup_counter"></div>
+            </div>
+            <div id="energydeduct_container">
+                <div class="status_token status_energydeduct_token" id="status_energydeduct_image"></div>
+                <div class="counter aniversus_counter" id="status_energydeduct_counter"></div>
+            </div>
+            <div id="comeback_container">
+                <div class="status_token status_comeback_token" id="status_comeback_image"></div>
+                <div class="counter aniversus_counter" id="status_comeback_counter"></div>
+            </div>
+        </div>
+    </div>
     <div id="myhand" class="playertablecard"></div>
 </div>
 
 <script type="text/javascript">
 
 
-var jstpl_cardsOnTable = '<div class="js-cardsontable" id="cardsOnTable_${player_id}_${card_id}" style="background-position:${x}px ${y}px"></div>';
+var jstpl_cardsOnTable = '<div class="js-cardsontable" id="${card_id}" style="background-position:${x}px ${y}px"></div>';
 
 var jstpl_tempCardStock = '<div class="tempStockClass" id="tempStock"><div class="tempCardMessageClass" id="tempCardMessage">${message}</div><div class="tempCardStockClass" id="tempCardStock"></div><div class="btn_div_class" id="btn_div"><button class="tempStockButtonClass" id="tempStockButton">${buttonText}</button></div></div>';
 
@@ -57,17 +81,26 @@ var jstpl_cardToolTip =
 '<div class=\'tooltip-main\'>' +
     '<div class="tooltip-container">' +
         '<div class="tooltip-description">' +
-            '<ul class=\'no-bullets\'>' +     
-            '<li class=\'li-item title\'><h1>${card_name}</h1></li>' +
-            '<hr>' +
-            '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
-            '<li class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></li>' +
-            '<li class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></li>' +
-            '<li class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></li>' +
-            '<hr>' +
-            // '<li class=\'li-item\'><span>Description :</span></li>' +
-            '<li class=\'li-item description\'><p>${card_description}</p></li>' +
-            '</ul>' + 
+            '<div class=\'no-bullets\'>' +     
+                '<div class=\'li-item title\'><h1>${card_name}</h1></div>' +
+                '<hr>' +
+                '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
+                '<div class="tooltip_ability_container">' +
+                    '<div class="tooltip_ability_left">' +
+                        '<div class=\'li-item\'><span class="span_center"><div class=\'cost-inline-image\'></div> Cost</span></div>' +
+                        '<div class=\'li-item\'>${card_cost}</div>' +
+                        '<div class=\'li-item\'><span class="span_center"><div class=\'power-inline-image\'></div> Power</span></div>' +
+                        '<div class=\'li-item\'>${card_power}</div>' +
+                    '</div>' +
+                    '<div class=\'li-item ortext\'>Or</div>' +
+                    '<div class="tooltip_ability_right">' +
+                        '<div class=\'li-item\'><span class="span_center"><div class=\'productivity-inline-image\'></div> Productivity</span></div>' +
+                        '<div class=\'li-item\'>${card_productivity}</div>' +
+                    '</div>' +
+                '</div>' +
+                '<hr>' +
+                '<div class=\'li-item description\'>${card_description}</div>' +
+            '</div>' + 
         '</div>' +
         '<div class="tooltip-image" style="background-position:${x}px ${y}px">' +
         '</div>' +
@@ -82,11 +115,18 @@ var jstpl_cardToolTip_backup =
             '<li class=\'li-item title\'><h1>${card_name}</h1></li>' +
             '<hr>' +
             '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
-            '<li class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></li>' +
-            '<li class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></li>' +
-            '<li class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></li>' +
+            '<div class="tooltip_ability_container">' +
+                '<div>' +
+                    '<div class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></div>' +
+                    '<div class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></div>' +
+                '</div>' +
+                '<div class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></div>' +
+                '<div class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></div>' +
+                '<div>' +
+                    '<div class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></div>' +
+                '</div>' +
+            '</div>' +
             '<hr>' +
-            // '<li class=\'li-item\'><span>Description :</span></li>' +
             '<li class=\'li-item description\'><p>${card_description}</p></li>' +
             '</ul>' + 
         '</div>' +

@@ -230,6 +230,20 @@ class Aniversus extends Table
         // playerAbility
         $result['playerAbility'] = $this->updatePlayerAbility($player_id);
         // Cards in the draw deck
+
+        // status bar
+        $sql = "select player_status from player where player_id = $player_id";
+        $player = self::getNonEmptyObjectFromDB( $sql );
+        $player_status = json_decode($player['player_status'], true);
+        $result['player_status'] = array();
+        $result['player_status']['cannotdraw'] = self::countStatusOccurrence($player_status, 55);
+        $sql = "select player_status from player where player_id != $player_id";
+        $opponent = self::getNonEmptyObjectFromDB( $sql );
+        $opponent_status = json_decode($opponent['player_status'], true);
+        $result['player_status']['suspension'] = self::countStatusOccurrence($player_status, 105);
+        $result['player_status']['actionup'] = self::countStatusOccurrence($player_status, 13);
+        $result['player_status']['energydeduct'] = self::countStatusOccurrence($player_status, 10);
+        $result['player_status']['comeback'] = self::countStatusOccurrence($player_status, 9);
         return $result;
     }
 

@@ -41,10 +41,10 @@ $this->card_types = array(
 $cards_info_CSVdata = <<<CSV
 id,type,cost,productivity,power,function,name,nbr,team,css_position
 1,Function,1,0,0,"Draw 3 cards, then discard 1 card from your hand",Scouting,3,basic,0
-2,Function,0,0,0,"Play a card without paying its cost <br><br>NOTE: DOES NOT count as an action",Gambit Play,2,basic,1
-3,Function,1,0,0,"Double the effect of a function card. <br><br>NOTE: Play this card first, then the function card.",Double effect,2,basic,2
-4,Function,0,0,0,"Dismiss 1 opponent's forward player. <br><br>NOTE: This card can be played during opponent's SHOOTING phase, which DOES NOT count as an action.",Red Card,3,basic,3
-5,Function,0,0,0,"Ineffective opponent's function card. <br><br>NOTE: DOES NOT count as an action, and can be played during opponent’s turn.",Intercept,4,basic,4
+2,Function,0,0,0,"Play a card without paying its cost <br><br><div class='notetextred'>NOTE: DOES NOT count as an action",Gambit Play</div>div,2,basic,1
+3,Function,1,0,0,"Double the effect of a function card. <br><br><div class='notetextred'>NOTE: Play this card first, then the function card.</div>",Double effect,2,basic,2
+4,Function,0,0,0,"Dismiss 1 opponent's forward player. <br><br><div class='notetextred'>NOTE: This card can be played during opponent's SHOOTING phase, which DOES NOT count as an action.</div>",Red Card,3,basic,3
+5,Function,0,0,0,"Ineffective opponent's function card. <br><br><div class='notetextred'>NOTE: DOES NOT count as an action, and can be played during opponent’s turn.</div>",Intercept,4,basic,4
 6,Function,2,0,0,"Choose 1 card, at random, from your opponent's hand and discard it.",Disruption,3,basic,5
 7,Function,0,0,0,"Gain 2 energy in this round.",energy up,2,basic,6
 8,Function,1,0,0,"Look at the top 5 cards from your draw deck, then put them back in any order either on top of or at the bottom of your draw deck.",Tactical Reshuffle,2,basic,7
@@ -60,7 +60,7 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 55,Function,2,0,0,"Your opponent cannot draw cards next round.",Restriction,2,squirrel,17
 56,Function,1,0,0,"Draw 2 cards, then discard 2 cards from all your hand cards.",Substitution,2,squirrel,18
 57,Player,3,0,2,"When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.",Jeffrey,2,squirrel,19
-58,Player,5,0,3,"The player in the same position on the opponent's field -2 power. <br><br>NOTE: For as long as Sergio is in play",Sergio,3,squirrel,20
+58,Player,5,0,3,"The player in the same position on the opponent's field -2 power. <br><br><div class='notetextred'>NOTE: For as long as Sergio is in play</div>",Sergio,3,squirrel,20
 59,Player,0,2,0,"The opponent's productivity player (same position) becomes ineffective. (for as long as Antonio is on the field)",Antonio,2,squirrel,21
 60,Player,2,0,1,"Multiple Marco Bros cards can be played in the same player slot. <br><br>Marco Bros x1 = 1 power <br>Marco Bros x2 = 3 power <br>Marco Bros x3 = 6 power",Marco Bros,4,squirrel,22
 61,Player,1,0,1,"Becomes stronger when working with Aaron.",Paul,2,squirrel,23

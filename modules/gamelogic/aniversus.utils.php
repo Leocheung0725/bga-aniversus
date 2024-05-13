@@ -5,7 +5,8 @@
 //////////////////////////////////////////////////////////////////////////////
 trait AniversusUtils {
     // SECTION DEBUG function
-    function pickCard2Hand($card_type, $player_id) {
+    function pickCard2Hand($card_type) {
+        $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
         $typeofCard = $this->getCardinfoFromCardsInfo($card_type)['type'];
         $cards = $player_deck->getCardsOfTypeInLocation($typeofCard, $card_type, 'deck');
@@ -36,7 +37,12 @@ trait AniversusUtils {
         $sql = "UPDATE player SET player_action = player_action + 1 WHERE player_id = $player_id";
         self::DbQuery( $sql );
         $this->updatePlayerBoard($player_id);
-
+    }
+    function getEnergy($energy) {
+        $player_id = self::getActivePlayerId();
+        $sql = "UPDATE player SET player_productivity = player_productivity + $energy WHERE player_id = $player_id";
+        self::DbQuery( $sql );
+        $this->updatePlayerBoard($player_id);
     }
 
 
@@ -256,12 +262,30 @@ trait AniversusUtils {
     public function updatePlayerBoard($player_id)
     {
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-        $sql = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $player_id";
+        $sql = "select player_score, player_action, player_productivity, player_team, player_power, player_status from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
         // get the deck cards number 
         $player_deck = $this->getActivePlayerDeck($player_id);
         $player_handCardNumber = $player_deck->countCardInLocation('hand', $player_id);
         $player_deckCardNumber = $player_deck->countCardInLocation('deck');
+        $player_status = json_decode($player['player_status'], true);
+        $mycannotdraw = self::countStatusOccurrence($player_status, 55);
+        $mysuspension = self::countStatusOccurrence($player_status, 105);
+        $myactionup = self::countStatusOccurrence($player_status, 13);
+        $myenergydeduct = self::countStatusOccurrence($player_status, 10);
+        $mycomeback = self::countStatusOccurrence($player_status, 9);
+        $opponent_id = $this->getNonActivePlayerId();
+        $sql2 = "select player_score, player_action, player_productivity, player_team, player_power, player_status from player where player_id = $opponent_id";
+        $opponent = self::getNonEmptyObjectFromDB( $sql2 );
+        $opponent_deck = $this->getActivePlayerDeck($opponent_id);
+        $opponent_handCardNumber = $opponent_deck->countCardInLocation('hand', $opponent_id);
+        $opponent_deckCardNumber = $opponent_deck->countCardInLocation('deck');
+        $oplayer_status = json_decode($opponent['player_status'], true);
+        $opcannotdraw = self::countStatusOccurrence($oplayer_status, 55);
+        $opsuspension = self::countStatusOccurrence($oplayer_status, 105);
+        $opactionup = self::countStatusOccurrence($oplayer_status, 13);
+        $openergydeduct = self::countStatusOccurrence($oplayer_status, 10);
+        $opcomeback = self::countStatusOccurrence($oplayer_status, 9);
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
             'player_id' => $player_id,
             'player_productivity' => $player['player_productivity'],
@@ -270,13 +294,13 @@ trait AniversusUtils {
             'player_power' => $player['player_power'],
             'player_handCardNumber' => $player_handCardNumber,
             'player_deckCardNumber' => $player_deckCardNumber,
+            'cannotdraw' => $mycannotdraw,
+            'suspension' => $opsuspension,
+            'actionup' => $myactionup,
+            'energydeduct' => $myenergydeduct,
+            'comeback' => $mycomeback,
         ) );
-        $opponent_id = $this->getNonActivePlayerId();
-        $sql2 = "select player_score, player_action, player_productivity, player_team, player_power from player where player_id = $opponent_id";
-        $opponent = self::getNonEmptyObjectFromDB( $sql2 );
-        $opponent_deck = $this->getActivePlayerDeck($opponent_id);
-        $opponent_handCardNumber = $opponent_deck->countCardInLocation('hand', $opponent_id);
-        $opponent_deckCardNumber = $opponent_deck->countCardInLocation('deck');
+
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
             'player_id' => $opponent_id,
             'player_productivity' => $opponent['player_productivity'],
@@ -285,6 +309,11 @@ trait AniversusUtils {
             'player_power' => $opponent['player_power'],
             'player_handCardNumber' => $opponent_handCardNumber,
             'player_deckCardNumber' => $opponent_deckCardNumber,
+            'cannotdraw' => $opcannotdraw,
+            'suspension' => $mysuspension,
+            'actionup' => $opactionup,
+            'energydeduct' => $openergydeduct,
+            'comeback' => $opcomeback,
         ) );
     }
     // ANCHOR getLogCardBackgroundPosition

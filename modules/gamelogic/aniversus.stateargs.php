@@ -83,7 +83,7 @@ trait AniversusStateArgs {
                 $message = "pick 1 player from the field to your hand.";
                 break;
             case 109:
-                $message = "discard 2 cards from your hand.";
+                $message = "discard 2 cards from the hand.";
                 $button_list[] = 1;
                 break;
             case 112:

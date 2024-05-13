@@ -649,7 +649,7 @@ trait AniversusPlayerActions {
                 }
                 $this->throwCards($player_id, $card_ids);
                 $allCardsInDrawDeck = $player_deck->getCardsInLocation('deck');
-                $allCardsInDrawDeck_json = json_encode($all_discard_cards);
+                $allCardsInDrawDeck_json = json_encode($allCardsInDrawDeck);
                 $sql = "UPDATE playing_card SET card_info = '{$allCardsInDrawDeck_json}' WHERE disabled = FALSE";
                 self::DbQuery( $sql );
                 self::notifyPlayer( $player_id, "showCardsOnTempStock", "", array(
@@ -665,11 +665,14 @@ trait AniversusPlayerActions {
     public function getCard_CardActiveEffect( $card_ids ) {
         // ANCHOR - getCard_CardActiveEffect
         self::checkAction( 'getCard_CardActiveEffect' );
-
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
         if (count($card_ids) != 3) {
             throw new BgaUserException( self::_("Please ensure that you select exactly 3 cards from your discard pile; selecting more or fewer cards than required is not permitted.") );
+        } else if ( count($card_ids) == 0 ) {
+            // end the effect
+            self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
+            $this->checkDoubleCard($player_id);
         }
         $player_id = $card_effect_info['player_id'];
         $player_deck = $this->getActivePlayerDeck($player_id);
@@ -742,6 +745,29 @@ trait AniversusPlayerActions {
             throw new BgaUserException( self::_("This card does not have an effect that can be activated") );
         } else {
             $random_pick_cards = json_decode($playing_card_info['card_info'], true);
+            for ($i = 0; $i < count($bottom_items); $i++) {
+                // Filter $random_pick_cards to find all items with the matching type_arg
+                $matches = array_filter($random_pick_cards, function($card) use ($bottom_items, $i) {
+                    return $card['type_arg'] == $bottom_items[$i]['type'];
+                });
+                
+                // If no matching cards, throw an exception
+                if (empty($matches)) {
+                    throw new BgaUserException(self::_("Invalid bottom cards selected"));
+                }
+                
+                // Randomly pick one of the matching cards
+                $keys = array_keys($matches);
+                $random_key = $keys[array_rand($keys)];
+                $selected_card = $matches[$random_key];
+                
+                // Perform your operation with $selected_card here
+                // $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
+                $player_deck = $playing_card_info['card_id'] == 4058 ? $this->getNonActivePlayerDeck($playing_card_info['player_id']) : $this->getActivePlayerDeck($playing_card_info['player_id']);
+                $player_deck->insertCardOnExtremePosition($selected_card['id'], 'deck', true);
+                // Now remove the selected item from $random_pick_cards
+                unset($random_pick_cards[$random_key]);
+            }
             foreach ($top_items as $top_item) {
                 // Filter $random_pick_cards to find all items with the matching type_arg
                 $matches = array_filter($random_pick_cards, function($card) use ($top_item) {
@@ -762,29 +788,6 @@ trait AniversusPlayerActions {
                 // $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
                 $player_deck = $playing_card_info['card_id'] == 4058 ? $this->getNonActivePlayerDeck($playing_card_info['player_id']) : $this->getActivePlayerDeck($playing_card_info['player_id']);
                 $player_deck->insertCardOnExtremePosition($selected_card['id'], 'deck', true);
-                // Now remove the selected item from $random_pick_cards
-                unset($random_pick_cards[$random_key]);
-            }
-            for ($i = 0; $i < count($bottom_items); $i++) {
-                // Filter $random_pick_cards to find all items with the matching type_arg
-                $matches = array_filter($random_pick_cards, function($card) use ($bottom_items, $i) {
-                    return $card['type_arg'] == $bottom_items[$i]['type'];
-                });
-                
-                // If no matching cards, throw an exception
-                if (empty($matches)) {
-                    throw new BgaUserException(self::_("Invalid bottom cards selected"));
-                }
-                
-                // Randomly pick one of the matching cards
-                $keys = array_keys($matches);
-                $random_key = $keys[array_rand($keys)];
-                $selected_card = $matches[$random_key];
-                
-                // Perform your operation with $selected_card here
-                // $player_deck = $this->getActivePlayerDeck($playing_card_info['player_id']);
-                $player_deck = $playing_card_info['card_id'] == 4058 ? $this->getNonActivePlayerDeck($playing_card_info['player_id']) : $this->getActivePlayerDeck($playing_card_info['player_id']);
-                $player_deck->insertCardOnExtremePosition($selected_card['id'], 'deck', false);
                 // Now remove the selected item from $random_pick_cards
                 unset($random_pick_cards[$random_key]);
             }
@@ -845,6 +848,8 @@ trait AniversusPlayerActions {
         if (empty($player_card)) {
             throw new BgaUserException( self::_("There is no player in this position") );
         } else {
+            // player swap -> throw -> unselectall
+            self::notifyPlayer($player_id, "removePlaymatClickAvailable", "", array());
             foreach ($player_card as $card) {
                 $this->playCard2Discard($player_id, $card['id'], 'playmat');
                 self::notifyAllPlayers( "movePlayerInPlaymat2Discard", clienttranslate( '${player_name} swaps the player ${card_name}' ), array(
@@ -1104,6 +1109,12 @@ trait AniversusPlayerActions {
         $this->addStatus2StatusLst($player_id, False, 54);
         $this->addStatus2StatusLst($player_id, False, 405);
         $this->updatePlayerBoard($player_id);
+        $player_name = self::getActivePlayerName();
+        self::notifyAllPlayers('broadcast', clienttranslate('${player_name} uses the skill Cat Power Up! Power +2'), array(
+            'player_name' => $player_name,
+            'message' => clienttranslate("${$player_name}'s Power + 2"),
+            'type' => 'info',
+        ) );
         $this->gamestate->nextState( "playerTurn" );
     }
     // ANCHOR catProductivityUp_skill
@@ -1114,6 +1125,12 @@ trait AniversusPlayerActions {
         self::DbQuery( $sql );
         $this->addStatus2StatusLst($player_id, False, 405);
         $this->updatePlayerBoard($player_id);
+        $player_name = self::getActivePlayerName();
+        self::notifyAllPlayers('broadcast', clienttranslate('${player_name} uses the skill Cat Productivity Up! Productivity +2'), array(
+            'player_name' => $player_name,
+            'message' => clienttranslate("${$player_name}'s Productivity + 2"),
+            'type' => 'info',
+        ) );
         $this->gamestate->nextState( "playerTurn" );
     }
     // ANCHOR squirrelLookAt_skill

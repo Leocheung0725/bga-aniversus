@@ -22,6 +22,11 @@
 .none {
   display: none !important;
 }
+
+.status_noeffect {
+  opacity: 0.5 !important;
+}
+
 .spectatorMode #myhand_wrap {
   display: none;
 }
@@ -68,7 +73,9 @@ html {
   position: relative;
   margin-left: 4rem;
 }
-
+.dijitTooltipContainer{
+  border-radius: 10px !important;
+}
 
 .player_score_value {
   font-family: 'Sriracha' !important;
@@ -111,6 +118,14 @@ html {
   color: #0b89dd;
   left: 1.8rem;
   text-shadow: 3px 0 3px #ffffff,0 -3px 3px #ffffff,0 3px 3px #ffffff,-3px 0 3px #ffffff;
+}
+
+/* .status_bar>*>.aniversus_counter {
+  left: 1.5rem;
+} */
+
+.dijitTooltipContainer {
+  background: rgba(255, 255, 255, 0.95) !important;
 }
 /* ---------------------- ---------------------- tpl css ---------------------- ---------------------- */
 #gamefield {
@@ -172,15 +187,30 @@ html {
   flex-direction: row;
 }
 
+.myhand_bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 45px;
+}
+
+.status_bar {
+  display: flex;
+  flex-direction: row;
+  width: 300px;
+  height: 45px;
+  justify-content: space-evenly;
+}
+
 h3.myhand_text {
   font-weight: bold;
   padding: 3px 6px;
   border-radius: 4px;
   color: rgb(110, 27, 189);
   margin: 0 2px;
-  font-size: 120%;
+  font-size: 100%;
   /* text-shadow: 10px 10px 10px #ffffff; */
-  -webkit-text-stroke: 1px #ffffff;
+  -webkit-text-stroke: 0.3px #ffffff;
 }
 
 .playmat_field {
@@ -330,7 +360,7 @@ h3.myhand_text {
 	width: var(--card-width);
 	background-image: url("img/sprite_sheet.png");
   border-radius: 4px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* A more pronounced shadow */
+  box-shadow: 1px 8px 16px rgba(0, 0, 0, 0.8); /* A more pronounced shadow */
 }
 
 
@@ -365,13 +395,20 @@ h3.myhand_text {
   font-family: "Arial";
   padding: 0.75rem;
   z-index: 900;
+  width: 510px;
+
+}
+
+.notetextred {
+  color: #c36866;
 }
 
 .tooltip-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between; /* Adjust this as needed */
-  gap: 3rem; /* Adjust the gap between the image and description */
+  gap: 1rem; /* Adjust the gap between the image and description */
+  width: -webkit-fill-available;
 }
 
 .tooltip-image {
@@ -380,6 +417,22 @@ h3.myhand_text {
   width: var(--tooltipimage-width);
   background-image: var(--tooltipurl);
   border-radius: 4px;
+  box-shadow: black 1px 2px 4px;
+}
+
+.ortext {
+  justify-content: center;
+  font-size: 0.8rem !important;
+}
+
+.li-item.description {
+  display: flex;
+  flex-direction: column;
+}
+
+.span_center {
+  display: flex;
+  justify-content: center;
 }
 
 .tooltip-description {
@@ -391,6 +444,29 @@ ul.no-bullet {
   list-style-type: none;
   padding: 0;
   margin: 0;
+}
+.tooltip_ability_left {
+  display: grid;
+  grid-template-columns: 5fr 1fr;
+  background-color: #f1ead7;
+  border-radius: 2px;
+  padding-left: 2px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  /* box-shadow: 1px 2px 2px; */
+}
+.tooltip_ability_right {
+  display: flex;
+  justify-content: space-between;
+  background-color: #edecea;
+  border-radius: 2px;
+  padding-right: 8px;
+  /* box-shadow: 1px 2px 2px; */
+}
+
+.tooltip_ability_container {
+  display: grid;
+  grid-template-columns: 4fr 1fr 5fr;
 }
 
 .li-item {
@@ -461,7 +537,7 @@ ul.no-bullet {
 .playerboard_container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 11px;
 
 }
 
@@ -495,6 +571,39 @@ ul.no-bullet {
 
 .element_hand_token {
   background-position: calc(var(--elements-width) - (var(--element-width) * 5)) 0;
+}
+
+.element_first_token {
+  background-position: calc(var(--elements-width) - (var(--element-width) * 7)) 0;;
+}
+
+.status_token {
+  background-image: url('img/Status.png');
+  position: absolute;
+  background-size: var(--elements-width) 40px;
+  height: 40px;
+  width: 40px;
+}
+
+.status_cannotdraw_token {
+  background-position: calc(var(--elements-width) - (var(--element-width) * 0)) 0;
+}
+
+.status_suspension_token {
+  background-position: calc(var(--elements-width) - (var(--element-width) * 1)) 0;
+}
+
+.status_actionup_token {
+  background-position: calc(var(--elements-width) - (var(--element-width) * 2)) 0;
+}
+
+.status_energydeduct_token {
+  background-position: calc(var(--elements-width) - (var(--element-width) * 3)) 0;
+}
+
+.status_comeback_token {
+  background-position: calc(var(--elements-width) - (var(--element-width) * 4)) 0;
+
 }
 
 .counter {

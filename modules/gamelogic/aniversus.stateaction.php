@@ -217,7 +217,7 @@ trait AniversusStateActions {
                 // id : 9 handling
                 $opponent_hand = $opponent_deck->getPlayerHand($opponent_id);
                 if ($selected_thrown_card['type_arg'] == 9) {
-                    $this->addStatus2StatusLst($opponent_id, True, 9);
+                    $this->addStatus2StatusLst($opponent_id, false, 9);
                 } else {
                     if ( count($this->find_elements_by_key_value( $opponent_hand, "type_arg", 9 )) >= 1 ) {
                         $this->addStatus2StatusLst($opponent_id, false, 9);
@@ -575,7 +575,7 @@ trait AniversusStateActions {
                 'diceTwo' => $diceTwo,
                 'diceTotal' => $diceTotal,
             ) );
-            $message = clienttranslate( "{$player_name} shoots the goal by hitting number {$diceTotal}" );
+            $message = clienttranslate( "<div>{$player_name} <span sytle='color: green;'>shoots the goal by hitting number {$diceTotal}</span></div>" );
             self::notifyAllPlayers( "broadcast", '', array(
                 'type' => 'info',
                 'message' => $message,
@@ -616,7 +616,7 @@ trait AniversusStateActions {
                 'diceTwo' => $diceTwo,
                 'diceTotal' => $diceTotal,
             ) );
-            $message = clienttranslate( "{$player_name} misses the goal by hitting number {$diceTotal}" );
+            $message = clienttranslate( "<div>{$player_name} <span style='color: red;'>misses the goal by hitting number {$diceTotal}</span></div>" );
             self::notifyAllPlayers( "broadcast", '', array(
                 'type' => 'info',
                 'message' => $message,
