@@ -133,6 +133,9 @@ trait AniversusPlayerActions {
         $player_name = self::getActivePlayerName();
         $time = time();
         $player_color = self::getPlayerColorById($player_id);
+        // give extra time
+        self::giveExtraTime($player_id);
+        // 
         self::notifyAllPlayers( "playFunctionCard", 
         clienttranslate( 
             "<div class='log_withcard_main'>
@@ -346,6 +349,8 @@ trait AniversusPlayerActions {
             ";
             self::DbQuery( $sql );
         }
+        // give extra time
+        self::giveExtraTime($player_id);
         // move the card from hand to playmat
         $player_deck->moveCard($card_id, 'playmat', $db_position);
         $allPlayerInThisPosition = $this->find_elements_by_key_value($player_deck->getCardsInLocation('playmat'), 'location_arg', $db_position);
@@ -551,6 +556,9 @@ trait AniversusPlayerActions {
     public function pass_playerTurn() {
         // ANCHOR - pass_playerTurn
         self::checkAction( 'pass_playerTurn' );
+        // give extra time
+        $player_id = self::getActivePlayerId();
+        self::giveExtraTime($player_id);
         $this->gamestate->nextState( "throwCard" );
     }
 
@@ -584,6 +592,7 @@ trait AniversusPlayerActions {
         }
         $sql = "UPDATE playing_card SET card_id = 402, card_type = 'status', card_type_arg = '402', disabled = FALSE WHERE player_id = $player_id";
         self::DbQuery( $sql );
+        self::giveExtraTime($player_id);
         $this->gamestate->nextState( "cardActiveEffect" );
     }
     public function throwCard_throwCard( $player_id, $card_ids ) {
@@ -1112,9 +1121,11 @@ trait AniversusPlayerActions {
         $player_name = self::getActivePlayerName();
         self::notifyAllPlayers('broadcast', clienttranslate('${player_name} uses the skill Cat Power Up! Power +2'), array(
             'player_name' => $player_name,
-            'message' => clienttranslate("${$player_name}'s Power + 2"),
+            'message' => clienttranslate("{$player_name}'s Power + 2"),
             'type' => 'info',
         ) );
+
+        self::giveExtraTime($player_id);
         $this->gamestate->nextState( "playerTurn" );
     }
     // ANCHOR catProductivityUp_skill
@@ -1131,6 +1142,8 @@ trait AniversusPlayerActions {
             'message' => clienttranslate("${$player_name}'s Productivity + 2"),
             'type' => 'info',
         ) );
+
+        self::giveExtraTime($player_id);
         $this->gamestate->nextState( "playerTurn" );
     }
     // ANCHOR squirrelLookAt_skill
@@ -1169,6 +1182,8 @@ trait AniversusPlayerActions {
             'message' => clienttranslate('The squirrel player uses the skill << Deck Peek >> that it can look at the top 4 cards of the opponent\'s draw deck and rearrange them in any order.'),
             'type' => 'info',
         ) );
+
+        self::giveExtraTime($player_id);
         $this->gamestate->nextState( "cardActiveEffect" );
     }
     // ANCHOR squirrelSearch_skill
@@ -1191,6 +1206,8 @@ trait AniversusPlayerActions {
         . "disabled = FALSE "
         . "WHERE player_id = " . intval($player_id);
         self::DbQuery( $sql );
+
+        self::giveExtraTime($player_id);
         $this->addStatus2StatusLst($player_id, False, 405);
 
         $this->gamestate->nextState( "cardActiveEffect" );

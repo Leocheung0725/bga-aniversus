@@ -341,8 +341,7 @@ trait AniversusStateActions {
 
     function stPlayerTurn() {
         // ANCHOR stPlayerTurn
-        $player_id = self::getActivePlayerId();
-        self::giveExtraTime($player_id);
+        
         // $this->updatePlayerAbility($player_id);
     }
 
@@ -352,7 +351,6 @@ trait AniversusStateActions {
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $card_active_effect_info = self::getNonEmptyObjectFromDB( $sql );
         $player_id = $card_active_effect_info['player_id'];
-        self::giveExtraTime($player_id);
         $player_deck = $this->getActivePlayerDeck($player_id); // this is the deck of the player who plays the card
         switch ( $card_active_effect_info['card_type_arg'] ) {
             case 8:

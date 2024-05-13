@@ -303,9 +303,9 @@ class Aniversus extends Table
         // }
         $zombiePlayerId = $active_player;
         $nonzombie_player_id = $this->getNonActivePlayerId();
-        $sql = "UPDATE player_score = 0 WHERE player_id = $zombiePlayerId";
+        $sql = "UPDATE player SET player_score = 0 WHERE player_id = $zombiePlayerId";
         self::DbQuery( $sql );
-        $sql = "UPDATE player_score = 1 WHERE player_id = $nonzombie_player_id";
+        $sql = "UPDATE player SET player_score = 1 WHERE player_id = $nonzombie_player_id";
         self::DbQuery( $sql );
         $this->gamestate->nextState( "endGame" );
         return;
