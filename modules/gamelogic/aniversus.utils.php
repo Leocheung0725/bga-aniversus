@@ -654,33 +654,28 @@ trait AniversusUtils {
 
     // ANCHOR endGameAfterEmptyDeck
     public function endGameAfterEmptyDeck() {
-        $sql = "SELECT player_score, player_id FROM player";
+        $sql = "SELECT player_id, player_name, player_score FROM player";
         $players = self::getCollectionFromDb( $sql );
-        // find whether the player has the highest score
-        // winning condition 
         // 1. if one of the player's deck is empty, the player with the highest score wins
         // 2. if two players' score are the same, the player who plays the last card lost
         $player_id = self::getActivePlayerId();
         $active_player_score = $players[$player_id]['player_score'];
         $non_active_player_id = $this->getNonActivePlayerId();
         $non_active_player_score = $players[$non_active_player_id]['player_score'];
-        $active_player_deck = $this->getActivePlayerDeck($player_id);
-        $non_active_player_deck = $this->getNonActivePlayerDeck($player_id);
-        $active_player_deckCardNumber = $active_player_deck->countCardInLocation('deck');
-        $non_active_player_deckCardNumber = $non_active_player_deck->countCardInLocation('deck');
+        // $active_player_deck = $this->getActivePlayerDeck($player_id);
+        // $non_active_player_deck = $this->getNonActivePlayerDeck($player_id);
+        // $active_player_deckCardNumber = $active_player_deck->countCardInLocation('deck');
+        // $non_active_player_deckCardNumber = $non_active_player_deck->countCardInLocation('deck');
+        self::notifyAllPlayers( "broadcast", clienttranslate( 'The game has ended.' ), array(
+            'message' => clienttranslate( 'The game has ended.' ),
+            'type' => 'info'
+        ) );
         if ($active_player_score == $non_active_player_score) {
             // 2. if two players' score are the same, the player who plays the last card lost
-            if ($active_player_deckCardNumber < $non_active_player_deckCardNumber) {
                 $sql = "UPDATE player SET player_score = player_score + 1 WHERE player_id = $non_active_player_id";
                 self::DbQuery( $sql );
                 $this->updatePlayerBoard($player_id);
                 $this->gamestate->nextState( "endGame" );
-            } else {
-                $sql = "UPDATE player SET player_score = player_score + 1 WHERE player_id = $player_id";
-                self::DbQuery( $sql );
-                $this->updatePlayerBoard($player_id);
-                $this->gamestate->nextState( "endGame" );
-            }
         } else {
             $this->gamestate->nextState( "endGame" );
         }

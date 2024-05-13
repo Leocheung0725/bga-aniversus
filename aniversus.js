@@ -1266,6 +1266,7 @@ function (dojo, declare) {
             dojo.subscribe('enableShootBtnPlayerTurn', this, "notif_enableShootBtnPlayerTurn")
             // broadcast notifications
             dojo.subscribe('broadcast', this, "notif_broadcast");
+            this.notifqueue.setSynchronous('broadcast', 2000);
         },  
 
         // from this point and below, you can write your game notifications handling methods
@@ -1340,7 +1341,7 @@ function (dojo, declare) {
             const col = notif.args.col;
             if (player_id == this.player_id) {
                 // this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_me');
-                this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_me', true);
+                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_me_${row}_${col}`, 'discardPile_field_me', true);
                 this.playerOnPlaymat['me'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, 'discardPile_field_me');
                 dojo.style(`playerOnPlaymat_me_${row}_${col}`, 'height', 'auto');
                 if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
@@ -1350,7 +1351,7 @@ function (dojo, declare) {
                 this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}` , 0 );
             } else {
                 // this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_opponent');
-                this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_me', true);
+                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_opponent_${row}_${col}`, 'discardPile_field_me', true);
                 this.playerOnPlaymat['opponent'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, 'discardPile_field_opponent');
                 dojo.style(`playerOnPlaymat_opponent_${row}_${col}`, 'height', 'auto')
                 if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {

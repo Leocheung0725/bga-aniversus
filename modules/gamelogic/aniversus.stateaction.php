@@ -163,7 +163,7 @@ trait AniversusStateActions {
         $sql = "SELECT player_team FROM player WHERE player_id = $player_id";
         $player_team = self::getUniqueValueFromDB( $sql );
         // squirrel skill
-        if ( $card_type_arg != 5 && $player_team == "squirrel" ) {
+        if ( $card_type_arg != 5 && $player_team == "squirrel" && $card_effect_info['card_type'] ) {
             $additional_card = $player_deck->pickCard( 'deck' , $player_id );
             self::notifyPlayer( $player_id, "cardDrawn", "Your Animal Skill is activated: You draw 1 extra card after playing a function card.", 
             array(
@@ -341,7 +341,8 @@ trait AniversusStateActions {
 
     function stPlayerTurn() {
         // ANCHOR stPlayerTurn
-        // $player_id = self::getActivePlayerId();
+        $player_id = self::getActivePlayerId();
+        self::giveExtraTime($player_id);
         // $this->updatePlayerAbility($player_id);
     }
 
@@ -351,6 +352,7 @@ trait AniversusStateActions {
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $card_active_effect_info = self::getNonEmptyObjectFromDB( $sql );
         $player_id = $card_active_effect_info['player_id'];
+        self::giveExtraTime($player_id);
         $player_deck = $this->getActivePlayerDeck($player_id); // this is the deck of the player who plays the card
         switch ( $card_active_effect_info['card_type_arg'] ) {
             case 8:

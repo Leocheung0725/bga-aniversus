@@ -275,7 +275,7 @@ h3.myhand_text {
   left: 0px;
   right: 0px;
   bottom: 0px;
-  opacity: 0.75;
+  /* opacity: 0.75; */
 }
 
 .playerCardOnPlaymat {
@@ -402,6 +402,9 @@ h3.myhand_text {
 .notetextred {
   color: #c36866;
 }
+.align-with-text {
+  vertical-align: middle; /* This aligns the image vertically with the surrounding text */
+}
 
 .tooltip-container {
   display: flex;
@@ -428,6 +431,7 @@ h3.myhand_text {
 .li-item.description {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .span_center {
@@ -518,6 +522,16 @@ ul.no-bullet {
   height: 20px;
   width: 20px;
   background-position: calc(200px - (20px * 2)) 0;
+}
+
+.action-inline-image {
+  display: inline-block; /* or 'inline' depending on your layout needs */
+  background-image: url('img/Element.png');
+  position: relative;
+  background-size: 200px 20px;
+  height: 20px;
+  width: 20px;
+  background-position: calc(200px - (20px * 3)) 0;
 }
 
 /* player_board CSS */

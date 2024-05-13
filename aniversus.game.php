@@ -285,23 +285,30 @@ class Aniversus extends Table
     {
     	$statename = $state['name'];
     	
-        if ($state['type'] === "activeplayer") {
-            switch ($statename) {
-                default:
-                    $this->gamestate->nextState( "zombiePass" );
-                	break;
-            }
+        // if ($state['type'] === "activeplayer") {
+        //     switch ($statename) {
+        //         default:
+        //             $this->gamestate->nextState( "zombiePass" );
+        //         	break;
+        //     }
 
-            return;
-        }
+        //     return;
+        // }
 
-        if ($state['type'] === "multipleactiveplayer") {
-            // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
+        // if ($state['type'] === "multipleactiveplayer") {
+        //     // Make sure player is in a non blocking status for role turn
+        //     $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
             
-            return;
-        }
-
+        //     return;
+        // }
+        $zombiePlayerId = $active_player;
+        $nonzombie_player_id = $this->getNonActivePlayerId();
+        $sql = "UPDATE player_score = 0 WHERE player_id = $zombiePlayerId";
+        self::DbQuery( $sql );
+        $sql = "UPDATE player_score = 1 WHERE player_id = $nonzombie_player_id";
+        self::DbQuery( $sql );
+        $this->gamestate->nextState( "endGame" );
+        return;
         throw new feException( "Zombie mode not supported at this game state: ".$statename );
     }
     

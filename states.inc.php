@@ -89,7 +89,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stNewHand",
         "updateGameProgression" => true,
-        "transitions" => array( "playerTurn" => statePlayerTurn )
+        "transitions" => array( "playerTurn" => statePlayerTurn, "endGame" => stateEndGame )
     ),
     // SECTION normal process section
     21 => array(
@@ -149,7 +149,7 @@ $machinestates = array(
         "possibleactions" => array( "catPowerUp_skill", "catProductivityUp_skill", 
         "squirrelLookAt_skill", "squirrelSearch_skill", "back_skill"),
         "transitions" => array( "playerTurn" => statePlayerTurn, "cardEffect" => stateCardEffect
-        , "cardActiveEffect" => stateCardActiveEffect )
+        , "cardActiveEffect" => stateCardActiveEffect, "endGame" => stateEndGame )
     ),
 
     // !SECTION normal process section
