@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////////////////////////
 trait AniversusUtils {
     // SECTION DEBUG function
-    function pickCard2Hand($card_type) {
+    function getCard($card_type) {
         $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
         $typeofCard = $this->getCardinfoFromCardsInfo($card_type)['type'];
@@ -19,7 +19,8 @@ trait AniversusUtils {
             'cards' => array($card),
         ) );
     }
-    function pickCardFromDiscard2Hand($card_type, $player_id) {
+    function getCardD($card_type) {
+        $player_id = self::getActivePlayerId();
         $player_deck = $this->getActivePlayerDeck($player_id);
         $typeofCard = $this->getCardinfoFromCardsInfo($card_type)['type'];
         $cards = $player_deck->getCardsOfTypeInLocation($typeofCard, $card_type, 'discard');
@@ -34,7 +35,7 @@ trait AniversusUtils {
     }
     function actionup() {
         $player_id = self::getActivePlayerId();
-        $sql = "UPDATE player SET player_action = player_action + 1 WHERE player_id = $player_id";
+        $sql = "UPDATE player SET player_action = player_action + 3 WHERE player_id = $player_id";
         self::DbQuery( $sql );
         $this->updatePlayerBoard($player_id);
     }
@@ -262,7 +263,8 @@ trait AniversusUtils {
     public function updatePlayerBoard($player_id)
     {
         // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-        $sql = "select player_score, player_action, player_productivity, player_team, player_power, player_status from player where player_id = $player_id";
+        $sql = "select player_score, player_action, player_productivity, player_team, 
+        player_power, player_status, shooting_number from player where player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
         // get the deck cards number 
         $player_deck = $this->getActivePlayerDeck($player_id);
@@ -274,8 +276,10 @@ trait AniversusUtils {
         $myactionup = self::countStatusOccurrence($player_status, 13);
         $myenergydeduct = self::countStatusOccurrence($player_status, 10);
         $mycomeback = self::countStatusOccurrence($player_status, 9);
+        $shooting_numbers_me = json_decode($player['shooting_number']);
         $opponent_id = $this->getNonActivePlayerId();
-        $sql2 = "select player_score, player_action, player_productivity, player_team, player_power, player_status from player where player_id = $opponent_id";
+        $sql2 = "select player_score, player_action, player_productivity, player_team, 
+        player_power, player_status, shooting_number from player where player_id = $opponent_id";
         $opponent = self::getNonEmptyObjectFromDB( $sql2 );
         $opponent_deck = $this->getActivePlayerDeck($opponent_id);
         $opponent_handCardNumber = $opponent_deck->countCardInLocation('hand', $opponent_id);
@@ -286,6 +290,7 @@ trait AniversusUtils {
         $opactionup = self::countStatusOccurrence($oplayer_status, 13);
         $openergydeduct = self::countStatusOccurrence($oplayer_status, 10);
         $opcomeback = self::countStatusOccurrence($oplayer_status, 9);
+        $shooting_numbers_opponent = json_decode($opponent['shooting_number']);
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
             'player_id' => $player_id,
             'player_productivity' => $player['player_productivity'],
@@ -299,6 +304,7 @@ trait AniversusUtils {
             'actionup' => $myactionup,
             'energydeduct' => $myenergydeduct,
             'comeback' => $mycomeback,
+            'shootNum_lst' => $shooting_numbers_me,
         ) );
 
         self::notifyAllPlayers( "updatePlayerBoard", "", array(
@@ -314,6 +320,7 @@ trait AniversusUtils {
             'actionup' => $opactionup,
             'energydeduct' => $openergydeduct,
             'comeback' => $opcomeback,
+            'shootNum_lst' => $shooting_numbers_opponent,
         ) );
     }
     // ANCHOR getLogCardBackgroundPosition
@@ -432,6 +439,11 @@ trait AniversusUtils {
         $powerup = $this->countStatusOccurrence($player_status, 54);
         if ($powerup > 0) {
             $total_mypower += $powerup * 2 ;
+        }
+        // 40511: Catskill Powerup
+        $catskill_Powerup = $this->countStatusOccurrence($player_status, 40511);
+        if ($catskill_Powerup > 0) {
+            $total_mypower += 3 ;
         }
         // end of speical card effect
         $sql = "UPDATE player SET player_power = $total_mypower, player_productivity_limit = $total_myproductivity WHERE player_id = $player_id";

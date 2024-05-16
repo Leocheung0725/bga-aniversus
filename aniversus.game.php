@@ -183,7 +183,8 @@ class Aniversus extends Table
         $opponent_deck = $this->getActivePlayerDeck($opponent_player_id);
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score, player_team team, player_power, player_productivity_limit, player_productivity, player_action_limit, player_action FROM player ";
+        $sql = "SELECT player_id id, player_score score, player_team team, player_power,
+        player_productivity_limit, player_productivity, player_action_limit, player_action, shooting_number FROM player ";
         $result['players'] = self::getCollectionFromDb( $sql );
         $current_player = $result['players'][$current_player_id];
         $result['current_player'] = $current_player;
@@ -215,6 +216,9 @@ class Aniversus extends Table
             foreach ($playmatCards as $card) {
                 $result['players'][$player_id]['playmat'][] = $card;
             }
+
+            // shooting number
+            $result['players'][$player_id]['shooting_number'] = json_decode($player['shooting_number']);
         }
 
         // check playing_card status
@@ -244,6 +248,9 @@ class Aniversus extends Table
         $result['player_status']['actionup'] = self::countStatusOccurrence($player_status, 13);
         $result['player_status']['energydeduct'] = self::countStatusOccurrence($player_status, 10);
         $result['player_status']['comeback'] = self::countStatusOccurrence($player_status, 9);
+
+        
+
         return $result;
     }
 

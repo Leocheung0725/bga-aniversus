@@ -364,7 +364,7 @@ trait AniversusStateActions {
                     });
                     $top_cards_opponent = array_slice($all_draw_deck_opponent, 0, $lookatNum);
                     $top_cards_opponent_json = json_encode($top_cards_opponent);
-                    $sql = "UPDATE playing_card SET card_info = '{$top_cards_opponent_json}' WHERE disabled = FALSE";
+                    $sql = "UPDATE playing_card SET card_info = '{$top_cards_opponent_json}', card_status = 'thrown' WHERE disabled = FALSE";
                     self::DbQuery( $sql );
                 } else {
                     $lookatNum = 5;
@@ -374,7 +374,7 @@ trait AniversusStateActions {
                     });
                     $top_cards = array_slice($all_draw_deck, 0, $lookatNum);
                     $top_cards_json = json_encode($top_cards);
-                    $sql = "UPDATE playing_card SET card_info = '{$top_cards_json}' WHERE disabled = FALSE";
+                    $sql = "UPDATE playing_card SET card_info = '{$top_cards_json}', card_status = 'thrown' WHERE disabled = FALSE";
                     self::DbQuery( $sql );
                 }
                 self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( "You look at {$lookatNum} cards and you need to rearrange them. (put on the top or the bottom)" ), [
@@ -388,9 +388,9 @@ trait AniversusStateActions {
             case 57:
                 $all_discard_cards = $player_deck->getCardsInLocation('discard');
                 $all_discard_cards_json = json_encode($all_discard_cards);
-                $sql = "UPDATE playing_card SET card_info = '{$all_discard_cards_json}' WHERE disabled = FALSE";
+                $sql = "UPDATE playing_card SET card_info = '{$all_discard_cards_json}', card_status = 'thrown' WHERE disabled = FALSE";
                 self::DbQuery( $sql );
-                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( "You picks 3 cards from discard pile." ), [
+                self::notifyPlayer($player_id, 'showCardsOnTempStock', clienttranslate( "You picks 2 cards from discard pile." ), [
                     'cards' => $all_discard_cards,
                     'player_id' => $player_id,
                     'card_type_arg' => 57,
@@ -399,7 +399,7 @@ trait AniversusStateActions {
             case 40512:
                 $allCardsInDrawDeck = $player_deck->getCardsInLocation('deck');
                 $allCardsInDrawDeck_json = json_encode($allCardsInDrawDeck);
-                $sql = "UPDATE playing_card SET card_info = '{$allCardsInDrawDeck_json}' WHERE disabled = FALSE";
+                $sql = "UPDATE playing_card SET card_info = '{$allCardsInDrawDeck_json}', card_status = 'thrown' WHERE disabled = FALSE";
                 self::DbQuery( $sql );
                 self::notifyPlayer( $player_id, "showCardsOnTempStock", "", array(
                     'cards' => $allCardsInDrawDeck,
@@ -514,6 +514,10 @@ trait AniversusStateActions {
         if ($status4058 > 0) {
             $this->removeStatusFromStatusLst($player_id, 4058);
         }
+        $status40511 = $this->countStatusOccurrence($player_status, 40511);
+        if ($status40511 > 0) {
+            $this->removeStatusFromStatusLst($player_id, 40511);
+        }
 
         $this->activeNextPlayer();
         $this->gamestate->nextState( "cardDrawing" );
@@ -548,10 +552,15 @@ trait AniversusStateActions {
                     $forward_player_num += 1;
                 }
             }
-            if ( $forward_player_num >= 4 ) {
+            if ( $forward_player_num >= 3 ) {
                 $shooting_number[] = 12;
             }
-        } 
+            self::notifyAllPlayers( "catSkillUpdateShootingNumber", clienttranslate( '' ), array(
+                'player_id' => $player_id,
+                'player_name' => self::getActivePlayerName(),
+                'shootNum_lst' => $shooting_number,
+            ) );
+        }
         // end of cat skill
         $player_name = self::getActivePlayerName();
         // check whether the diceTotal is in the shooting_number
@@ -566,8 +575,6 @@ trait AniversusStateActions {
                 $sql = "UPDATE player SET shooting_number = '{$this->squirrel_original_shooting_numbers}' WHERE player_id = $player_id";
                 self::DbQuery( $sql );
             }
-            // Refresh the player board by using lastest data (Fetch the data from database again this time) 
-            $this->updatePlayerBoard($player_id);
             self::notifyAllPlayers( "shoot_roll", clienttranslate( '${player_name} shoots the goal by hitting number ${diceTotal}' ), array(
                 'player_id' => $player_id,
                 'player_name' => self::getActivePlayerName(),
@@ -580,7 +587,8 @@ trait AniversusStateActions {
                 'type' => 'info',
                 'message' => $message,
             ) );
-
+            // Refresh the player board by using lastest data (Fetch the data from database again this time) 
+            $this->updatePlayerBoard($player_id);
             // Determine whether the game is over
             $sql = "SELECT player_score FROM player WHERE player_id = $player_id";
             $player_score = self::getUniqueValueFromDB( $sql );
@@ -590,7 +598,6 @@ trait AniversusStateActions {
             }
             // change the game state to playerEndTurn
             $this->activeNextPlayer();
-
             // UPDATE: change the game state to cardActiveEffect and update the database to record special card (redcard)
             $player_id = self::getActivePlayerId();
             $sql = "UPDATE playing_card SET "
@@ -621,6 +628,8 @@ trait AniversusStateActions {
                 'type' => 'info',
                 'message' => $message,
             ) );
+            // Refresh the player board by using lastest data (Fetch the data from database again this time) 
+            $this->updatePlayerBoard($player_id);
             // change the game state to playerEndTurn
             $this->gamestate->nextState( "throwCard" );
         }

@@ -73,7 +73,7 @@ trait AniversusStateArgs {
                 $button_list[] = 1;
                 break;
             case 57:
-                $message = "may search 3 cards from the discard pile and put them in hand";
+                $message = "may search 1 card from the discard pile and put them in hand";
                 break;
             case 64:
                 $message = "must discard 1 card from the hand";
@@ -87,7 +87,7 @@ trait AniversusStateArgs {
                 $button_list[] = 1;
                 break;
             case 112:
-                $message = "discard 1 hand card to search for 1 card from the draw deck and put to the hand.";
+                $message = "discard 1 hand card to search for 2 cards from the draw deck and put to the hand.";
                 $button_list[] = 1;
                 break;
             case 401:
@@ -151,12 +151,12 @@ trait AniversusStateArgs {
         $player_id = self::getActivePlayerId();
         $sql = "SELECT player_status, player_team, player_id from player WHERE player_id = $player_id";
         $player = self::getNonEmptyObjectFromDB( $sql );
-        $player_status = json_decode($player['player_status'], true);
-        $used_skill = in_array(405, $player_status);
+        // $player_status = json_decode($player['player_status'], true);
+        // $used_skill = in_array(405, $player_status);
         $player_team = $player['player_team'];
         return array(
             "player_team" => $player_team,
-            "used_skill" => $used_skill,
+            "player_status" => $player['player_status'],
         );
     }
 

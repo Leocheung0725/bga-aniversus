@@ -107,33 +107,6 @@ var jstpl_cardToolTip =
     '</div>' +
 '</div>';
 
-var jstpl_cardToolTip_backup = 
-'<div class=\'tooltip-main\'>' +
-    '<div class="tooltip-container">' +
-        '<div class="tooltip-description">' +
-            '<ul class=\'no-bullets\'>' +     
-            '<li class=\'li-item title\'><h1>${card_name}</h1></li>' +
-            '<hr>' +
-            '<li class=\'li-item type\'><p>Card Type : ${card_type}</p></li>' +
-            '<div class="tooltip_ability_container">' +
-                '<div>' +
-                    '<div class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></div>' +
-                    '<div class=\'li-item\'><span>Power <div class=\'power-inline-image\'></div> : ${card_power}</span></div>' +
-                '</div>' +
-                '<div class=\'li-item\'><span>Cost <div class=\'cost-inline-image\'></div> : ${card_cost}</span></div>' +
-                '<div class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></div>' +
-                '<div>' +
-                    '<div class=\'li-item\'><span>Productivity <div class=\'productivity-inline-image\'></div> : ${card_productivity}</span></div>' +
-                '</div>' +
-            '</div>' +
-            '<hr>' +
-            '<li class=\'li-item description\'><p>${card_description}</p></li>' +
-            '</ul>' + 
-        '</div>' +
-        '<div class="tooltip-image" style="background-position:${x}px ${y}px">' +
-        '</div>' +
-    '</div>' +
-'</div>';
 
 var jstpl_player_board =
 '<div class="playerboard-main">' +
@@ -146,6 +119,10 @@ var jstpl_player_board =
         '<div class="playerboard_icon">' +
         '<div class="secondrow"><div class="element_token element_hand_token" id="playerboard_hand_image"></div><div class="counter aniversus_counter" id="player_hand_${player_id}"></div></div>' +
         '<div class="secondrow"><div class="element_token element_draw_token" id="playerboard_draw_image"></div><div class="counter aniversus_counter" id="player_deck_${player_id}"></div></div>' +
+        '</div>' +
+        '<div class="playerboard_shootingNum_container">' +
+            '<div class="element_token element_shootNum_token" id="playerboard_shootNum_image"></div>' +
+            '<div class="playerboard_shootNum" id="player_shootNum_${player_id}"></div>' +
         '</div>' +
     '</div>' +
 '</div>';

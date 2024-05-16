@@ -117,6 +117,16 @@ function (dojo, declare) {
                 this.playerCounter[player_id]['deckCardNumber'] = new ebg.counter();
                 this.playerCounter[player_id]['deckCardNumber'].create( `player_deck_${player_id}` );
                 this.playerCounter[player_id]['deckCardNumber'].setValue(gamedatas['deck_card_number'][player_id]);
+                // shooting number
+                let shootNum_text = '';
+                player.shooting_number = [...new Set(player.shooting_number)].sort((a, b) => a - b);
+                for (let i = 0; i < player.shooting_number.length; i++) {
+                    if ( Number(player.shooting_number[i]) <= 12 ) {
+                        shootNum_text += `${player.shooting_number[i]}, `;
+                    }
+                }
+                shootNum_text = shootNum_text.slice(0, -2)
+                $(`player_shootNum_${player_id}`).textContent = shootNum_text;
                 if (player_id == this.player_id) {
                     this.playerCounter[player_id]['productivity_playmat'] = new ebg.counter();
                     this.playerCounter[player_id]['productivity_playmat'].create( `playermat_productivity_me` );
@@ -175,6 +185,7 @@ function (dojo, declare) {
                     dojo.removeClass('comeback_container', 'status_noeffect')
                 }
                 }
+
             }
             // playerboard ToolTip
             this.addTooltipToClass('element_productivity_token', _('<b>Productivity</b>'), '');
@@ -182,6 +193,7 @@ function (dojo, declare) {
             this.addTooltipToClass('element_power_token', _('<b>Power</b>'), '');
             this.addTooltipToClass('element_hand_token', _('<b>Hand Card Number(s)</b>'), '');
             this.addTooltipToClass('element_draw_token', _('<b>Draw Deck Number(s)</b>'), '');
+            this.addTooltipToClass('element_shootNum_token', _('<b>Goal Number(s)</b>'), '');
             this.addTooltipToClass('status_cannotdraw_token', _('<b>You cannot draw cards next round</b>'), '');
             this.addTooltipToClass('status_suspension_token', _('<b>You skip 1 round</b>'), '');
             this.addTooltipToClass('status_actionup_token', _('<b>You have 2 more actions next round</b>'), '');
@@ -297,6 +309,7 @@ function (dojo, declare) {
                         switch (Number(my_playing_card['card_type_arg'])) {
                             case 4:
                                 this.notif_removePlaymatClickAvailable({});
+                                this.playerdeck.setSelectionMode(0);
                                 for (let row = 1; row <= 2; row++) {
                                     for (let col = 1; col <= 5; col++) {
                                         var div_id = `playerOnPlaymat_opponent_${row}_${col}`; 
@@ -349,9 +362,11 @@ function (dojo, declare) {
                                 break;
                             case 112:
                                 this.notif_showCardsOnTempStock({args: {'card_type_arg': 112, 'cards': JSON.parse(my_playing_card['card_info'])}});
+                                this.playerdeck.setSelectionMode(0);
                                 break;
                             case 401:
                                 this.notif_removePlaymatClickAvailable({});
+                                this.playerdeck.setSelectionMode(0);
                                 if (this.player_id == this.getActivePlayerId()) {
                                     for (let row = 1; row <= 2; row++) {
                                         for (let col = 1; col <= 5; col++) {
@@ -367,7 +382,7 @@ function (dojo, declare) {
                             case 402:
                                 this.notif_removePlaymatClickAvailable({});
                                 this.playerdeck.setSelectionMode(0);
-                                if (args.player_id == this.player_id) {
+                                if (this.player_id == this.getActivePlayerId()) {
                                     for (let row = 1; row <= 2; row++) {
                                         for (let col = 1; col <= 5; col++) {
                                             let div_id = `playerOnPlaymat_me_${row}_${col}`; 
@@ -378,6 +393,7 @@ function (dojo, declare) {
                                         }
                                     }
                                 }
+                                break;
                             case 40512:
                                 this.notif_showCardsOnTempStock({args: {'card_type_arg': 40512, 'cards': JSON.parse(my_playing_card['card_info'])}});
                                 break;
@@ -499,7 +515,7 @@ function (dojo, declare) {
                     this.playerdeck.setSelectionMode(2);
                     break;
                 case 112:
-                    this.playerdeck.setSelectionMode(1);
+                    this.playerdeck.setSelectionMode(2);
                     break;
                 case 401:
                     this.playerdeck.setSelectionMode(0);
@@ -517,6 +533,7 @@ function (dojo, declare) {
                     break;
                 case 402:
                     this.playerdeck.setSelectionMode(0);
+                    this.notif_removePlaymatClickAvailable({});
                     if (args.player_id == this.player_id) {
                         for (let row = 1; row <= 2; row++) {
                             for (let col = 1; col <= 5; col++) {
@@ -653,19 +670,21 @@ function (dojo, declare) {
                     break;
                 case 'skill':
                     const team = args.player_team;
-                    const used_skill = args.used_skill;
+                    const player_status = JSON.parse(args.player_status);
+                    console.log(player_status);
                     if ( team == 'cat' ) {
                         this.addActionButton( 'skill_btn_cat_power', _('Power Up'), 'onCatPowerUp_skill' );
                         this.addActionButton( 'skill_btn_cat_productivity', _('Productivity Up'), 'onCatProductivityUp_skill' );
-                        if (used_skill == true) {
+                        if ( player_status.includes(40512) ) {
                             dojo.addClass('skill_btn_cat_power', 'disabled');
-                            dojo.addClass('skill_btn_cat_productivity', 'disabled');
-                        
                         }
+                        if ( player_status.includes(40513) ) {
+                            dojo.addClass('skill_btn_cat_productivity', 'disabled');
+                        }   
                     } else if ( team == 'squirrel' ) {
                         this.addActionButton( 'skill_btn_squirrel_lookAt', _('Deck Peek'), 'onSquirrelLookAt_skill' );
                         this.addActionButton( 'skill_btn_squirrel_search', _('Deck Search'), 'onSquirrelSearch_skill' );
-                        if (used_skill == true) {
+                        if ( player_status.includes(405) ) {
                             dojo.addClass('skill_btn_squirrel_search', 'disabled');
                         }
                     
@@ -1264,6 +1283,7 @@ function (dojo, declare) {
             dojo.subscribe('addIneffectiveCard', this, "notif_addIneffectiveCard");
             dojo.subscribe('removeIneffectiveCard', this, "notif_removeIneffectiveCard");
             dojo.subscribe('enableShootBtnPlayerTurn', this, "notif_enableShootBtnPlayerTurn")
+            dojo.subscribe('catSkillUpdateShootingNumber', this, "notif_catSkillUpdateShootingNumber");
             // broadcast notifications
             dojo.subscribe('broadcast', this, "notif_broadcast");
             this.notifqueue.setSynchronous('broadcast', 2000);
@@ -1288,6 +1308,7 @@ function (dojo, declare) {
             const actionup = Number(notif.args.actionup);
             const energydeduct = Number(notif.args.energydeduct);
             const comeback = Number(notif.args.comeback);
+            var shootNum_lst = notif.args.shootNum_lst;
             // Update all information in the player board
             this.playerCounter[player_id]['productivity'].toValue(player_productivity);
             this.playerCounter[player_id]['productivity_playmat'].toValue(player_productivity);
@@ -1329,6 +1350,16 @@ function (dojo, declare) {
                     dojo.removeClass('comeback_container', 'status_noeffect')
                 }
             }
+            // update shooting number list
+            shootNum_lst = [...new Set(shootNum_lst)].sort((a, b) => a - b);
+            let shootNum_text = '';
+            for (let i = 0; i < shootNum_lst.length; i++) {
+                if ( Number(shootNum_lst[i]) <= 12 ) {
+                    shootNum_text += `${shootNum_lst[i]}, `;
+                }
+            }
+            shootNum_text = shootNum_text.slice(0, -2);
+            $(`player_shootNum_${player_id}`).textContent = shootNum_text;
         },
         // ANCHOR movePlayerInPlaymat2Discard
         notif_movePlayerInPlaymat2Discard: function(notif) {
@@ -1372,11 +1403,10 @@ function (dojo, declare) {
             const row = notif.args.row;
             const col = notif.args.col;
             if (player_id == this.player_id) {
-                this.playerOnPlaymat['me'][row][col].removeFromZone(`discardOnTable_${player_id}_${card_id}`, true, `myhand_item_${card_id}`);
                 this.playerdeck.addToStockWithId(card_type, card_id);
-                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_me_${row}_${col}`, `myhand_item_${card_id}`);
+                this.playerOnPlaymat['me'][row][col].removeFromZone(`cardsOnTable_${player_id}_${card_id}`, true, `myhand_item_${card_id}`);
             } else {
-                this.playerOnPlaymat['opponent'][row][col].removeFromZone(`discardOnTable_${player_id}_${card_id}`, true, `player_board_${player_id}`);
+                this.playerOnPlaymat['opponent'][row][col].removeFromZone(`cardsOnTable_${player_id}_${card_id}`, true, `player_board_${player_id}`);
             }
         },
         // ANCHOR playFunctionCard
@@ -1509,31 +1539,26 @@ function (dojo, declare) {
                     message = 'Select a card from your discard pile and put it in your hand';
                     button_text = 'Confirm';
                     selected_mode = 1;
-                    dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
                     break;
                 case 57:
-                    message = "Select 3 cards from your discard pile and put them in your hand"
-                    button_text = 'Confirm';
-                    selected_mode = 2;
-                    dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
-                    break;
-                case 112:
-                    message = "Select a card from your draw deck and this card will be put on your hand"
+                    message = "Select 2 cards from your discard pile and put them in your hand"
                     button_text = 'Confirm';
                     selected_mode = 1;
-                    dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
+                    break;
+                case 112:
+                    message = "Select 2 cards from your draw deck and this card will be put on your hand"
+                    button_text = 'Confirm';
+                    selected_mode = 2;
                     break;
                 case 40512:
                     message = "Select 2 cards from your draw desk and put them in your hand"
                     button_text = 'Confirm';
                     selected_mode = 2;
-                    dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
                     break;
                 default:
                     message = "Please define the message for this card type"
                     button_text = 'Confirm';
                     selected_mode = 0;
-                    dojo.addClass('cardActiveEffect_btn_throw', 'disabled')
             }
             dojo.place(this.format_block('jstpl_tempCardStock', {
                 'message': message,
@@ -1579,7 +1604,7 @@ function (dojo, declare) {
         },
 
         // ANCHOR removePlaymatClickAvailable
-        notif_removePlaymatClickAvailable: function( notif ) {
+        notif_removePlaymatClickAvailable: function( ) {
             console.log(`**** Notification: removePlaymatClickAvailable `)
             for (let row = 1; row <= 2; row++) {
                 for (let col = 1; col <= 5; col++) {
@@ -1648,6 +1673,22 @@ function (dojo, declare) {
             console.log(`**** Notification: enableShootBtnPlayerTurn `)
             console.log(notif);
             dojo.removeClass('playerTurn_btn_shoot', 'disabled');
+        },
+
+        notif_catSkillUpdateShootingNumber: function( notif ) {
+            console.log(`**** Notification: catSkillUpdateShootingNumber `)
+            console.log(notif);
+            const player_id = notif.args.player_id;
+            var shootNum_lst = notif.args.shootNum_lst;
+            let shootNum_text = '';
+            shootNum_lst = [...new Set(shootNum_lst)].sort((a, b) => a - b);
+            for (let i = 0; i < shootNum_lst.length; i++) {
+                if ( Number(shootNum_lst[i]) <= 12 ) {
+                    shootNum_text += `${shootNum_lst[i]}, `;
+                }
+            }
+            shootNum_text = shootNum_text.slice(0, -2);
+            $(`player_shootNum_${player_id}`).textContent = shootNum_text;
         },
         // !SECTION ACTION NOTIFICATIONS
         // ------------------------------------- End of ACTION Notifications -------------------------------------------- //

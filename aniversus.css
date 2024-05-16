@@ -42,6 +42,7 @@ html {
   background-size: cover;
 }
 
+
 .page-title-css {
   background: url('img/Bar.jpg') !important;
   background-repeat: no-repeat;
@@ -555,6 +556,19 @@ ul.no-bullet {
 
 }
 
+.playerboard_shootingNum_container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 35px;
+}
+
+.playerboard_shootNum {
+  font-family: 'Kalam';
+  margin-left: 50px;
+  text-shadow: 0.5px 0 0.5px #ffffff, 0 -0.5px 0.5px #ffffff, 0 0.5px 0.5px #ffffff, -0.5px 0 0.5px #ffffff;
+}
+
 .element_token {
   background-image: url('img/Element.png');
   position: absolute;
@@ -587,7 +601,7 @@ ul.no-bullet {
   background-position: calc(var(--elements-width) - (var(--element-width) * 5)) 0;
 }
 
-.element_first_token {
+.element_shootNum_token {
   background-position: calc(var(--elements-width) - (var(--element-width) * 7)) 0;;
 }
 

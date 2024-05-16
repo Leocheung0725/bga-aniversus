@@ -59,7 +59,7 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 54,Function,0,0,0,"<div>Power <div class='power-inline-image align-with-text'></div>+ 2 this round.</div>",Power Play,1,squirrel,16
 55,Function,2,0,0,"Your opponent cannot draw cards next round.",Restriction,2,squirrel,17
 56,Function,1,0,0,"Draw 2 cards, then discard 2 cards from all your hand cards.",Substitution,2,squirrel,18
-57,Player,3,0,2,"When Jeffrey comes into play, search your discard pile for 3 cards and put them in your hand.",Jeffrey,2,squirrel,19
+57,Player,3,0,2,"When Jeffrey comes into play, search your discard pile for 1 card and put them in your hand.",Jeffrey,2,squirrel,19
 58,Player,5,0,3,"<div>The player in the same position on the opponent's field -2 power&nbsp;<div class='power-inline-image align-with-text'></div></div> <br><br><div class='notetextred'>NOTE: The effect is activated as long as Sergio is in play</div>",Sergio,3,squirrel,20
 59,Player,0,2,0,"The opponent's productivity player (same position) becomes ineffective. <br><br><div class='notetextred'>NOTE: The effect is activated as long as Antonio is in play</div>",Antonio,2,squirrel,21
 60,Player,2,0,1,"Multiple Marco Bros cards can be played in the same player slot. <br><br><div class='notetextred'>SPECIAL NOTES:</div><div>Marco Bros x1 = 1 power <div class='power-inline-image align-with-text'></div> <br>Marco Bros x2 = 3 power <div class='power-inline-image align-with-text'></div> <br>Marco Bros x3 = 6 power <div class='power-inline-image align-with-text'></div></div>",Marco Bros,4,squirrel,22
@@ -67,18 +67,18 @@ id,type,cost,productivity,power,function,name,nbr,team,css_position
 62,Player,4,0,4,"<div>All Pauls on the field gain +1 power<div class='power-inline-image align-with-text'></div></div>",Aaron,1,squirrel,24
 63,Player,0,2,0,"When Jude is placed, the productivity player in the same position on opponent's side must leave the field to discard pile.",Jude,2,squirrel,25
 64,Player,0,2,2,"When Ceci is placed, discard 1 card from your hand.",Ceci,3,squirrel,26
-101,Training,2,0,0,"<div>If put it on a productivity player, Productivity +1<div class='productivity-inline-image align-with-text'></div> <br><br>If put it on a forward player,  Power +1<div class='power-inline-image align-with-text'></div></div> <br><br><div class='notetextred'>NOTE: The cost applies wherever it is placed</div>",Empowerment,4,cat,27
+101,Training,1,0,0,"<div>If put it on a productivity player, Productivity +1<div class='productivity-inline-image align-with-text'></div> <br><br>If put it on a forward player,  Power +1<div class='power-inline-image align-with-text'></div></div> <br><br><div class='notetextred'>NOTE: The cost applies wherever it is placed</div>",Empowerment,4,cat,27
 102,Player,2,2,4,"Anthony can only be placed if there is a TRAINING CARD on the field already.",Anthony,2,cat,28
 103,Player,3,0,1,"<div>For every 2 forward players on the opponent's team, your team gains +1 power <div class='power-inline-image align-with-text'></div></div>",Sandra,2,cat,29
-104,Player,6,0,6,"You can only have 2 other players in your forward row when Timo is in play.",Timo,1,cat,30
+104,Player,5,0,6,"You can only have 2 other players in your forward row when Timo is in play.",Timo,1,cat,30
 105,Function,3,0,0,"Your opponent skips 1 round.",Suspension,2,cat,31
-106,Player,0,0,2,"Leo can only be placed if you have 3 or more forward players on the field.",Leo,2,cat,32
+106,Player,0,0,2,"Leo can only be placed if you have 2 or more forward players on the field.",Leo,2,cat,32
 107,Player,4,0,3,"Cannot be targeted by any FUNCTION cards.",James,2,cat,33
-108,Function,1,0,0,"Return 1 card from the field to your hand.",Tactical Change,2,cat,34
+108,Function,1,0,0,"Return 1 player card (with training card if any) from the field to your hand.",Tactical Change,2,cat,34
 109,Player,0,3,0,"When Harry is placed, discard 2 cards from your hand.",Harry,2,cat,35
 110,Player,0,1,0,"<div>Gain an additional 1 productivity <div class='productivity-inline-image align-with-text'></div>&nbsp; for every 2 forward players you have.</div>",Roberto,2,cat,36
 111,Player,2,0,1,"<div>The player in the same position on the opponent's field -1 power <div class='power-inline-image align-with-text'></div></div><br><br><div class='notetextred'>NOTE: The effect is activated as long as Lucia is in play</div>",Lucia,2,cat,37
-112,Function,0,0,0,"Discard 1 hand card to search for 1 card from your draw deck and put to your hand. Then, shuffle your deck.",Deck Dive,2,cat,38
+112,Function,0,0,0,"Discard 1 hand card to search for 2 card from your draw deck and put to your hand. Then, shuffle your deck.",Deck Dive,2,cat,38
 113,Player,2,2,2,"Basic player",Rachel,2,cat,39
 114,Player,1,1,1,"Basic player",Alex,4,cat,40
 CSV;
@@ -233,5 +233,5 @@ $this->card_type_arg2css_position = [
     114 => 40,
 ];
 
-$this->cat_original_shooting_numbers = json_encode([1, 3, 5, 7, 9, 11, 100]);
-$this->squirrel_original_shooting_numbers = json_encode([2, 4, 6, 8, 10, 12, 101]);
+$this->cat_original_shooting_numbers = json_encode([3, 5, 7, 9, 11, 100]);
+$this->squirrel_original_shooting_numbers = json_encode([2, 4, 6, 8, 10, 101]);

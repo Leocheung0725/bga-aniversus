@@ -9,7 +9,7 @@
  * -----
  * 
  * states.inc.php
- *
+ *405
  * Aniversus game states description
  *
  */
@@ -89,7 +89,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stNewHand",
         "updateGameProgression" => true,
-        "transitions" => array( "playerTurn" => statePlayerTurn, "endGame" => stateEndGame )
+        "transitions" => array( "playerTurn" => statePlayerTurn )
     ),
     // SECTION normal process section
     21 => array(
