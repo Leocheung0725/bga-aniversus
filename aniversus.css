@@ -4,7 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Poetsen+One&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Sriracha&family=Zeyada&display=swap');
 /********* You can start writing your CSS below this line: **********/
 :root {
-	--card-height: 174px;
+	--card-height: 173px;
 	--card-width: 124px;
   --tooltipimage-height: 321px;
   --tooltipimage-width: 230px;
@@ -901,9 +901,9 @@ ul.no-bullet {
 }
 
 .log_deck {
+  background-image: var(--logdeck-url);
   height: var(--log-deck-card-height);
   width: var(--log-deck-card-width);
-  background-image: var(--logdeck-url);
   border-radius: 4px;
   box-shadow: 1px 2px 4px rgb(0, 0, 0);
   margin: 3px;

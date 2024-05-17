@@ -50,7 +50,7 @@ function (dojo, declare) {
             console.log('aniversus constructor');
             // declare card width and height
             this.cardwidth = 124;
-            this.cardheight = 174;
+            this.cardheight = 173;
             
             this.other = new bgagame.other();
             // Zone control (Player Playmat)
@@ -756,7 +756,7 @@ function (dojo, declare) {
         getCardBackgroundPosition: function(card_type) {
             const type2css = this.gamedatas['card_type_arg2css_position'];
             const position = type2css[card_type];
-            const card_width = 124; const card_height = 174;
+            const card_width = 124; const card_height = 173;
             const columns = 10;
             var row = Math.floor(position / columns);
             var column = (position % columns);
@@ -1063,12 +1063,10 @@ function (dojo, declare) {
         onGetCard_CardActiveEffect: function(evt) {
             dojo.stopEvent(evt);
             var items = this.tempstock.getSelectedItems();
-            if (items.length > 0) {
-                var items_ids = items.map((item) => Number(item.id));
-                this.ajaxcallwrapper('getCard_CardActiveEffect', {
-                    "card_ids": JSON.stringify(items_ids)
-                });
-            }
+            var items_ids = items.map((item) => Number(item.id));
+            this.ajaxcallwrapper('getCard_CardActiveEffect', {
+                "card_ids": JSON.stringify(items_ids)
+            });
         },
         // ANCHOR onSwapField_CardActiveEffect
         onSwapField_CardActiveEffect: function( row, col ) {
@@ -1541,7 +1539,7 @@ function (dojo, declare) {
                     selected_mode = 1;
                     break;
                 case 57:
-                    message = "Select 2 cards from your discard pile and put them in your hand"
+                    message = "Select 1 cards from your discard pile and put them in your hand"
                     button_text = 'Confirm';
                     selected_mode = 1;
                     break;

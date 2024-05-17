@@ -702,14 +702,14 @@ trait AniversusPlayerActions {
         self::checkAction( 'getCard_CardActiveEffect' );
         $sql = "SELECT * FROM playing_card WHERE disabled = FALSE";
         $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
-        if (count($card_ids) > 2) {
-            throw new BgaUserException( self::_("Please ensure that you select below 2 cards from your discard pile; selecting more cards than required is not permitted.") );
+        $player_id = $card_effect_info['player_id'];
+        if (count($card_ids) > 1) {
+            throw new BgaUserException( self::_("Please ensure that you select below 1 cards from your discard pile; selecting more cards than required is not permitted.") );
         } else if ( count($card_ids) == 0 ) {
             // end the effect
             self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
-            $this->checkDoubleCard($player_id);
+            $this->endEffect('normal');
         }
-        $player_id = $card_effect_info['player_id'];
         $player_deck = $this->getActivePlayerDeck($player_id);
         $cards = [];
         foreach ( $card_ids as $card_id ) {
@@ -725,7 +725,7 @@ trait AniversusPlayerActions {
         ) );
         // end the effect
         self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
-        $this->checkDoubleCard($player_id);
+        $this->endEffect('normal');
     }
 
     public function pickCardFromDeck2Hand_CardActiveEffect( $card_ids ) {

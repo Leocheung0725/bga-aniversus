@@ -110,7 +110,7 @@ $machinestates = array(
         "shoot_playerTurn", "throwPlayer_playerTurn", "skill_playerTurn" ),
         "transitions" => array( "endGame" => stateEndGame, "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack , "launch" => stateCardEffect,
         "shoot" => stateShoot, "throwCard" => stateThrowCard, "changeActivePlayer_redcard" => stateChangeActivePlayer_redcard, 
-        "cardActiveEffect" => stateCardActiveEffect, "skill" => stateSkill)
+        "cardActiveEffect" => stateCardActiveEffect, "skill" => stateSkill, "playerEndTurn" => statePlayerEndTurn, "playerTurn" => statePlayerTurn )
     ),
 
     23 => array(
@@ -197,7 +197,7 @@ $machinestates = array(
         "type" => "game",
         "action" => "stChangeActivePlayer",
         "transitions" => array( "endGame" => stateEndGame, "counterattack" => stateCounterattack, "cardEffect" => stateCardEffect, "playerTurn" => statePlayerTurn
-        , 'shoot' => stateShoot )
+        , "shoot" => stateShoot )
     ),
 
     34 => array(
@@ -221,9 +221,7 @@ $machinestates = array(
         "launch" => stateCardEffect, "changeActivePlayer_counterattack" => stateChangeActivePlayer_counterattack )
     ),
     // !SECTION playerTurn section 
-
     // End hand section
-    
     90 => array(
         "name" => "endGame",
         "description" => clienttranslate('End of Game'),
@@ -231,21 +229,6 @@ $machinestates = array(
         "action" => "stEndGame",
         "transitions" => array( "gameEnd" => stateGameEnd, "playerTurn" => statePlayerTurn )
     ),
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // Please do not modify. -----------------------------------------------------------
     // Final state.
     // Please do not modify (and do not overload action/args methods).
