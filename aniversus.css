@@ -12,9 +12,9 @@
 	--playmat-url: url('img/playmat.png');
   --elements-width: 400px;
   --element-width: 40px;
-  --log-deck-card-height: 87px;
+  --log-deck-card-height: 83px;
   --log-deck-card-width: 62px;
-  --logdeck-image-height: 435px;
+  --logdeck-image-height: 430px;
   --logdeck-image-width: 620px;
   --logdeck-url: url('img/sprite_sheet_log.png')
 }

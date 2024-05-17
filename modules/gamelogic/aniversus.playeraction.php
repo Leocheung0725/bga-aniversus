@@ -77,7 +77,7 @@ trait AniversusPlayerActions {
                 break;
             case 8:
                 // need the player have at least 5 card in deck
-                if ($player_deck->countCardInLocation('deck') < 5) {
+                if ($player_deck->countCardInLocation('deck') == 0) {
                     throw new BgaUserException( self::_("You do not have enough cards in deck to play this card") );
                 }
                 break;
@@ -103,6 +103,11 @@ trait AniversusPlayerActions {
             case 108:
                 if ($player_deck->countCardInLocation('playmat') == 0) {
                     throw new BgaUserException( self::_("You do not have any player in playmat") );
+                }
+                break;
+            case 112:
+                if ($player_deck->countCardInLocation('hand') == 0 || $player_deck->countCardInLocation('deck') == 0) {
+                    throw new BgaUserException( self::_("You do not have enough cards in your hand to discard or in your deck to draw from.") );
                 }
                 break;
             default:
@@ -268,6 +273,11 @@ trait AniversusPlayerActions {
                     throw new BgaUserException( self::_("Leo can only be placed if you have 2 or more forward players on the field") );
                 }
                 break;
+            case 109:
+                if ($player_deck->countCardInLocation('hand') <= 2 ) {
+                    throw new BgaUserException( self::_("You do not have enough cards in hand to play this card") );
+                }
+                break;
             case 110:
                 $count_myself_forward_players = 0;
                 foreach ( $actplayer_playmat as $myselfcard ) {
@@ -310,6 +320,9 @@ trait AniversusPlayerActions {
             $allCardsInThisPosition = $this->find_elements_by_key_value($actplayer_playmat, 'location_arg', $db_position);
             if ( count($allCardsInThisPosition) == 0 ) {
                 throw new BgaUserException( self::_("This position haven't any player here, the training card can't not be played.") );
+            }
+            if ( count($player_deck->getCardsOfTypeInLocation($card_category, null, 'playmat', $db_position)) > 0 ) {
+                throw new BgaUserException( self::_("You can only place one training card per each player.") );
             }
         }
         
@@ -635,12 +648,12 @@ trait AniversusPlayerActions {
                 $this->checkDoubleCard($player_id);
                 break;
             case 8:
-                if ( $card_effect_info['card_status'] = "thrown" ) {
+                if ( $card_effect_info['card_status'] == "thrown" ) {
                     throw new BgaUserException( self::_("Invalid operation!") );
                 }
                 break;
             case 11:
-                if ( $card_effect_info['card_status'] = "thrown" ) {
+                if ( $card_effect_info['card_status'] == "thrown" ) {
                     throw new BgaUserException( self::_("Invalid operation!") );
                 }
                 break;
@@ -652,7 +665,7 @@ trait AniversusPlayerActions {
                 $this->checkDoubleCard($player_id);
                 break;
             case 57:
-                if ( $card_effect_info['card_status'] = "thrown" ) {
+                if ( $card_effect_info['card_status'] == "thrown" ) {
                     throw new BgaUserException( self::_("Invalid operation!") );
                 }
                 break;
@@ -671,7 +684,7 @@ trait AniversusPlayerActions {
                 $this->checkDoubleCard($player_id);
                 break;
             case 112:
-                if ( $card_effect_info['card_status'] = "thrown" ) {
+                if ( $card_effect_info['card_status'] == "thrown" ) {
                     throw new BgaUserException( self::_("You have already thrown a card, don't do it again!") );
                 }
                 if (count($card_ids) != 1) {
@@ -688,7 +701,7 @@ trait AniversusPlayerActions {
                 ) );
                 break;
             case 40512:
-                if ( $card_effect_info['card_status'] = "thrown" ) {
+                if ( $card_effect_info['card_status'] == "thrown" ) {
                     throw new BgaUserException( self::_("You have already thrown a card, don't do it again!") );
                 }
                 break;
@@ -704,7 +717,7 @@ trait AniversusPlayerActions {
         $card_effect_info = self::getNonEmptyObjectFromDB( $sql );
         $player_id = $card_effect_info['player_id'];
         if (count($card_ids) > 1) {
-            throw new BgaUserException( self::_("Please ensure that you select below 1 cards from your discard pile; selecting more cards than required is not permitted.") );
+            throw new BgaUserException( self::_("Please ensure that you select below 1 card from your discard pile; selecting more cards than required is not permitted.") );
         } else if ( count($card_ids) == 0 ) {
             // end the effect
             self::notifyPlayer( $player_id, "terminateTempStock", "", array() );
@@ -869,6 +882,7 @@ trait AniversusPlayerActions {
         // deduct the action
         $sql = "UPDATE player SET player_action = player_action - 1 WHERE player_id = $player_id";
         self::DbQuery( $sql );
+        $this->updatePlayerBoard($player_id);
         // checking
         $this->checkPlayingCard();
         self::notifyPlayer( $player_id, "removePlaymatClickAvailable", "", array() );
@@ -987,31 +1001,16 @@ trait AniversusPlayerActions {
             throw new BgaUserException( self::_("There is no player in this position") );
         } else {
             foreach ($player_card as $card) {
-                // if ( $card['type'] == "Player" )
-                // {
-                    $player_deck->moveCard($card['id'], 'hand', $player_id);
-                    self::notifyAllPlayers( "movePlayerInPlaymat2Hand", clienttranslate( '${player_name} picks the ${card_name} from the field to hand.' ), array(
-                        'player_id' => $player_id,
-                        'player_name' => self::getActivePlayerName(),
-                        'card_id' => $card['id'],
-                        'card_name' => self::getCardinfoFromCardsInfo($card['type_arg'])['name'],
-                        'card_type' => $card['type_arg'],
-                        'row' => $row,
-                        'col' => $col,
-                    ) );
-                // } else if ( $card['type'] == "Training" ) {
-                //     $this->playCard2Discard($player_id, $card['id'], 'playmat');
-                //     self::notifyAllPlayers( "movePlayerInPlaymat2Discard", clienttranslate( '${player_name} throws the ${card_name} from the field.' ), array(
-                //         'player_id' => $player_id,
-                //         'player_name' => self::getActivePlayerName(),
-                //         'card_id' => $card['id'],
-                //         'card_name' => $this->getCardinfoFromCardsInfo($card['type_arg'])['name'],
-                //         'card_type' => $card['type_arg'],
-                //         'row' => $row,
-                //         'col' => $col,
-                //     ) );
-                
-                // }
+                $player_deck->moveCard($card['id'], 'hand', $player_id);
+                self::notifyAllPlayers( "movePlayerInPlaymat2Hand", clienttranslate( '${player_name} picks the ${card_name} from the field to hand.' ), array(
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                    'card_id' => $card['id'],
+                    'card_name' => self::getCardinfoFromCardsInfo($card['type_arg'])['name'],
+                    'card_type' => $card['type_arg'],
+                    'row' => $row,
+                    'col' => $col,
+                ) );
             }
         }
         self::notifyPlayer( $player_id, "removePlaymatClickAvailable", "", array() );
@@ -1150,19 +1149,16 @@ trait AniversusPlayerActions {
             throw new BgaUserException( self::_("You have already used the skill") );
         }
         $powerupValue = 3;
-        $sql = "UPDATE player SET player_power =  player_power + $powerupValue WHERE player_id = $player_id";
-        self::DbQuery( $sql );
         $this->addStatus2StatusLst($player_id, False, 40511);
         $this->addStatus2StatusLst($player_id, False, 40512);
-        $this->updatePlayerBoard($player_id);
         $player_name = self::getActivePlayerName();
         self::notifyAllPlayers('broadcast', clienttranslate("${player_name} uses the skill Cat Power Up! Power + {$powerupValue}"), array(
             'player_name' => $player_name,
             'message' => clienttranslate("{$player_name}'s Power + {$powerupValue}"),
             'type' => 'info',
         ) );
-
         self::giveExtraTime($player_id);
+        $this->updatePlayerAbility($player_id);
         $this->gamestate->nextState( "playerTurn" );
     }
     // ANCHOR catProductivityUp_skill

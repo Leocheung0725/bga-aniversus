@@ -9,8 +9,8 @@
  * -----
  * 
  * states.inc.php
- *405
- * Aniversus game states description
+ *405PickCardFromDeck2Hand_CardActiveEffect
+ * Aniversus game states descriptionPickCardFromDeck2Hand_CardActiveEffectid1
  *
  */
 

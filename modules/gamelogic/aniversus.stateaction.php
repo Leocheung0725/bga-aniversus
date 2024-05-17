@@ -163,7 +163,7 @@ trait AniversusStateActions {
         $sql = "SELECT player_team FROM player WHERE player_id = $player_id";
         $player_team = self::getUniqueValueFromDB( $sql );
         // squirrel skill
-        if ( $card_type_arg != 5 && $player_team == "squirrel" && $card_effect_info['card_type'] ) {
+        if ( $card_type_arg != 5 && $player_team == "squirrel" && $card_effect_info['card_type'] == "Function" ) {
             $additional_card = $player_deck->pickCard( 'deck' , $player_id );
             self::notifyPlayer( $player_id, "cardDrawn", "Your Animal Skill is activated: You draw 1 extra card after playing a function card.", 
             array(
@@ -172,7 +172,7 @@ trait AniversusStateActions {
         }
         // end of squirrel skill
         switch ($card_type_arg) {
-            case 1: // Function : Draw 3 cards, then discard 1 card from your hand. (seems ok)
+            case 1: // Function : Draw 3 cards, then discard 1 card from your hand. (seems ok) id 1
                 $picked_cards_list = $player_deck->pickCards( 3, 'deck', $player_id );
                 self::notifyPlayer($player_id, 'cardDrawn', clienttranslate( 'You draw 3 cards' ), [
                     'cards' => $picked_cards_list,
@@ -355,23 +355,24 @@ trait AniversusStateActions {
         switch ( $card_active_effect_info['card_type_arg'] ) {
             case 8:
                 $card_id = $card_active_effect_info['card_id'];
-                if ( $card_id == 4058 ) { 
-                    $lookatNum = 4; 
+                if ( $card_id == 4058 ) {  
                     $opponent_deck = $this->getNonActivePlayerDeck($player_id);
                     $all_draw_deck_opponent = $opponent_deck->getCardsInLocation('deck');
                     usort($all_draw_deck_opponent, function($a, $b) {
                         return -($a['location_arg'] <=> $b['location_arg']);
                     });
+                    count($all_draw_deck_opponent) > 4 ? $lookatNum = 4 : $lookatNum = count($all_draw_deck_opponent);
                     $top_cards_opponent = array_slice($all_draw_deck_opponent, 0, $lookatNum);
                     $top_cards_opponent_json = json_encode($top_cards_opponent);
                     $sql = "UPDATE playing_card SET card_info = '{$top_cards_opponent_json}', card_status = 'thrown' WHERE disabled = FALSE";
                     self::DbQuery( $sql );
                 } else {
-                    $lookatNum = 5;
+                    
                     $all_draw_deck = $player_deck->getCardsInLocation('deck');
                     usort($all_draw_deck, function($a, $b) {
                         return -($a['location_arg'] <=> $b['location_arg']);
                     });
+                    count($all_draw_deck) > 5 ? $lookatNum = 5 : $lookatNum = count($all_draw_deck);
                     $top_cards = array_slice($all_draw_deck, 0, $lookatNum);
                     $top_cards_json = json_encode($top_cards);
                     $sql = "UPDATE playing_card SET card_info = '{$top_cards_json}', card_status = 'thrown' WHERE disabled = FALSE";

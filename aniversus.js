@@ -235,9 +235,10 @@ function (dojo, declare) {
                     let topThreeDiscardPile = this.gamedatas['players'][player_id]['discardpile'].slice(0, 3);
                     // we just need to get first three cards in the discard pile
                     topThreeDiscardPile.forEach((card) => {
-                        this.getJstplCard(player_id, card.id, card.type_arg, 'player_board_' + player_id, 'discardPile_field_me', true);
-                        this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card.id}`, 0 );
-                        this.addTooltipHtml(`discardOnTable_${player_id}_${card.id}`, this.getTooltipHtml(card.type_arg));
+                        const card_unixtime_id = String(Date.now());
+                        this.getJstplCard(player_id, card.id, card.type_arg, 'player_board_' + player_id, 'discardPile_field_me', true, card_unixtime_id);
+                        this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card.id}_${card_unixtime_id}`, 0 );
+                        this.addTooltipHtml(`discardOnTable_${player_id}_${card.id}_${card_unixtime_id}`, this.getTooltipHtml(card.type_arg));
                     });
                     ////
                     //// Add cards to my playmat
@@ -255,9 +256,10 @@ function (dojo, declare) {
                     //// Opponent Discard pile
                     let topThreeDiscardPile_opponent = this.gamedatas['players'][player_id]['discardpile'].slice(0, 3);
                     topThreeDiscardPile_opponent.forEach((card) => {
-                        this.getJstplCard(player_id, card.id, card.type_arg, 'player_board_' + player_id, 'discardPile_field_opponent', true);
-                        this.playerOnPlaymat['opponent']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card.id}`, 0 );
-                        this.addTooltipHtml(`discardOnTable_${player_id}_${card.id}`, this.getTooltipHtml(card.type_arg));
+                        const card_unixtime_id = String(Date.now());
+                        this.getJstplCard(player_id, card.id, card.type_arg, 'player_board_' + player_id, 'discardPile_field_opponent', true, card_unixtime_id);
+                        this.playerOnPlaymat['opponent']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card.id}_${card_unixtime_id}`, 0 );
+                        this.addTooltipHtml(`discardOnTable_${player_id}_${card.id}_${card_unixtime_id}`, this.getTooltipHtml(card.type_arg));
                     });
                     //// Opponent playmat
                     //// Add cards to the playmat
@@ -783,9 +785,9 @@ function (dojo, declare) {
             this.addTooltipHtml('myhand_item_' + card.id, this.getTooltipHtml(Number(card.type_arg)));
         },
         // ANCHOR getJstplCard
-        getJstplCard: function(player_id, card_id, card_type, from, to, discard = false) {
+        getJstplCard: function(player_id, card_id, card_type, from, to, discard = false, timeid = null) {
             const position = this.getCardBackgroundPosition(card_type);
-            let discard_id = `discardOnTable_${player_id}_${card_id}`;
+            let discard_id = `discardOnTable_${player_id}_${card_id}_${+timeid ? timeid : ""}`;
             let table_id = `cardsOnTable_${player_id}_${card_id}`;
             var cardOnTable_id = discard ? discard_id : table_id;
             // create card on table
@@ -794,8 +796,6 @@ function (dojo, declare) {
                 ...position
             }), to);
             // add ToolTip to Class
-            // dojo.addClass(cardOnTable_id, `cardsOnTable_type_${card_type}`)
-            // this.addTooltipHtmlToClass(`cardsOnTable_type_${card_type}`, this.getTooltipHtml(Number(card_type)));
             // place the card on the player board
             this.placeOnObject(cardOnTable_id, from);
             // slide the card to the table
@@ -1368,28 +1368,29 @@ function (dojo, declare) {
             const card_type = notif.args.card_type;
             const row = notif.args.row;
             const col = notif.args.col;
+            const card_unixtime_id = String(Date.now());
             if (player_id == this.player_id) {
                 // this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_me');
-                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_me_${row}_${col}`, 'discardPile_field_me', true);
+                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_me_${row}_${col}`, 'discardPile_field_me', true, card_unixtime_id);
                 this.playerOnPlaymat['me'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, 'discardPile_field_me');
                 dojo.style(`playerOnPlaymat_me_${row}_${col}`, 'height', 'auto');
                 if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
                     const discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
                     this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
-                this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}` , 0 );
+                this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}_${card_unixtime_id}` , 0 );
             } else {
                 // this.getJstplCard(player_id, card_id, card_type, card_div, 'discardPile_field_opponent');
-                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_opponent_${row}_${col}`, 'discardPile_field_me', true);
+                this.getJstplCard(player_id, card_id, card_type, `playerOnPlaymat_opponent_${row}_${col}`, 'discardPile_field_me', true, card_unixtime_id);
                 this.playerOnPlaymat['opponent'][row][col].removeFromZone('cardsOnTable_' + player_id + '_' + card_id, true, 'discardPile_field_opponent');
                 dojo.style(`playerOnPlaymat_opponent_${row}_${col}`, 'height', 'auto')
                 if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
                     const discard_pile_items = this.playerOnPlaymat['opponent']['discardpile'].getAllItems();
                     this.playerOnPlaymat['opponent']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
-                this.playerOnPlaymat['opponent']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}` , 0 );
+                this.playerOnPlaymat['opponent']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}_${card_unixtime_id}` , 0 );
             }
-            this.addTooltipHtml(`discardOnTable_${player_id}_${card_id}`, this.getTooltipHtml(Number(card_type)));
+            this.addTooltipHtml(`discardOnTable_${player_id}_${card_id}_${card_unixtime_id}`, this.getTooltipHtml(Number(card_type)));
         },
         // ANCHOR movePlayerInPlaymat2Hand
         notif_movePlayerInPlaymat2Hand: function(notif) {
@@ -1416,24 +1417,24 @@ function (dojo, declare) {
             const player_id = notif.args.player_id;
             const card_id = notif.args.card_id;
             const card_type = notif.args.card_type;
-            const unixtime = notif.args.time;
+            const unixtime = notif.args.time ? notif.args.time : Date.now();
             if (player_id == this.player_id) {
-                this.getJstplCard(player_id, card_id, card_type, 'myhand_item_' + card_id, 'discardPile_field_me', true);
+                this.getJstplCard(player_id, card_id, card_type, 'myhand_item_' + card_id, 'discardPile_field_me', true, unixtime);
                 this.playerdeck.removeFromStockById(card_id);
                 if (this.playerOnPlaymat['me']['discardpile'].getItemNumber() > 2) {
                     const discard_pile_items = this.playerOnPlaymat['me']['discardpile'].getAllItems();
                     this.playerOnPlaymat['me']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
-                this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}` , 0 );
+                this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}_${unixtime}` , 0 );
             } else {
-                this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, 'discardPile_field_opponent', true);
+                this.getJstplCard(player_id, card_id, card_type, 'player_board_' + player_id, 'discardPile_field_opponent', true, unixtime);
                 if (this.playerOnPlaymat['opponent']['discardpile'].getItemNumber() > 2) {
                     const discard_pile_items = this.playerOnPlaymat['opponent']['discardpile'].getAllItems();
                     this.playerOnPlaymat['opponent']['discardpile'].removeFromZone(discard_pile_items[0], true, "player_board_" + player_id);
                 }
-                this.playerOnPlaymat['opponent']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}` , 0 );
+                this.playerOnPlaymat['opponent']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}_${unixtime}` , 0 );
             }
-            this.addTooltipHtml(`discardOnTable_${player_id}_${card_id}`, this.getTooltipHtml(Number(card_type)));
+            this.addTooltipHtml(`discardOnTable_${player_id}_${card_id}_${unixtime}`, this.getTooltipHtml(Number(card_type)));
             if ( notif.args.time != null ) {
                 this.addTooltipHtml('logcard_' + unixtime + '_' + card_type, this.getTooltipHtml(Number(card_type)));
             }
@@ -1471,9 +1472,8 @@ function (dojo, declare) {
                 }
             }
             this.addTooltipHtml('cardsOnTable_' + player_id + '_' + card_id, this.joinTooltipHtml(allPlayerInThisPosition));
-            if ( notif.args.time != null ) {
-                this.addTooltipHtml('logcard_' + notif.args.time + '_' + card_type, this.getTooltipHtml(Number(card_type)));
-            }
+            const time = notif.args.time ? notif.args.time : Date.now();
+            this.addTooltipHtml('logcard_' + time + '_' + card_type, this.getTooltipHtml(Number(card_type)));
         },
         // ANCHOR cardDrawn
         // This Notification is called when a card is drawn
@@ -1494,8 +1494,9 @@ function (dojo, declare) {
             const player_id = notif.args.player_id;
             const card_id = notif.args.card_id;
             const card_type_arg = notif.args.card_type_arg;
-            this.getJstplCard(player_id, card_id, card_type_arg, 'myhand_item_' + card_id, 'discardPile_field_me', true);
-            this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}`, 0);
+            const unixtime = Date.now();
+            this.getJstplCard(player_id, card_id, card_type_arg, 'myhand_item_' + card_id, 'discardPile_field_me', true, unixtime);
+            this.playerOnPlaymat['me']['discardpile'].placeInZone( `discardOnTable_${player_id}_${card_id}_${unixtime}`, 0);
             this.playerdeck.removeFromStockById(Number(card_id));
         },
 
@@ -1539,7 +1540,7 @@ function (dojo, declare) {
                     selected_mode = 1;
                     break;
                 case 57:
-                    message = "Select 1 cards from your discard pile and put them in your hand"
+                    message = "Select 1 card from your discard pile and put them in your hand"
                     button_text = 'Confirm';
                     selected_mode = 1;
                     break;
